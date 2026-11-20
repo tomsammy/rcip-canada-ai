@@ -1,0 +1,10 @@
+data/
+tests/
+__pycache__/
+*.pyc
+.git/
+Dockerfile
+render.yaml
+*.db
+*.db-wal
+*.db-shm

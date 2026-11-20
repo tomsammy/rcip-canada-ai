@@ -1,6 +1,5 @@
-"""FastAPI gateway for RCIP Canada AI."""
+"""FastAPI gateway for JapaAI.ng."""
 
-import html as html_lib
 import os
 from typing import Any, Dict, List, Optional
 
@@ -10,13 +9,13 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from backend.canada_crawler import (
-    SEED_CANADA_PAGES,
-    crawl_official_canada_pages,
-    crawl_official_global_sources,
-)
+from backend.canada_crawler import SEED_CANADA_PAGES
 from backend.config import BASE_DIR, DB_PATH, IS_VERCEL
 from backend.countries_data import COUNTRIES_CATALOG
+from backend.dossier_renderer import (
+    render_country_pathway_dossier,
+    render_rcip_dossier,
+)
 from backend.eligibility_engine import (
     build_tailored_roadmap,
     compute_clb_from_test,
@@ -27,9 +26,7 @@ from backend.matcher_engine import match_global_pathways
 from backend.rag_service import CanadaRAGService
 from backend.rcip_data import (
     COMMON_NOC_CATALOG,
-    ECA_ORGANIZATIONS,
     ESDC_NOC_FINDER_URL,
-    LANGUAGE_TEST_CHARTS,
     OFFICIAL_IMM_FORMS,
     PARTICIPATING_COMMUNITIES,
     SETTLEMENT_FUNDS_TABLE,
@@ -44,9 +41,14 @@ from backend.store import (
     save_profile as store_save_profile,
     store_session,
     upsert_canada_page as store_upsert_canada_page,
-    upsert_global_official_page as store_upsert_global_official_page,
     upsert_progress as store_upsert_progress,
     upsert_shortlist as store_upsert_shortlist,
+)
+from backend.sync_service import (
+    build_country_live_snapshots,
+    build_sources_index,
+    sync_canada_sources,
+    sync_official_sources,
 )
 
 app = FastAPI(
@@ -526,28 +528,7 @@ def shortlist_community_endpoint(payload: CommunityShortlistPayload) -> Dict[str
 
 @app.post("/api/sync-canada")
 def sync_canada_endpoint() -> Dict[str, Any]:
-    crawl_result = crawl_official_canada_pages()
-    counts = {"inserted": 0, "updated": 0, "unchanged": 0}
-
-    db_path = _resolve_db_path()
-    with store_session(db_path) as conn:
-        for page in crawl_result["pages"]:
-            outcome = store_upsert_canada_page(conn, page)
-            counts[outcome] = counts.get(outcome, 0) + 1
-        all_pages = store_list_canada_pages(conn)
-        global_pages = store_list_global_official_pages(conn)
-
-    rag_engine.index_pages(all_pages, global_live_pages=global_pages)
-    return {
-        "status": "success",
-        "inserted": counts["inserted"],
-        "updated": counts["updated"],
-        "unchanged": counts["unchanged"],
-        "failed": len(crawl_result["errors"]),
-        "errors": crawl_result["errors"],
-        "total_indexed": len(all_pages),
-        "countries_indexed": len(COUNTRIES_CATALOG),
-    }
+    return sync_canada_sources(_resolve_db_path(), rag_engine)
 
 
 @app.post("/api/sync-sources")
@@ -555,143 +536,15 @@ def sync_all_official_sources_endpoint(
     country_id: Optional[str] = Query(None),
 ) -> Dict[str, Any]:
     """Concurrently sync verbatim content from live official government portals across all 12 or 1 country."""
-    from concurrent.futures import ThreadPoolExecutor
-
     scope = (country_id or "all").strip().lower()
     if scope not in ("", "all") and not any(c["id"] == scope for c in COUNTRIES_CATALOG):
         raise HTTPException(status_code=404, detail="Country not found in catalog.")
-
-    is_all = scope in ("", "all")
-    crawl_canada_too = scope in ("", "all", "canada")
-
-    if crawl_canada_too:
-        pool = ThreadPoolExecutor(max_workers=2)
-        try:
-            f_global = pool.submit(
-                crawl_official_global_sources,
-                None if is_all else "canada",
-                4 if is_all else 5,
-                16 if is_all else 6,
-                1 if is_all else 3,
-                9.0,
-            )
-            f_ca = pool.submit(crawl_official_canada_pages, 4, 10)
-            crawl_global = f_global.result()
-            ca_crawl = f_ca.result()
-        finally:
-            pool.shutdown(wait=False, cancel_futures=True)
-    else:
-        crawl_global = crawl_official_global_sources(
-            country_id=scope,
-            timeout=5,
-            max_workers=6,
-            max_pathways_per_country=3,
-            overall_timeout=9.0,
-        )
-        ca_crawl = {"pages": [], "errors": []}
-
-    ca_errors: List[Dict[str, str]] = ca_crawl.get("errors", [])
-    counts = {"inserted": 0, "updated": 0, "unchanged": 0}
-
-    db_path = _resolve_db_path()
-    with store_session(db_path) as conn:
-        for page in crawl_global["pages"]:
-            outcome = store_upsert_global_official_page(conn, page)
-            counts[outcome] = counts.get(outcome, 0) + 1
-
-        for ca_page in ca_crawl.get("pages", []):
-            outcome = store_upsert_canada_page(conn, ca_page)
-            counts[outcome] = counts.get(outcome, 0) + 1
-
-        all_canada = store_list_canada_pages(conn)
-        all_global = store_list_global_official_pages(conn)
-
-    rag_engine.index_pages(all_canada, global_live_pages=all_global)
-    return {
-        "status": "success",
-        "scope": scope or "all",
-        "synced_at": crawl_global["synced_at"],
-        "countries_indexed": len(COUNTRIES_CATALOG),
-        "live_fetched": crawl_global["total_fetched"],
-        "inserted": counts["inserted"],
-        "updated": counts["updated"],
-        "unchanged": counts["unchanged"],
-        "failed": len(crawl_global["errors"]) + len(ca_errors),
-        "errors": (crawl_global["errors"] + ca_errors)[:10],
-        "total_indexed": len(all_canada) + len(all_global),
-        "live_global_pages": len(all_global),
-    }
+    return sync_official_sources(scope, _resolve_db_path(), rag_engine)
 
 
 @app.get("/api/sources")
 def get_sources_endpoint() -> Dict[str, Any]:
-    db_path = _resolve_db_path()
-    with store_session(db_path) as conn:
-        pages = store_list_canada_pages(conn)
-        global_live = store_list_global_official_pages(conn)
-    if not pages:
-        pages = ensure_seeded_and_indexed(db_path)
-
-    live_urls = {p["url"] for p in global_live}
-    summary_pages: List[Dict[str, Any]] = []
-
-    for gp in global_live:
-        summary_pages.append(
-            {
-                "url": gp["url"],
-                "country_id": gp["country_id"],
-                "track": gp["country_name"],
-                "slug": gp["country_id"],
-                "title": gp["title"],
-                "site_last_modified": gp["site_last_modified"],
-                "alert_text": gp["alert_text"],
-                "fetched_at": gp["fetched_at"],
-                "source_mode": gp.get("source_mode", "live"),
-            }
-        )
-
-    for p in pages:
-        is_live_ca = bool(p.get("fetched_at") and not str(p.get("fetched_at", "")).startswith("2026-11-09T00:00:00"))
-        summary_pages.append(
-            {
-                "url": p["url"],
-                "country_id": "canada",
-                "track": p["track"],
-                "slug": p["slug"],
-                "title": p["title"],
-                "site_last_modified": p["site_last_modified"],
-                "alert_text": p["alert_text"],
-                "fetched_at": p["fetched_at"],
-                "source_mode": "live" if is_live_ca else "verified_registry",
-            }
-        )
-
-    for c in COUNTRIES_CATALOG:
-        if c["official_portal"] not in live_urls:
-            summary_pages.append(
-                {
-                    "url": c["official_portal"],
-                    "country_id": c["id"],
-                    "track": c["name"],
-                    "slug": c["id"],
-                    "title": f"{c['name']} — {c['authority']}",
-                    "site_last_modified": "",
-                    "alert_text": "",
-                    "fetched_at": "",
-                    "source_mode": "verified_registry",
-                }
-            )
-
-    live_timestamps = [p["fetched_at"] for p in summary_pages if p.get("source_mode") == "live" and p.get("fetched_at")]
-    return {
-        "status": "success",
-        "count": len(summary_pages),
-        "live_count": len(live_timestamps),
-        "last_synced_at": max(live_timestamps, default=""),
-        "sources": summary_pages,
-        "language_charts": LANGUAGE_TEST_CHARTS,
-        "eca_organizations": ECA_ORGANIZATIONS,
-    }
+    return build_sources_index(_resolve_db_path(), ensure_seeded_and_indexed)
 
 
 @app.post("/api/chat")
@@ -774,29 +627,10 @@ def get_country_hub_endpoint(country_id: str) -> Dict[str, Any]:
     if not target:
         raise HTTPException(status_code=404, detail="Country not found in catalog.")
 
-    db_path = _resolve_db_path()
-    with store_session(db_path) as conn:
-        live_rows = store_list_global_official_pages(conn, country_id=cid)
-
-    # Also check in-memory RAG live pages (e.g. during tests or warm cache)
-    if not live_rows and rag_engine.global_live_pages:
-        live_rows = [p for p in rag_engine.global_live_pages if p.get("country_id") == cid]
-
-    live_snapshots = [
-        {
-            "url": lp["url"],
-            "title": lp["title"],
-            "site_last_modified": lp.get("site_last_modified", ""),
-            "fetched_at": lp.get("fetched_at", ""),
-            "alert_text": lp.get("alert_text", ""),
-            "excerpt": (lp.get("content_text", "")[:450].strip() + ("..." if len(lp.get("content_text", "")) > 450 else "")),
-        }
-        for lp in live_rows
-    ]
-    timestamps = [s["fetched_at"] for s in live_snapshots if s.get("fetched_at")]
+    live_snapshots, last_verified_at = build_country_live_snapshots(cid, _resolve_db_path(), rag_engine)
     enriched = dict(target)
     enriched["live_snapshots"] = live_snapshots
-    enriched["last_verified_at"] = max(timestamps, default="")
+    enriched["last_verified_at"] = last_verified_at
     return {"status": "success", "country": enriched}
 
 
@@ -815,57 +649,13 @@ def export_global_roadmap_html(payload: GlobalRoadmapExportPayload) -> HTMLRespo
     if not pathway:
         raise HTTPException(status_code=404, detail="Pathway not found.")
 
-    esc = html_lib.escape
-    name_safe = esc(payload.applicant_name or "Applicant")
-    steps_html = ""
-    done_count = 0
-    for idx, step in enumerate(pathway["stages"], 1):
-        is_done = bool(payload.checked_steps.get(step["id"]))
-        if is_done:
-            done_count += 1
-        note = esc(str(payload.notes.get(step["id"], "") or ""))
-        note_html = f"<div style='margin-top:4px; color:#047857; font-size:13px;'><strong>Note:</strong> {note}</div>" if note else ""
-        steps_html += (
-            f"<li><strong>[{'DONE' if is_done else 'TODO'}] Step {idx}: {esc(step['title'])}</strong><br>"
-            f"<span>{esc(step['description'])}</span> "
-            f"(<a href='{esc(step['url'])}'>Official Guide</a>){note_html}</li>"
-        )
-
-    notes_html = "".join(f"<li>{esc(n)}</li>" for n in (country.get("applicant_notes") or []))
-
-    doc_html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>JapaAI.ng — {esc(country['name'])}: {esc(pathway['name'])}</title>
-<style>
-  body {{ font-family: Arial, sans-serif; color: #0f172a; max-width: 880px; margin: 32px auto; padding: 0 20px; line-height: 1.55; }}
-  h1 {{ color: #047857; border-bottom: 2px solid #047857; padding-bottom: 8px; }}
-  .box {{ background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px 16px; border-radius: 8px; margin-bottom: 18px; }}
-  li {{ margin-bottom: 10px; }}
-  @media print {{ .no-print {{ display: none; }} }}
-</style>
-</head>
-<body>
-  <div class="no-print" style="margin-bottom:16px;"><button onclick="window.print()">Print / Save PDF</button></div>
-  <h1>JapaAI.ng — {esc(country['name'])} Immigration Roadmap</h1>
-  <div class="box">
-    <p><strong>Applicant:</strong> {name_safe}</p>
-    <p><strong>Pathway:</strong> {esc(pathway['name'])} ({esc(pathway['category'])})</p>
-    <p><strong>Official Authority:</strong> {esc(country['authority'])} (<a href="{esc(pathway['official_url'])}">{esc(pathway['official_url'])}</a>)</p>
-    <p><strong>PR / Settlement Path:</strong> {esc(pathway['leads_to_pr'])}</p>
-    <p><strong>Key Thresholds:</strong> {esc(pathway['threshold_label'])}</p>
-    <p><strong>Checklist Progress:</strong> {done_count} / {len(pathway['stages'])} completed</p>
-  </div>
-  <h2>Official Step-by-Step Roadmap</h2>
-  <ol>{steps_html}</ol>
-  <h2>Official Applicant Notes &amp; Key Requirements</h2>
-  <ul>{notes_html}</ul>
-  <p style="margin-top:28px; font-size:12px; color:#64748b;">
-    Curated directly from official government portals indexed by JapaAI.ng with no added assumptions. Informational planning guide only; not legal immigration advice.
-  </p>
-</body>
-</html>"""
+    doc_html = render_country_pathway_dossier(
+        country=country,
+        pathway=pathway,
+        applicant_name=payload.applicant_name or "Applicant",
+        checked_steps=payload.checked_steps,
+        notes=payload.notes,
+    )
     return HTMLResponse(content=doc_html)
 
 
@@ -874,94 +664,7 @@ def _render_export_html(
     progress_map: Dict[str, Any],
     shortlists: Dict[str, Any],
 ) -> HTMLResponse:
-    evaluation = evaluate_rcip_eligibility(profile)
-    roadmap = build_tailored_roadmap(profile, progress_map, evaluation)
-    esc = html_lib.escape
-
-    candidate_name = esc(str(profile.get("name") or "RCIP Candidate"))
-    track_label = esc(evaluation["program_track"]["label"])
-    verdict = esc(evaluation["verdict"])
-
-    pillar_rows = "".join(
-        f"<tr><td><strong>{esc(p['title'])}</strong></td>"
-        f"<td>{esc(p['status'])}</td>"
-        f"<td>{p['score']}/{p['max_score']}</td>"
-        f"<td>{esc(p['summary'])}</td></tr>"
-        for p in evaluation["pillars"]
-    )
-
-    action_rows = "".join(
-        f"<li><strong>[{esc(a['priority'])}] {esc(a['pillar'])}:</strong> {esc(a['action'])} "
-        f"(<a href='{esc(a['url'])}'>Canada.ca source</a>)</li>"
-        for a in evaluation["action_plan"]
-    ) or "<li>No remaining eligibility blockers detected.</li>"
-
-    shortlisted_rows = "".join(
-        f"<li><strong>{esc(c['name'])}, {esc(c['province_code'])}</strong> — "
-        f"<a href='{esc(c['official_url'])}'>{esc(c['official_url'])}</a> "
-        f"(Employers contacted: {int((shortlists.get(c['id']) or {}).get('employers_contacted', 0))})</li>"
-        for c in PARTICIPATING_COMMUNITIES
-        if (shortlists.get(c["id"]) or {}).get("shortlisted")
-    ) or "<li>No participating communities shortlisted yet.</li>"
-
-    stage_blocks = ""
-    for stage in roadmap["stages"]:
-        items_html = "".join(
-            f"<li>[{'DONE' if item['completed'] else 'TODO'}] "
-            f"{'(Optional / Not active for your branch) ' if not item['applicable'] else ''}"
-            f"<strong>{esc(item['title'])}</strong> — {esc(item['description'])}</li>"
-            for item in stage["items"]
-        )
-        stage_blocks += (
-            f"<h3>{esc(stage['title'])} ({stage['completed_count']}/{stage['active_count']} done)</h3>"
-            f"<p>{esc(stage['summary'])}</p><ul>{items_html}</ul>"
-        )
-
-    doc_html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>RCIP Canada AI — Personalized Roadmap Report</title>
-<style>
-  body {{ font-family: Arial, sans-serif; color: #111827; max-width: 900px; margin: 32px auto; padding: 0 20px; line-height: 1.5; }}
-  h1 {{ color: #991b1b; border-bottom: 2px solid #dc2626; padding-bottom: 8px; }}
-  h2 {{ color: #1f2937; margin-top: 28px; }}
-  table {{ width: 100%; border-collapse: collapse; margin: 12px 0; }}
-  th, td {{ border: 1px solid #d1d5db; padding: 8px 10px; text-align: left; font-size: 14px; }}
-  th {{ background: #f3f4f6; }}
-  .box {{ background: #f9fafb; border: 1px solid #e5e7eb; padding: 14px; border-radius: 6px; margin-bottom: 16px; }}
-  @media print {{ .no-print {{ display: none; }} }}
-</style>
-</head>
-<body>
-  <div class="no-print" style="margin-bottom:16px;">
-    <button onclick="window.print()">Print / Save PDF</button>
-  </div>
-  <h1>RCIP Canada AI — Personalized Roadmap Report</h1>
-  <div class="box">
-    <p><strong>Applicant:</strong> {candidate_name}</p>
-    <p><strong>Readiness Score:</strong> {evaluation['readiness_score']}/100 ({esc(evaluation['overall_status'])})</p>
-    <p><strong>Verdict:</strong> {verdict}</p>
-    <p><strong>Program Track:</strong> {track_label}</p>
-    <p><strong>Roadmap Checklist Progress:</strong> {roadmap['completed_items']}/{roadmap['total_items']} ({roadmap['completion_percent']}%)</p>
-  </div>
-  <h2>6-Pillar Eligibility Assessment</h2>
-  <table>
-    <thead><tr><th>Pillar</th><th>Status</th><th>Score</th><th>Assessment</th></tr></thead>
-    <tbody>{pillar_rows}</tbody>
-  </table>
-  <h2>Prioritized Action Plan</h2>
-  <ul>{action_rows}</ul>
-  <h2>Shortlisted RCIP Communities</h2>
-  <ul>{shortlisted_rows}</ul>
-  <h2>6-Stage Canada.ca Roadmap</h2>
-  {stage_blocks}
-  <p style="margin-top:32px; font-size:12px; color:#6b7280;">
-    Grounded in official Canada.ca Rural Community Immigration Pilot / Program documentation. Informational planning tool only; not legal immigration advice.
-  </p>
-</body>
-</html>"""
-    return HTMLResponse(content=doc_html)
+    return HTMLResponse(content=render_rcip_dossier(profile, progress_map, shortlists))
 
 
 @app.get("/api/roadmap/export/html", response_class=HTMLResponse)

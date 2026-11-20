@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeou
 import hashlib
 import re
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 from urllib.parse import urljoin
 
 import httpx
@@ -14,6 +14,12 @@ from backend.config import OFFICIAL_CANADA_PAGES
 from backend.countries_data import COUNTRIES_CATALOG
 
 USER_AGENT = "JapaAI-Official-Sync/2.0 (+https://rcip-canada-ai.vercel.app)"
+HttpFetcher = Callable[[str, Any, Dict[str, str]], Tuple[int, str, Dict[str, str]]]
+
+
+def _default_http_fetcher(url: str, timeout: Any, headers: Dict[str, str]) -> Tuple[int, str, Dict[str, str]]:
+    resp = httpx.get(url, follow_redirects=True, timeout=timeout, headers=headers)
+    return resp.status_code, resp.text, dict(resp.headers)
 
 
 def _hash_text(text: str) -> str:
@@ -95,23 +101,27 @@ def parse_canada_page_html(
     }
 
 
-def crawl_official_canada_pages(timeout: int = 6, max_workers: int = 10) -> Dict[str, Any]:
+def crawl_official_canada_pages(
+    timeout: int = 6,
+    max_workers: int = 10,
+    fetcher: Optional[HttpFetcher] = None,
+) -> Dict[str, Any]:
     """Concurrently fetch official RCIP Pilot and Permanent Program pages from Canada.ca within bounded latency."""
     pages: List[Dict[str, Any]] = []
     errors: List[Dict[str, str]] = []
     req_timeout = httpx.Timeout(connect=3.0, read=float(timeout), write=3.0, pool=3.0)
+    http_get = fetcher or _default_http_fetcher
 
     def _fetch_ca(meta: Dict[str, str]) -> Dict[str, Any]:
-        resp = httpx.get(
+        status_code, body, _ = http_get(
             meta["url"],
-            follow_redirects=True,
-            timeout=req_timeout,
-            headers={"User-Agent": USER_AGENT},
+            req_timeout,
+            {"User-Agent": USER_AGENT},
         )
-        if resp.status_code != 200:
-            return {"_error": f"HTTP {resp.status_code}", "url": meta["url"]}
+        if status_code != 200:
+            return {"_error": f"HTTP {status_code}", "url": meta["url"]}
         parsed = parse_canada_page_html(
-            resp.text,
+            body,
             url=meta["url"],
             track=meta["track"],
             slug=meta["slug"],
@@ -446,6 +456,7 @@ def crawl_official_global_sources(
     max_workers: int = 16,
     max_pathways_per_country: int = 2,
     overall_timeout: float = 10.0,
+    fetcher: Optional[HttpFetcher] = None,
 ) -> Dict[str, Any]:
     """Concurrently fetch live verbatim HTML from official ministry portals within a strict wall-clock bound."""
     targets = build_global_crawl_targets(
@@ -456,26 +467,27 @@ def crawl_official_global_sources(
     errors: List[Dict[str, str]] = []
     synced_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     req_timeout = httpx.Timeout(connect=2.5, read=float(timeout), write=2.5, pool=2.5)
+    http_get = fetcher or _default_http_fetcher
 
     def _fetch_one(target: Dict[str, str]) -> Dict[str, Any]:
-        resp = httpx.get(
+        status_code, body, hdrs = http_get(
             target["url"],
-            follow_redirects=True,
-            timeout=req_timeout,
-            headers={
+            req_timeout,
+            {
                 "User-Agent": USER_AGENT,
                 "Accept-Language": "en-US,en;q=0.9",
             },
         )
-        if resp.status_code != 200:
-            return {"_error": f"HTTP {resp.status_code}", **target}
+        if status_code != 200:
+            return {"_error": f"HTTP {status_code}", **target}
+        last_mod = hdrs.get("last-modified") or hdrs.get("Last-Modified") or ""
         parsed = parse_official_page_html(
-            resp.text,
+            body,
             url=target["url"],
             country_id=target["country_id"],
             country_name=target["country_name"],
             title_fallback=target["title"],
-            last_modified_header=resp.headers.get("last-modified", ""),
+            last_modified_header=last_mod,
         )
         if len(parsed.get("content_text", "")) < 120:
             return {"_error": "Insufficient readable text returned", **target}

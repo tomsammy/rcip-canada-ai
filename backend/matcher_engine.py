@@ -52,6 +52,8 @@ def _has_profile_input(profile: Dict[str, Any]) -> bool:
         bool((profile.get("english_level") or "").strip()),
         bool((profile.get("french_level") or "").strip()),
         bool((profile.get("german_level") or "").strip()),
+        bool((profile.get("spanish_level") or "").strip()),
+        bool((profile.get("portuguese_level") or "").strip()),
         _to_float(profile.get("relocation_budget_usd")) > 0,
         _to_float(profile.get("monthly_remote_income_usd")) > 0,
         bool(profile.get("has_foreign_job_offer")),
@@ -80,6 +82,15 @@ def match_global_pathways(profile: Dict[str, Any]) -> Dict[str, Any]:
     eng_rank = _LANG_RANK.get(str(safe.get("english_level") or "").strip().lower(), 0)
     fr_rank = _LANG_RANK.get(str(safe.get("french_level") or "").strip().lower(), 0)
     de_rank = _LANG_RANK.get(str(safe.get("german_level") or "").strip().lower(), 0)
+    es_rank = _LANG_RANK.get(str(safe.get("spanish_level") or "").strip().lower(), 0)
+    pt_rank = _LANG_RANK.get(str(safe.get("portuguese_level") or "").strip().lower(), 0)
+    lang_ranks = {
+        "english": eng_rank,
+        "french": fr_rank,
+        "german": de_rank,
+        "spanish": es_rank,
+        "portuguese": pt_rank,
+    }
     budget_usd = _to_float(safe.get("relocation_budget_usd"))
     remote_income = _to_float(safe.get("monthly_remote_income_usd"))
     has_offer = bool(safe.get("has_foreign_job_offer"))
@@ -159,11 +170,7 @@ def match_global_pathways(profile: Dict[str, Any]) -> Dict[str, Any]:
                     blocked = True
                     gaps.append("French proficiency (NCLC 5+) is mandatory for this pathway.")
             else:
-                best_rank = eng_rank if "english" in langs else 0
-                if "french" in langs:
-                    best_rank = max(best_rank, fr_rank)
-                if "german" in langs:
-                    best_rank = max(best_rank, de_rank)
+                best_rank = max((lang_ranks.get(lang, 0) for lang in langs), default=0)
                 if best_rank >= 3:
                     lang_pts = 20
                     why.append("Strong language proficiency meets threshold.")

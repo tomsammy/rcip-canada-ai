@@ -1,4 +1,4 @@
-// JapaAI.ng Frontend Controller — Multi-Country Roadmaps + Deep Canada RCIP Engine
+// JapaAI.ng Frontend Controller — Multi-Country Roadmaps + Canada RCIP Toolkit
 
 const STORAGE_KEY = 'japaai_ng_state_v3';
 const LEGACY_STORAGE_KEY = 'rcip_canada_ai_state_v2';
@@ -6,7 +6,7 @@ const THEME_KEY = 'japaai_ng_theme';
 const MAX_UPLOAD_BYTES = Math.floor(4.2 * 1024 * 1024);
 const DONUT_CIRCUMFERENCE = 263.89;
 
-function esc(value) {
+const esc = window.JapaUtils?.esc || (value => {
   if (value === null || value === undefined) return '';
   return String(value)
     .replace(/&/g, '&amp;')
@@ -14,7 +14,7 @@ function esc(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-}
+});
 
 function showToast(message, isError = false) {
   const container = document.getElementById('toast-container');
@@ -74,7 +74,12 @@ function toggleTheme() {
 
 function loadLocalBrowserState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+    const primary = localStorage.getItem(STORAGE_KEY);
+    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (window.JapaUtils?.migrateBrowserState) {
+      return window.JapaUtils.migrateBrowserState(primary, legacy);
+    }
+    const raw = primary || legacy;
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === 'object' ? parsed : null;
@@ -183,124 +188,6 @@ async function hydrateFromLocalServer() {
   } catch (err) {
     console.error(err);
   }
-}
-
-// --------------------------------------------------------------------------
-// PWA Installation & Service Worker Support
-// --------------------------------------------------------------------------
-
-const INSTALL_DISMISS_KEY = 'japaai_ng_install_dismissed';
-let deferredInstallPrompt = null;
-
-function isStandalonePwa() {
-  return (
-    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-    window.navigator.standalone === true
-  );
-}
-
-function isIosDevice() {
-  const ua = (navigator.userAgent || '').toLowerCase();
-  const isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
-  return /iphone|ipad|ipod/.test(ua) || isTouchMac;
-}
-
-function showInstallBannerIfEligible() {
-  const banner = document.getElementById('pwa-install-banner');
-  if (!banner) return;
-  if (isStandalonePwa() || localStorage.getItem(INSTALL_DISMISS_KEY) === '1') {
-    banner.classList.add('hidden');
-    return;
-  }
-  const isCompactViewport = window.innerWidth <= 900 || !!deferredInstallPrompt || isIosDevice();
-  banner.classList.toggle('hidden', !isCompactViewport);
-}
-
-function dismissInstallBanner() {
-  localStorage.setItem(INSTALL_DISMISS_KEY, '1');
-  const banner = document.getElementById('pwa-install-banner');
-  if (banner) banner.classList.add('hidden');
-}
-
-function openPwaInstallModal() {
-  const modal = document.getElementById('pwa-install-modal');
-  const title = document.getElementById('pwa-modal-title');
-  const steps = document.getElementById('pwa-modal-steps');
-  if (!modal || !steps) return;
-
-  if (isIosDevice()) {
-    if (title) title.textContent = 'Install JapaAI.ng on iPhone / iPad';
-    steps.innerHTML = [
-      '<li>Tap the <strong>Share</strong> icon in your Safari toolbar (square with an upward arrow).</li>',
-      '<li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>',
-      '<li>Tap <strong>Add</strong> in the top corner to install JapaAI.ng like a native app.</li>',
-    ].join('');
-  } else {
-    if (title) title.textContent = 'Install JapaAI.ng on Android or Desktop';
-    steps.innerHTML = [
-      '<li>Open your browser menu (<strong>⋮</strong> on Chrome Android or <strong>⋯</strong> in your toolbar).</li>',
-      '<li>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>',
-      '<li>Confirm to add <strong>JapaAI.ng</strong> directly to your phone or desktop.</li>',
-    ].join('');
-  }
-  modal.classList.remove('hidden');
-}
-
-function closePwaInstallModal() {
-  const modal = document.getElementById('pwa-install-modal');
-  if (modal) modal.classList.add('hidden');
-}
-
-async function promptPwaInstall() {
-  if (isStandalonePwa()) {
-    showToast('JapaAI.ng is already running as an installed app.');
-    return;
-  }
-  if (deferredInstallPrompt) {
-    try {
-      deferredInstallPrompt.prompt();
-      const choice = await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
-      if (choice && choice.outcome === 'accepted') {
-        dismissInstallBanner();
-      }
-      return;
-    } catch (err) {
-      deferredInstallPrompt = null;
-    }
-  }
-  openPwaInstallModal();
-}
-
-function initPwaSupport() {
-  if (isStandalonePwa()) {
-    document.documentElement.classList.add('is-pwa-installed');
-  }
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(err => {
-        console.warn('ServiceWorker registration skipped:', err);
-      });
-    });
-  }
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredInstallPrompt = e;
-    showInstallBannerIfEligible();
-  });
-
-  window.addEventListener('appinstalled', () => {
-    deferredInstallPrompt = null;
-    document.documentElement.classList.add('is-pwa-installed');
-    closePwaInstallModal();
-    const banner = document.getElementById('pwa-install-banner');
-    if (banner) banner.classList.add('hidden');
-    showToast('JapaAI.ng installed on your device!');
-  });
-
-  showInstallBannerIfEligible();
 }
 
 // --------------------------------------------------------------------------
@@ -896,7 +783,7 @@ function renderSavedProgress() {
 }
 
 // --------------------------------------------------------------------------
-// Deep Canada RCIP Engine (Preserved Full Functionality)
+// Canada RCIP Toolkit (Full Interactive Verification)
 // --------------------------------------------------------------------------
 
 function setWizardStep(stepNum) {
@@ -1644,6 +1531,10 @@ async function updateCommunityState(communityId, shortlisted, employersContacted
 function updateHeroSyncStatus(lastSyncedAt, liveCount) {
   const el = document.getElementById('hero-sync-status');
   if (!el) return;
+  if (window.JapaUtils?.resolveHeroSyncStatusText) {
+    el.textContent = window.JapaUtils.resolveHeroSyncStatusText(lastSyncedAt, liveCount);
+    return;
+  }
   if (lastSyncedAt) {
     const cleanTs = String(lastSyncedAt).replace('T', ' ').replace('+00:00', ' UTC');
     el.textContent = `Direct official portals · ${liveCount || 'Live'} live snapshots verified (${cleanTs})`;

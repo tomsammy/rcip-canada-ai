@@ -1,7 +1,8 @@
-// RCIP Canada AI Frontend Controller (Civic Editorial + Vercel Stateless Support)
+// JapaAI.ng Frontend Controller — Multi-Country Roadmaps + Deep Canada RCIP Engine
 
-const STORAGE_KEY = 'rcip_canada_ai_state_v2';
-const THEME_KEY = 'rcip_canada_ai_theme';
+const STORAGE_KEY = 'japaai_ng_state_v3';
+const LEGACY_STORAGE_KEY = 'rcip_canada_ai_state_v2';
+const THEME_KEY = 'japaai_ng_theme';
 const MAX_UPLOAD_BYTES = Math.floor(4.2 * 1024 * 1024);
 const DONUT_CIRCUMFERENCE = 263.89;
 
@@ -27,6 +28,15 @@ function showToast(message, isError = false) {
 
 let state = {
   environment: 'local',
+  countriesCatalog: [],
+  countryCache: {},
+  regionFilter: 'all',
+  activeCountryId: 'canada',
+  activePathwayId: 'ca-rcip',
+  universalProfile: {},
+  globalChecklist: {}, // { stepId: { completed: bool, note: str, country_id, pathway_id, title } }
+  matcherResult: null,
+  // Deep Canada RCIP state
   profile: {},
   progress: {},
   shortlists: {},
@@ -41,7 +51,7 @@ let state = {
 };
 
 // --------------------------------------------------------------------------
-// Theme & Local Persistence
+// Theme & Persistence
 // --------------------------------------------------------------------------
 
 function initTheme() {
@@ -67,7 +77,7 @@ function toggleTheme() {
 
 function loadLocalBrowserState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === 'object' ? parsed : null;
@@ -81,6 +91,8 @@ function persistBrowserState() {
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
+        universalProfile: state.universalProfile || {},
+        globalChecklist: state.globalChecklist || {},
         profile: state.profile || {},
         progress: state.progress || {},
         shortlists: state.shortlists || {},
@@ -107,8 +119,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (envLabel) {
       envLabel.textContent =
         state.environment === 'vercel'
-          ? 'Vercel Serverless • Private Browser-Saved Roadmap'
-          : 'Local SQLite + Browser-Synced Roadmap';
+          ? 'Vercel Production • Private Browser-Saved Roadmaps'
+          : 'Official Gov Sources • Local + Browser Sync';
     }
   } catch (err) {
     console.error(err);
@@ -116,6 +128,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const localData = loadLocalBrowserState();
   if (localData) {
+    state.universalProfile = localData.universalProfile || {};
+    state.globalChecklist = localData.globalChecklist || {};
     state.profile = localData.profile || {};
     state.progress = localData.progress || {};
     state.shortlists = localData.shortlists || {};
@@ -123,9 +137,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     await hydrateFromLocalServer();
   }
 
-  await Promise.all([loadSources(), loadCommunities()]);
+  await Promise.all([loadCountries(), loadSources(), loadCommunities()]);
+  populateUniversalForm();
   populateProfileForm();
   await recomputeRoadmapAndEvaluation();
+  renderSavedProgress();
 });
 
 async function hydrateFromLocalServer() {
@@ -170,12 +186,12 @@ async function hydrateFromLocalServer() {
     state.shortlists = slMap;
     persistBrowserState();
   } catch (err) {
-    console.error('Local server hydration failed', err);
+    console.error(err);
   }
 }
 
 // --------------------------------------------------------------------------
-// Navigation & Wizard Controls
+// Tab & Subtab Navigation
 // --------------------------------------------------------------------------
 
 function switchTab(tabId) {
@@ -185,12 +201,540 @@ function switchTab(tabId) {
   document.querySelectorAll('.tab-panel').forEach(panel => {
     panel.classList.toggle('active', panel.id === tabId);
   });
+  if (tabId === 'tab-saved') renderSavedProgress();
+}
+
+function switchRcipSubtab(subtabId) {
+  document.querySelectorAll('.subtab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.subtab === subtabId);
+  });
+  document.querySelectorAll('.subtab-pane').forEach(pane => {
+    pane.classList.toggle('active', pane.id === subtabId);
+  });
 }
 
 function toggleMobileDrawer() {
   const drawer = document.getElementById('mobile-drawer');
   if (drawer) drawer.classList.toggle('open');
 }
+
+// --------------------------------------------------------------------------
+// 12 Countries Catalog, Country Hubs & Global Checklists
+// --------------------------------------------------------------------------
+
+async function loadCountries() {
+  try {
+    const res = await fetch('/api/countries');
+    const data = await res.json();
+    state.countriesCatalog = data.countries || [];
+    renderHeroCountryStrip();
+    renderCountriesGrid();
+    populateCopilotCountryDropdown();
+    updateGlobalCounters();
+  } catch (err) {
+    showToast('Failed to load 12-country catalog.', true);
+  }
+}
+
+function updateGlobalCounters() {
+  const cCount = state.countriesCatalog.length;
+  const pCount = state.countriesCatalog.reduce((sum, c) => sum + Number(c.pathway_count || 0), 0);
+  const rcipDone = Object.values(state.progress || {}).filter(p => p && p.completed).length;
+  const globalDone = Object.values(state.globalChecklist || {}).filter(g => g && g.completed).length;
+  const totalSaved = rcipDone + globalDone;
+
+  const elC = document.getElementById('hero-countries-count');
+  const elP = document.getElementById('hero-pathways-count');
+  const elS = document.getElementById('hero-saved-steps');
+  const badgeC = document.getElementById('tab-badge-countries');
+  const badgeSaved = document.getElementById('tab-badge-saved');
+
+  if (elC) elC.textContent = String(cCount || 12);
+  if (elP) elP.textContent = String(pCount || 43);
+  if (elS) elS.textContent = String(totalSaved);
+  if (badgeC) badgeC.textContent = String(cCount || 12);
+  if (badgeSaved) badgeSaved.textContent = String(totalSaved);
+}
+
+function renderHeroCountryStrip() {
+  const strip = document.getElementById('hero-country-strip');
+  if (!strip) return;
+  strip.innerHTML = state.countriesCatalog
+    .map(
+      c => `
+      <button type="button" class="country-chip" onclick="openCountryHub('${esc(c.id)}')">
+        <span>${esc(c.flag)}</span>
+        <span>${esc(c.name)}</span>
+      </button>
+    `
+    )
+    .join('');
+}
+
+function populateCopilotCountryDropdown() {
+  const sel = document.getElementById('copilot-country-scope');
+  if (!sel) return;
+  const prev = sel.value || 'all';
+  sel.innerHTML =
+    '<option value="all">All 12 Countries</option>' +
+    state.countriesCatalog.map(c => `<option value="${esc(c.id)}">${esc(c.flag)} ${esc(c.name)}</option>`).join('');
+  sel.value = prev;
+}
+
+function filterCountries(region, btnEl) {
+  state.regionFilter = region;
+  document.querySelectorAll('#tab-countries .prov-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  renderCountriesGrid();
+}
+
+function renderCountriesGrid() {
+  const grid = document.getElementById('countries-grid');
+  if (!grid) return;
+
+  const q = strVal('country-search').toLowerCase();
+  const reg = state.regionFilter.toLowerCase();
+
+  const filtered = state.countriesCatalog.filter(c => {
+    if (reg !== 'all' && c.region.toLowerCase() !== reg) return false;
+    if (q) {
+      const hay = [c.name, c.code, c.region, c.authority, c.summary, ...(c.pathway_names || [])].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:32px; color:var(--ink-subtle);">No countries match your filter.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered
+    .map(c => {
+      const chips = (c.pathway_names || [])
+        .slice(0, 3)
+        .map(name => `<span class="tag">${esc(name)}</span>`)
+        .join('');
+      const extraCount = (c.pathway_names || []).length > 3 ? `<span class="tag">+${c.pathway_names.length - 3} more</span>` : '';
+      return `
+        <div class="country-card">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+              <div>
+                <span class="pill" style="margin-bottom:6px;">${esc(c.region)}</span>
+                <h3 style="font-size:17px; font-weight:700;">${esc(c.flag)} ${esc(c.name)}</h3>
+                <div style="font-size:11.5px; color:var(--ink-subtle);">${esc(c.authority)}</div>
+              </div>
+              <span class="pill pill-emerald tabular">${Number(c.pathway_count)} pathways</span>
+            </div>
+            <p style="font-size:12.5px; color:var(--ink-muted); margin:10px 0;">${esc(c.summary)}</p>
+            <div class="tag-row">${chips}${extraCount}</div>
+          </div>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap; border-top:1px solid var(--border-subtle); padding-top:10px;">
+            <button type="button" class="btn btn-primary btn-sm" style="flex:1;" onclick="openCountryHub('${esc(c.id)}')">
+              Open Country Hub
+            </button>
+            <a class="btn btn-sm" href="${esc(c.official_portal)}" target="_blank" rel="noopener">Official Site ↗</a>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+async function openCountryHub(countryId, pathwayId = null) {
+  switchTab('tab-countries');
+  state.activeCountryId = countryId;
+
+  let country = state.countryCache[countryId];
+  if (!country) {
+    try {
+      const res = await fetch(`/api/countries/${encodeURIComponent(countryId)}`);
+      if (!res.ok) throw new Error('Country unavailable');
+      const data = await res.json();
+      country = data.country;
+      state.countryCache[countryId] = country;
+    } catch (err) {
+      showToast('Failed to load country hub details.', true);
+      return;
+    }
+  }
+
+  const pathways = country.pathways || [];
+  state.activePathwayId =
+    pathwayId && pathways.some(p => p.id === pathwayId) ? pathwayId : (pathways[0]?.id || '');
+
+  renderCountryHubWorkspace(country);
+  const ws = document.getElementById('country-hub-workspace');
+  if (ws) ws.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function selectCountryPathway(pathwayId) {
+  state.activePathwayId = pathwayId;
+  const country = state.countryCache[state.activeCountryId];
+  if (country) renderCountryHubWorkspace(country);
+}
+
+function renderCountryHubWorkspace(country) {
+  const ws = document.getElementById('country-hub-workspace');
+  if (!ws || !country) return;
+  ws.classList.remove('hidden');
+
+  const pathways = country.pathways || [];
+  const activePathway = pathways.find(p => p.id === state.activePathwayId) || pathways[0];
+  if (!activePathway) return;
+
+  const extraLinksHtml = (country.extra_official_links || [])
+    .map(l => `<a class="btn btn-sm" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`)
+    .join('');
+
+  const watchoutsHtml = (country.nigerian_notes || [])
+    .map(n => `<li style="margin-top:4px;">${esc(n)}</li>`)
+    .join('');
+
+  const pathwayBtns = pathways
+    .map(
+      p => `
+      <button type="button" class="pathway-tab-btn ${p.id === activePathway.id ? 'active' : ''}"
+              onclick="selectCountryPathway('${esc(p.id)}')">
+        ${esc(p.name)}
+      </button>
+    `
+    )
+    .join('');
+
+  const stepsHtml = (activePathway.stages || [])
+    .map((step, idx) => {
+      const saved = state.globalChecklist[step.id] || {};
+      const isDone = !!saved.completed;
+      const note = saved.note || '';
+      return `
+        <div class="checklist-row ${isDone ? 'is-done' : ''}">
+          <input type="checkbox" ${isDone ? 'checked' : ''}
+                 onchange="toggleGlobalStep('${esc(country.id)}', '${esc(activePathway.id)}', '${esc(step.id)}', '${esc(step.title)}', this.checked)">
+          <div class="checklist-content">
+            <div class="checklist-title">Step ${idx + 1}: ${esc(step.title)}</div>
+            <div class="checklist-desc">${esc(step.description)}</div>
+            <div class="checklist-actions">
+              <a class="btn btn-sm" href="${esc(step.url)}" target="_blank" rel="noopener">Official Government Guide ↗</a>
+              <button type="button" class="btn btn-ghost btn-sm" onclick="toggleGlobalNote('${esc(step.id)}')">
+                ${note ? 'Edit Note' : '+ Note'}
+              </button>
+            </div>
+            <div id="gnote-box-${esc(step.id)}" class="note-box ${note ? '' : 'hidden'}">
+              <input type="text" id="gnote-in-${esc(step.id)}" class="input" style="font-size:12px; padding:6px 10px;"
+                     value="${esc(note)}" placeholder="Add document date, reference number, or reminder...">
+              <button type="button" class="btn btn-sm"
+                      onclick="saveGlobalStepNote('${esc(country.id)}', '${esc(activePathway.id)}', '${esc(step.id)}', '${esc(step.title)}')">Save</button>
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+
+  const deepRcipBtn = activePathway.has_deep_engine
+    ? `<button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">Launch Deep RCIP Eligibility &amp; 14-Community Engine →</button>`
+    : '';
+
+  ws.innerHTML = `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="pill pill-emerald" style="margin-bottom:6px;">${esc(country.flag)} ${esc(country.name)} · Official Country Hub</span>
+          <h2 class="card-title" style="font-size:21px;">${esc(country.name)} — ${esc(country.authority)}</h2>
+          <p class="card-desc">${esc(country.summary)}</p>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a class="btn btn-primary btn-sm" href="${esc(country.official_portal)}" target="_blank" rel="noopener">Official Portal ↗</a>
+          ${extraLinksHtml}
+        </div>
+      </div>
+
+      <div class="watchout-box">
+        <strong style="font-size:13px;">Nigerian Applicant Notes &amp; Official Watch-Outs</strong>
+        <ul style="font-size:12.5px; padding-left:18px; margin-top:4px; color:var(--ink);">${watchoutsHtml}</ul>
+      </div>
+
+      <div class="pathway-tabs">${pathwayBtns}</div>
+
+      <div class="funds-card" style="margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+          <div>
+            <h3 style="font-size:16.5px; font-weight:700;">${esc(activePathway.name)}</h3>
+            <p style="font-size:13px; color:var(--ink-muted); margin-top:4px;">${esc(activePathway.summary)}</p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            ${deepRcipBtn}
+            <button type="button" class="btn btn-sm" onclick="exportGlobalRoadmap('${esc(country.id)}', '${esc(activePathway.id)}')">Export Printable Roadmap</button>
+            <a class="btn btn-primary btn-sm" href="${esc(activePathway.official_url)}" target="_blank" rel="noopener">Verify on Official Site ↗</a>
+          </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+          <span class="pill pill-blue">${esc(activePathway.category)}</span>
+          <span class="pill pill-emerald">${esc(activePathway.leads_to_pr)}</span>
+          <span class="pill ${activePathway.requires_job_offer ? 'pill-amber' : 'pill-emerald'}">${activePathway.requires_job_offer ? 'Requires Job Offer' : 'No Job Offer Needed Upfront'}</span>
+          <span class="pill">${esc(activePathway.threshold_label)}</span>
+        </div>
+      </div>
+
+      ${stepsHtml}
+    </div>
+  `;
+}
+
+function toggleGlobalNote(stepId) {
+  const el = document.getElementById(`gnote-box-${stepId}`);
+  if (el) el.classList.toggle('hidden');
+}
+
+function toggleGlobalStep(countryId, pathwayId, stepId, stepTitle, completed) {
+  const prev = state.globalChecklist[stepId] || {};
+  state.globalChecklist[stepId] = {
+    country_id: countryId,
+    pathway_id: pathwayId,
+    step_id: stepId,
+    title: stepTitle,
+    completed: !!completed,
+    note: prev.note || '',
+  };
+  persistBrowserState();
+  updateGlobalCounters();
+  const country = state.countryCache[countryId];
+  if (country) renderCountryHubWorkspace(country);
+  showToast(completed ? 'Roadmap step marked complete.' : 'Roadmap step marked incomplete.');
+}
+
+function saveGlobalStepNote(countryId, pathwayId, stepId, stepTitle) {
+  const input = document.getElementById(`gnote-in-${stepId}`);
+  const prev = state.globalChecklist[stepId] || {};
+  state.globalChecklist[stepId] = {
+    country_id: countryId,
+    pathway_id: pathwayId,
+    step_id: stepId,
+    title: stepTitle,
+    completed: !!prev.completed,
+    note: (input?.value || '').trim(),
+  };
+  persistBrowserState();
+  const country = state.countryCache[countryId];
+  if (country) renderCountryHubWorkspace(country);
+  showToast('Note saved.');
+}
+
+async function exportGlobalRoadmap(countryId, pathwayId) {
+  const checked = {};
+  const notes = {};
+  for (const [k, v] of Object.entries(state.globalChecklist || {})) {
+    if (v && v.pathway_id === pathwayId) {
+      checked[k] = !!v.completed;
+      if (v.note) notes[k] = v.note;
+    }
+  }
+  try {
+    const res = await fetch('/api/global/roadmap/export/html', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        country_id: countryId,
+        pathway_id: pathwayId,
+        applicant_name: state.profile?.name || 'JapaAI.ng Applicant',
+        checked_steps: checked,
+        notes,
+      }),
+    });
+    if (!res.ok) throw new Error('Export failed');
+    const htmlContent = await res.text();
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank', 'noopener');
+    if (!win) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `JapaAI_${countryId}_${pathwayId}.html`;
+      a.click();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+  } catch (err) {
+    showToast('Could not export roadmap.', true);
+  }
+}
+
+// --------------------------------------------------------------------------
+// Universal 12-Country Matcher
+// --------------------------------------------------------------------------
+
+function populateUniversalForm() {
+  const u = state.universalProfile || {};
+  setVal('gm-edu', u.education_level);
+  setVal('gm-field', u.field);
+  setVal('gm-exp', u.years_experience);
+  setVal('gm-age', u.age);
+  setVal('gm-eng', u.english_level);
+  setVal('gm-fr', u.french_level || 'none');
+  setVal('gm-de', u.german_level || 'none');
+  setVal('gm-region', u.target_region || 'all');
+  setVal('gm-budget', u.relocation_budget_usd);
+  setVal('gm-remote', u.monthly_remote_income_usd);
+  setChecked('gm-offer', u.has_foreign_job_offer);
+}
+
+function collectUniversalForm() {
+  return {
+    education_level: strVal('gm-edu'),
+    field: strVal('gm-field'),
+    years_experience: numOrNull('gm-exp') || 0,
+    age: numOrNull('gm-age') || 0,
+    english_level: strVal('gm-eng'),
+    french_level: strVal('gm-fr') || 'none',
+    german_level: strVal('gm-de') || 'none',
+    target_region: strVal('gm-region') || 'all',
+    relocation_budget_usd: numOrNull('gm-budget') || 0,
+    monthly_remote_income_usd: numOrNull('gm-remote') || 0,
+    has_foreign_job_offer: boolVal('gm-offer'),
+  };
+}
+
+async function runGlobalMatcher() {
+  state.universalProfile = collectUniversalForm();
+  persistBrowserState();
+
+  try {
+    const res = await fetch('/api/global/match', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state.universalProfile),
+    });
+    const data = await res.json();
+    state.matcherResult = data;
+    renderMatcherResults(data);
+  } catch (err) {
+    showToast('Failed to match across countries.', true);
+  }
+}
+
+function renderMatcherResults(res) {
+  const container = document.getElementById('global-matcher-results');
+  if (!container) return;
+
+  if (!res || res.status === 'INCOMPLETE') {
+    container.innerHTML = `<div class="card"><p style="color:var(--ink-muted);">${esc(res?.message || 'Enter your background details above to see ranked country & pathway matches.')}</p></div>`;
+    return;
+  }
+
+  const renderTier = (title, badgeClass, items) => {
+    if (!items || !items.length) return '';
+    const cards = items
+      .map(m => {
+        const whyHtml = (m.why_it_fits || []).map(w => `<li style="color:var(--emerald); margin-top:3px;">${esc(w)}</li>`).join('');
+        const gapsHtml = (m.gaps_to_close || []).map(g => `<li style="color:var(--amber); margin-top:3px;">${esc(g)}</li>`).join('');
+        const deepBtn = m.has_deep_engine
+          ? `<button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">Deep Calculator</button>`
+          : '';
+        return `
+          <div class="match-card tier-${esc(m.fit_tier)}">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                <div>
+                  <span class="pill">${esc(m.flag)} ${esc(m.country_name)}</span>
+                  <h4 style="font-size:15px; font-weight:700; margin-top:6px;">${esc(m.pathway_name)}</h4>
+                </div>
+                <span class="pill ${badgeClass} tabular">${m.score}/100</span>
+              </div>
+              <div style="font-size:11.5px; color:var(--ink-subtle); margin-top:5px;">${esc(m.leads_to_pr)}</div>
+              <div style="font-size:11.5px; color:var(--ink-muted); margin-top:4px;"><strong>Thresholds:</strong> ${esc(m.threshold_label)}</div>
+              <ul style="font-size:12px; padding-left:16px; margin-top:8px;">
+                ${whyHtml}
+                ${gapsHtml}
+              </ul>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; border-top:1px solid var(--border-subtle); padding-top:10px;">
+              <button type="button" class="btn btn-primary btn-sm" onclick="openCountryHub('${esc(m.country_id)}', '${esc(m.pathway_id)}')">Open Roadmap →</button>
+              ${deepBtn}
+              <a class="btn btn-sm" href="${esc(m.official_url)}" target="_blank" rel="noopener">Official ↗</a>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    return `
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">${esc(title)} (${items.length})</h3>
+        </div>
+        <div class="matcher-grid">${cards}</div>
+      </div>
+    `;
+  };
+
+  container.innerHTML =
+    `<div class="card" style="padding:14px 18px;"><strong style="font-size:13.5px;">${esc(res.message)}</strong></div>` +
+    renderTier('Strong Pathway Matches', 'pill-emerald', res.top_matches) +
+    renderTier('Viable With a Sponsored Job Offer', 'pill-blue', res.viable_with_job_offer) +
+    renderTier('Explore & Close Gaps', 'pill-amber', res.explore_and_prepare);
+}
+
+// --------------------------------------------------------------------------
+// Tab 5: Saved Progress Across All Countries
+// --------------------------------------------------------------------------
+
+function renderSavedProgress() {
+  const container = document.getElementById('saved-progress-container');
+  if (!container) return;
+
+  const grouped = {};
+  for (const item of Object.values(state.globalChecklist || {})) {
+    if (!item || (!item.completed && !item.note)) continue;
+    const key = `${item.country_id}::${item.pathway_id}`;
+    if (!grouped[key]) {
+      grouped[key] = { country_id: item.country_id, pathway_id: item.pathway_id, done: 0, notes: 0 };
+    }
+    if (item.completed) grouped[key].done += 1;
+    if (item.note) grouped[key].notes += 1;
+  }
+
+  const globalCards = Object.values(grouped)
+    .map(g => {
+      const country = state.countriesCatalog.find(c => c.id === g.country_id) || { name: g.country_id, flag: '🌍' };
+      return `
+        <div class="funds-card" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+          <div>
+            <strong>${esc(country.flag)} ${esc(country.name)} — ${esc(g.pathway_id)}</strong>
+            <div style="font-size:12px; color:var(--ink-muted);">${g.done} step(s) completed · ${g.notes} note(s)</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="openCountryHub('${esc(g.country_id)}', '${esc(g.pathway_id)}')">Resume Roadmap</button>
+            <button type="button" class="btn btn-sm" onclick="exportGlobalRoadmap('${esc(g.country_id)}', '${esc(g.pathway_id)}')">Export</button>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+
+  const rcipDone = Object.values(state.progress || {}).filter(p => p && p.completed).length;
+  const rcipScore = state.evaluation?.readiness_score ?? 0;
+  const shortCount = Object.values(state.shortlists || {}).filter(s => s && s.shortlisted).length;
+
+  container.innerHTML = `
+    <div class="funds-card" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+      <div>
+        <strong>🇨🇦 Canada RCIP Deep Engine</strong>
+        <div style="font-size:12px; color:var(--ink-muted);">Readiness Score: ${rcipScore}% · ${rcipDone} RCIP checklist step(s) done · ${shortCount} community shortlist(s)</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">Open RCIP Engine</button>
+        <button type="button" class="btn btn-sm" onclick="exportRoadmapReport()">Export RCIP Dossier</button>
+      </div>
+    </div>
+    ${globalCards || '<p style="font-size:13px; color:var(--ink-subtle);">No country-hub steps checked off yet — open any of the 12 Country Hubs to start tracking your roadmap.</p>'}
+  `;
+}
+
+// --------------------------------------------------------------------------
+// Deep Canada RCIP Engine (Preserved Full Functionality)
+// --------------------------------------------------------------------------
 
 function setWizardStep(stepNum) {
   state.wizardStep = Math.max(1, Math.min(6, Number(stepNum) || 1));
@@ -209,13 +753,8 @@ function setWizardStep(stepNum) {
   if (nextBtn) nextBtn.disabled = state.wizardStep >= 6;
 }
 
-function prevWizardStep() {
-  setWizardStep(state.wizardStep - 1);
-}
-
-function nextWizardStep() {
-  setWizardStep(state.wizardStep + 1);
-}
+function prevWizardStep() { setWizardStep(state.wizardStep - 1); }
+function nextWizardStep() { setWizardStep(state.wizardStep + 1); }
 
 function toggleWizardViewAll() {
   const showAll = !!document.getElementById('toggle-wizard-all')?.checked;
@@ -230,19 +769,12 @@ function toggleWizardViewAll() {
   if (!showAll) setWizardStep(state.wizardStep);
 }
 
-// --------------------------------------------------------------------------
-// Compute Roadmap, Readiness Ring & KPIs
-// --------------------------------------------------------------------------
-
 async function recomputeRoadmapAndEvaluation() {
   try {
     const res = await fetch('/api/roadmap/compute', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        profile: state.profile || {},
-        progress: state.progress || {},
-      }),
+      body: JSON.stringify({ profile: state.profile || {}, progress: state.progress || {} }),
     });
     const data = await res.json();
     state.roadmap = data.roadmap;
@@ -250,12 +782,13 @@ async function recomputeRoadmapAndEvaluation() {
     state.officialForms = data.official_forms || [];
 
     updateHeroSummary();
+    updateGlobalCounters();
     renderStageRail();
     renderRoadmap();
     renderEvaluationScorecard(state.evaluation);
     renderOfficialForms();
   } catch (err) {
-    showToast('Failed to compute RCIP roadmap.', true);
+    showToast('Failed to compute Canada RCIP roadmap.', true);
   }
 }
 
@@ -265,6 +798,7 @@ function updateHeroSummary() {
   const score = Number(ev.readiness_score || 0);
 
   const scoreEl = document.getElementById('kpi-score');
+  const heroRcip = document.getElementById('hero-rcip-score');
   const ringEl = document.getElementById('hero-donut-ring');
   const verdictEl = document.getElementById('kpi-verdict');
   const progEl = document.getElementById('kpi-progress');
@@ -273,14 +807,15 @@ function updateHeroSummary() {
   const branchEl = document.getElementById('kpi-branch');
   const pagesEl = document.getElementById('kpi-pages');
   const shortEl = document.getElementById('kpi-shortlisted');
-  const tabRoadmapBadge = document.getElementById('tab-badge-roadmap');
   const tabScoreBadge = document.getElementById('tab-badge-score');
 
   if (scoreEl) scoreEl.textContent = `${score}%`;
+  if (heroRcip) heroRcip.textContent = `${score}%`;
+  if (tabScoreBadge) tabScoreBadge.textContent = `${score}%`;
   if (ringEl) {
     const offset = DONUT_CIRCUMFERENCE * (1 - Math.max(0, Math.min(100, score)) / 100);
     ringEl.style.strokeDashoffset = String(offset.toFixed(2));
-    ringEl.style.stroke = score >= 80 ? 'var(--emerald)' : (score >= 40 ? 'var(--amber)' : 'var(--brand)');
+    ringEl.style.stroke = score >= 80 ? 'var(--emerald)' : (score >= 40 ? 'var(--amber)' : 'var(--crimson)');
   }
   if (verdictEl) verdictEl.textContent = ev.verdict || 'Profile incomplete';
 
@@ -289,8 +824,6 @@ function updateHeroSummary() {
   const pct = rm.completion_percent || 0;
   if (progEl) progEl.textContent = `${done} / ${total} steps (${pct}%)`;
   if (progBar) progBar.style.width = `${pct}%`;
-  if (tabRoadmapBadge) tabRoadmapBadge.textContent = `${done}/${total}`;
-  if (tabScoreBadge) tabScoreBadge.textContent = `${score}%`;
 
   const trackObj = ev.program_track || {};
   if (trackEl) trackEl.textContent = trackObj.track === 'pilot' ? 'Pilot (<= Dec 31, 2026)' : 'Permanent 2027';
@@ -314,13 +847,9 @@ function renderStageRail() {
   if (!rail || !rm) return;
 
   const allActive = state.focusedStageId === null;
-  let html = `
-    <button type="button" class="rail-btn ${allActive ? 'active' : ''}" onclick="focusRoadmapStage(null)">
-      All 6 Stages
-    </button>
-  `;
-
+  let html = `<button type="button" class="rail-btn ${allActive ? 'active' : ''}" onclick="focusRoadmapStage(null)">All 6 Stages</button>`;
   const shortNames = ['Eligibility', 'Job Offer', 'Recommend', 'PR Portal', 'Work Permit', 'Settle'];
+
   for (const stage of rm.stages || []) {
     const isComplete = stage.active_count > 0 && stage.completed_count >= stage.active_count;
     const isFocused = state.focusedStageId === stage.stage_id;
@@ -356,25 +885,19 @@ function renderRoadmap() {
       `<span class="pill pill-blue">${ctx.location_branch === 'inside_canada' ? 'Inside Canada Branch' : 'Outside Canada Branch'}</span>`,
       `<span class="pill ${ctx.funds_exempt ? 'pill-emerald' : 'pill-amber'}">${ctx.funds_exempt ? 'Settlement Funds Exempt' : 'Proof of Funds Required'}</span>`,
     ];
-    if (ctx.local_grad_exempt) {
-      badges.push('<span class="pill pill-emerald">Local Graduate Exempt</span>');
-    }
+    if (ctx.local_grad_exempt) badges.push('<span class="pill pill-emerald">Local Graduate Exempt</span>');
     badgeWrap.innerHTML = badges.join('');
   }
 
   const showAll = !!document.getElementById('toggle-show-all-steps')?.checked;
   const stagesEl = document.getElementById('roadmap-stages-container');
   if (stagesEl) {
-    const stagesToRender = (roadmap.stages || []).filter(
-      s => !state.focusedStageId || s.stage_id === state.focusedStageId
-    );
+    const stagesToRender = (roadmap.stages || []).filter(s => !state.focusedStageId || s.stage_id === state.focusedStageId);
     stagesEl.innerHTML = stagesToRender.map(stage => {
       const visibleItems = showAll ? stage.items : stage.items.filter(i => i.applicable);
       const itemsHtml = visibleItems.map(item => {
         const formsHtml = (item.forms || []).map(f => `<span class="form-chip">${esc(f)}</span>`).join('');
-        const inactiveBadge = !item.applicable
-          ? `<span class="pill">Inactive for branch (${esc(item.applies_to)})</span>`
-          : '';
+        const inactiveBadge = !item.applicable ? `<span class="pill">Inactive (${esc(item.applies_to)})</span>` : '';
         const noteText = item.notes || '';
         return `
           <div class="checklist-row ${item.completed ? 'is-done' : ''} ${!item.applicable ? 'is-inactive' : ''}">
@@ -387,13 +910,10 @@ function renderRoadmap() {
                 ${inactiveBadge}
                 ${formsHtml}
                 <a class="btn btn-sm" href="${esc(item.url)}" target="_blank" rel="noopener">Canada.ca Guide ↗</a>
-                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleTaskNoteBox('${esc(item.id)}')">
-                  ${noteText ? 'Edit Note' : '+ Note'}
-                </button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleTaskNoteBox('${esc(item.id)}')">${noteText ? 'Edit Note' : '+ Note'}</button>
               </div>
               <div id="note-box-${esc(item.id)}" class="note-box ${noteText ? '' : 'hidden'}">
-                <input type="text" id="note-input-${esc(item.id)}" class="input" style="font-size:12px; padding:6px 10px;"
-                       value="${esc(noteText)}" placeholder="Add personal reminder or document reference...">
+                <input type="text" id="note-input-${esc(item.id)}" class="input" style="font-size:12px; padding:6px 10px;" value="${esc(noteText)}" placeholder="Add personal reminder...">
                 <button type="button" class="btn btn-sm" onclick="saveTaskNote('${esc(item.id)}', '${esc(stage.stage_id)}')">Save</button>
               </div>
             </div>
@@ -404,9 +924,7 @@ function renderRoadmap() {
       return `
         <div class="stage-block">
           <div class="stage-block-head">
-            <div>
-              <h3 style="font-size:16.5px; font-weight:700;">${esc(stage.title)}</h3>
-            </div>
+            <h3 style="font-size:16px; font-weight:700;">${esc(stage.title)}</h3>
             <div style="display:flex; gap:8px; align-items:center;">
               <span class="pill pill-emerald tabular">${stage.completed_count} / ${stage.active_count}</span>
               <a class="btn btn-sm" href="${esc(stage.official_url)}" target="_blank" rel="noopener">Official Page ↗</a>
@@ -422,17 +940,15 @@ function renderRoadmap() {
   const planEl = document.getElementById('roadmap-action-plan');
   if (planEl && evaluation) {
     const actions = evaluation.action_plan || [];
-    if (actions.length === 0) {
-      planEl.innerHTML = '<div class="pill pill-emerald">All 6 core eligibility pillars satisfied. Ready to submit PR Portal dossier.</div>';
-    } else {
-      planEl.innerHTML = actions.map(a => `
-        <div class="action-item priority-${esc(a.priority)}">
-          <div style="font-weight:700; margin-bottom:2px;">[${esc(a.priority)}] ${esc(a.pillar)}</div>
-          <div style="color:var(--ink-muted); margin-bottom:4px;">${esc(a.action)}</div>
-          <a href="${esc(a.url)}" target="_blank" rel="noopener">Verify on Canada.ca ↗</a>
-        </div>
-      `).join('');
-    }
+    planEl.innerHTML = actions.length
+      ? actions.map(a => `
+          <div class="action-item priority-${esc(a.priority)}">
+            <div style="font-weight:700; margin-bottom:2px;">[${esc(a.priority)}] ${esc(a.pillar)}</div>
+            <div style="color:var(--ink-muted); margin-bottom:4px;">${esc(a.action)}</div>
+            <a href="${esc(a.url)}" target="_blank" rel="noopener">Verify on Canada.ca ↗</a>
+          </div>
+        `).join('')
+      : '<div class="pill pill-emerald">All 6 core eligibility pillars satisfied. Ready to submit PR Portal dossier.</div>';
   }
 }
 
@@ -444,28 +960,19 @@ function toggleTaskNoteBox(itemId) {
 async function saveTaskNote(itemId, stageId) {
   const input = document.getElementById(`note-input-${itemId}`);
   const existing = state.progress[itemId] || {};
-  const completed = !!existing.completed;
-  const notes = (input?.value || '').trim();
-  await updateChecklistRecord(itemId, stageId, completed, notes);
-  showToast('Milestone note saved.');
+  await updateChecklistRecord(itemId, stageId, !!existing.completed, (input?.value || '').trim());
+  showToast('RCIP milestone note saved.');
 }
 
 async function toggleChecklistItem(itemId, stageId, completed) {
   const existing = state.progress[itemId] || {};
   await updateChecklistRecord(itemId, stageId, completed, existing.notes || '');
-  showToast(completed ? 'Milestone completed.' : 'Milestone marked incomplete.');
+  showToast(completed ? 'RCIP milestone completed.' : 'RCIP milestone marked incomplete.');
 }
 
 async function updateChecklistRecord(itemId, stageId, completed, notes) {
-  state.progress[itemId] = {
-    item_id: itemId,
-    stage_id: stageId,
-    completed: !!completed,
-    notes: notes || '',
-    target_date: '',
-  };
+  state.progress[itemId] = { item_id: itemId, stage_id: stageId, completed: !!completed, notes: notes || '', target_date: '' };
   persistBrowserState();
-
   if (state.environment === 'local') {
     try {
       await fetch('/api/roadmap/progress', {
@@ -473,9 +980,7 @@ async function updateChecklistRecord(itemId, stageId, completed, notes) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ item_id: itemId, stage_id: stageId, completed: !!completed, notes: notes || '' }),
       });
-    } catch (err) {
-      console.warn('Local SQLite progress sync failed', err);
-    }
+    } catch (err) {}
   }
   await recomputeRoadmapAndEvaluation();
 }
@@ -484,7 +989,7 @@ function renderOfficialForms() {
   const container = document.getElementById('official-forms-list');
   if (!container) return;
   container.innerHTML = (state.officialForms || []).map(f => `
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:9px 11px; border-radius:8px; background:var(--bg-subtle); border:1px solid var(--border-subtle);">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; background:var(--bg-subtle); border:1px solid var(--border-subtle);">
       <div>
         <div style="font-size:12.5px; font-weight:700;">${esc(f.code)}</div>
         <div style="font-size:11.5px; color:var(--ink-muted);">${esc(f.title)}</div>
@@ -493,10 +998,6 @@ function renderOfficialForms() {
     </div>
   `).join('');
 }
-
-// --------------------------------------------------------------------------
-// Profile Intake, Evaluation, Resume & Tools
-// --------------------------------------------------------------------------
 
 function populateProfileForm() {
   const p = state.profile || {};
@@ -507,12 +1008,10 @@ function populateProfileForm() {
   setChecked('f-has-spouse', p.has_spouse);
   setVal('f-family-size', p.family_size);
   setVal('f-funds-cad', p.available_funds_cad);
-
   setVal('f-target-noc', p.target_job_noc_code);
   setVal('f-target-teer', p.target_job_teer);
   setVal('f-target-title', p.target_job_title);
   setVal('f-target-community', p.target_community_id);
-
   setChecked('f-is-local-grad', p.is_local_graduate);
   setVal('f-grad-type', p.grad_program_type);
   setVal('f-grad-months-since', p.months_since_graduation);
@@ -523,32 +1022,27 @@ function populateProfileForm() {
   setChecked('f-grad-lang-half', p.grad_over_half_language_study);
   setChecked('f-grad-dist-half', p.grad_over_half_distance_learning);
   setChecked('f-grad-return-sch', p.grad_return_home_scholarship);
-
   setVal('f-work-hours', p.paid_work_hours_last_3_years);
   setVal('f-exp-teer', p.experience_teer);
   setVal('f-exp-noc', p.experience_noc_code);
   setChecked('f-unpaid-self', p.work_was_self_employed_or_unpaid);
-
   setVal('f-lang-test', p.language_test_type);
   setVal('f-lang-age', p.language_test_age_months);
   setVal('f-lang-r', p.lang_reading);
   setVal('f-lang-w', p.lang_writing);
   setVal('f-lang-l', p.lang_listening);
   setVal('f-lang-s', p.lang_speaking);
-
   setVal('f-edu-origin', p.education_origin);
   setVal('f-edu-level', p.education_level);
   setChecked('f-has-eca', p.has_eca);
   setVal('f-eca-org', p.eca_organization);
   setVal('f-eca-age', p.eca_age_years);
-
   setChecked('f-has-offer', p.has_job_offer);
   setChecked('f-offer-designated', p.offer_from_designated_employer);
   setChecked('f-offer-ft', p.offer_full_time_30h);
   setChecked('f-offer-nonseasonal', p.offer_non_seasonal);
   setChecked('f-offer-indet', p.offer_indeterminate);
   setChecked('f-offer-inside', p.offer_inside_community);
-
   setChecked('f-has-rec', p.has_community_recommendation);
   setVal('f-rec-date', p.recommendation_date);
 
@@ -560,35 +1054,12 @@ function populateProfileForm() {
   updateLiveCLB();
 }
 
-function setVal(id, val) {
-  const el = document.getElementById(id);
-  if (el && val !== null && val !== undefined) el.value = val;
-}
-
-function setChecked(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.checked = !!val;
-}
-
-function numOrNull(id) {
-  const v = document.getElementById(id)?.value;
-  if (v === '' || v === null || v === undefined) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function intOrNull(id) {
-  const n = numOrNull(id);
-  return n === null ? null : Math.trunc(n);
-}
-
-function strVal(id) {
-  return (document.getElementById(id)?.value || '').trim();
-}
-
-function boolVal(id) {
-  return !!document.getElementById(id)?.checked;
-}
+function setVal(id, val) { const el = document.getElementById(id); if (el && val !== null && val !== undefined) el.value = val; }
+function setChecked(id, val) { const el = document.getElementById(id); if (el) el.checked = !!val; }
+function numOrNull(id) { const v = document.getElementById(id)?.value; if (v === '' || v === null || v === undefined) return null; const n = Number(v); return Number.isFinite(n) ? n : null; }
+function intOrNull(id) { const n = numOrNull(id); return n === null ? null : Math.trunc(n); }
+function strVal(id) { return (document.getElementById(id)?.value || '').trim(); }
+function boolVal(id) { return !!document.getElementById(id)?.checked; }
 
 function collectProfileFromForm() {
   return {
@@ -644,7 +1115,6 @@ function collectProfileFromForm() {
 async function saveAndEvaluateProfile() {
   state.profile = collectProfileFromForm();
   persistBrowserState();
-
   if (state.environment === 'local') {
     try {
       await fetch('/api/profile', {
@@ -652,12 +1122,10 @@ async function saveAndEvaluateProfile() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(state.profile),
       });
-    } catch (err) {
-      console.warn('Local SQLite save failed', err);
-    }
+    } catch (err) {}
   }
   await recomputeRoadmapAndEvaluation();
-  showToast('Profile saved and RCIP readiness recalculated.');
+  showToast('RCIP profile saved and readiness recalculated.');
 }
 
 function renderEvaluationScorecard(evaluation) {
@@ -677,7 +1145,7 @@ function renderEvaluationScorecard(evaluation) {
       const statusClass = (p.status === 'PASS' || p.status === 'EXEMPT')
         ? 'pill-emerald'
         : (p.status === 'BLOCKED' ? 'pill-red' : (p.status === 'ACTION_REQUIRED' ? 'pill-amber' : 'pill-blue'));
-      const gapsHtml = (p.gaps || []).map(g => `<li style="color:var(--brand); margin-top:3px;">${esc(g)}</li>`).join('');
+      const gapsHtml = (p.gaps || []).map(g => `<li style="color:var(--crimson); margin-top:3px;">${esc(g)}</li>`).join('');
       const detailsHtml = (p.details || []).map(d => `<li style="color:var(--ink-muted); margin-top:3px;">${esc(d)}</li>`).join('');
       return `
         <div class="pillar-tile">
@@ -687,48 +1155,26 @@ function renderEvaluationScorecard(evaluation) {
           </div>
           <div class="tabular" style="font-size:13px; font-weight:700;">${p.score} / ${p.max_score} pts</div>
           <p style="font-size:12px; color:var(--ink-muted); margin-top:5px;">${esc(p.summary)}</p>
-          <ul style="font-size:11.5px; padding-left:16px; margin-top:5px;">
-            ${detailsHtml}
-            ${gapsHtml}
-          </ul>
-          <div style="margin-top:8px;">
-            <a style="font-size:11.5px;" href="${esc(p.url)}" target="_blank" rel="noopener">Canada.ca Rules ↗</a>
-          </div>
+          <ul style="font-size:11.5px; padding-left:16px; margin-top:5px;">${detailsHtml}${gapsHtml}</ul>
+          <div style="margin-top:8px;"><a style="font-size:11.5px;" href="${esc(p.url)}" target="_blank" rel="noopener">Canada.ca Rules ↗</a></div>
         </div>
       `;
     }).join('');
   }
 }
 
-function toggleLocalGradBox() {
-  const box = document.getElementById('local-grad-box');
-  if (box) box.classList.toggle('hidden', !boolVal('f-is-local-grad'));
-}
-
-function toggleECABox() {
-  const box = document.getElementById('eca-fields-box');
-  if (box) box.classList.toggle('hidden', strVal('f-edu-origin') === 'canada');
-}
-
-function toggleOfferChecks() {
-  const box = document.getElementById('offer-checks-box');
-  if (box) box.classList.toggle('hidden', !boolVal('f-has-offer'));
-}
-
-function toggleRecDate() {
-  const box = document.getElementById('rec-date-box');
-  if (box) box.classList.toggle('hidden', !boolVal('f-has-rec'));
-}
+function toggleLocalGradBox() { const b = document.getElementById('local-grad-box'); if (b) b.classList.toggle('hidden', !boolVal('f-is-local-grad')); }
+function toggleECABox() { const b = document.getElementById('eca-fields-box'); if (b) b.classList.toggle('hidden', strVal('f-edu-origin') === 'canada'); }
+function toggleOfferChecks() { const b = document.getElementById('offer-checks-box'); if (b) b.classList.toggle('hidden', !boolVal('f-has-offer')); }
+function toggleRecDate() { const b = document.getElementById('rec-date-box'); if (b) b.classList.toggle('hidden', !boolVal('f-has-rec')); }
 
 async function updateLiveFundsCalc() {
   const readout = document.getElementById('live-funds-readout');
   const bar = document.getElementById('live-funds-bar');
   if (!readout) return;
-
   const wpExempt = boolVal('f-wp-exempt');
   const size = Math.max(1, intOrNull('f-family-size') || 1);
   const avail = numOrNull('f-funds-cad') || 0;
-
   try {
     const res = await fetch(`/api/tools/funds?family_size=${size}&in_canada_valid_work_permit=${wpExempt}`);
     const data = await res.json();
@@ -738,8 +1184,7 @@ async function updateLiveFundsCalc() {
       if (bar) bar.style.width = '100%';
     } else {
       const req = Number(data.required_cad || 10507);
-      const ratio = Math.min(100, Math.round((avail / req) * 100));
-      if (bar) bar.style.width = `${ratio}%`;
+      if (bar) bar.style.width = `${Math.min(100, Math.round((avail / req) * 100))}%`;
       if (avail >= req) {
         readout.className = 'pill pill-emerald tabular';
         readout.textContent = `Meets minimum CAD $${req.toLocaleString()} (Family size ${size})`;
@@ -748,29 +1193,24 @@ async function updateLiveFundsCalc() {
         readout.textContent = `Family size ${size} needs CAD $${req.toLocaleString()} (Shortfall: $${(req - avail).toLocaleString()})`;
       }
     }
-  } catch (err) {
-    // non-fatal
-  }
+  } catch (err) {}
 }
 
 async function updateLiveCLB() {
   const readout = document.getElementById('live-clb-readout');
   const cards = document.getElementById('live-clb-cards');
   if (!readout) return;
-
   const testType = strVal('f-lang-test');
   const r = numOrNull('f-lang-r');
   const w = numOrNull('f-lang-w');
   const l = numOrNull('f-lang-l');
   const s = numOrNull('f-lang-s');
-
   if (!testType || r === null || w === null || l === null || s === null) {
     readout.className = 'pill pill-blue';
     readout.textContent = 'Enter test & all 4 scores';
     if (cards) cards.innerHTML = '';
     return;
   }
-
   try {
     const res = await fetch('/api/tools/clb-convert', {
       method: 'POST',
@@ -778,25 +1218,18 @@ async function updateLiveCLB() {
       body: JSON.stringify({ test_type: testType, reading: r, writing: w, listening: l, speaking: s }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Error');
+    if (!res.ok) throw new Error('Error');
     const c = data.conversion;
     const p = c.per_skill_clb;
     readout.className = `pill tabular ${c.overall_clb >= 5 ? 'pill-emerald' : (c.overall_clb >= 4 ? 'pill-amber' : 'pill-red')}`;
     readout.textContent = `Governing CLB/NCLC: ${c.overall_clb}`;
-
     if (cards) {
-      const skills = [
-        { key: 'reading', label: 'Reading' },
-        { key: 'writing', label: 'Writing' },
-        { key: 'listening', label: 'Listening' },
-        { key: 'speaking', label: 'Speaking' },
-      ];
-      cards.innerHTML = skills.map(sk => {
-        const lvl = p[sk.key] || 0;
+      cards.innerHTML = ['reading', 'writing', 'listening', 'speaking'].map(k => {
+        const lvl = p[k] || 0;
         const isLowest = lvl === c.overall_clb;
         return `
           <div class="clb-mini-card ${isLowest ? 'is-lowest' : ''}">
-            <div style="font-size:11px; color:var(--ink-subtle); font-weight:600;">${esc(sk.label)}</div>
+            <div style="font-size:11px; color:var(--ink-subtle); font-weight:600; text-transform:capitalize;">${esc(k)}</div>
             <div class="tabular" style="font-size:18px; font-weight:800; margin-top:2px;">CLB ${lvl}</div>
             ${isLowest ? '<div style="font-size:10px; font-weight:700; color:var(--amber);">Governs</div>' : ''}
           </div>
@@ -814,22 +1247,16 @@ async function searchNocCatalog() {
   const q = strVal('noc-quick-search');
   const container = document.getElementById('noc-search-results');
   if (!container) return;
-  if (!q) {
-    container.innerHTML = '';
-    return;
-  }
+  if (!q) { container.innerHTML = ''; return; }
   try {
     const res = await fetch(`/api/tools/noc-search?q=${encodeURIComponent(q)}`);
     const data = await res.json();
     container.innerHTML = (data.results || []).slice(0, 6).map(item => `
-      <button type="button" class="prompt-chip"
-              onclick="applyNocChoice('${esc(item.noc)}', ${Number(item.teer)}, '${esc(item.title)}')">
+      <button type="button" class="prompt-chip" onclick="applyNocChoice('${esc(item.noc)}', ${Number(item.teer)}, '${esc(item.title)}')">
         NOC ${esc(item.noc)} (TEER ${Number(item.teer)}) — ${esc(item.title)}
       </button>
     `).join('');
-  } catch (err) {
-    container.innerHTML = '';
-  }
+  } catch (err) { container.innerHTML = ''; }
 }
 
 function applyNocChoice(noc, teer, title) {
@@ -842,17 +1269,12 @@ function applyNocChoice(noc, teer, title) {
 function setupResumeDropzone() {
   const dz = document.getElementById('resume-dropzone');
   if (!dz) return;
-  dz.addEventListener('dragover', e => {
-    e.preventDefault();
-    dz.classList.add('dragover');
-  });
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
   dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
   dz.addEventListener('drop', e => {
     e.preventDefault();
     dz.classList.remove('dragover');
-    if (e.dataTransfer?.files?.length) {
-      handleResumeFileUpload(e.dataTransfer.files[0]);
-    }
+    if (e.dataTransfer?.files?.length) handleResumeFileUpload(e.dataTransfer.files[0]);
   });
 }
 
@@ -876,7 +1298,7 @@ function applyParsedResumeHints(parsed) {
 async function handleResumeFileUpload(file) {
   if (!file) return;
   if (file.size > MAX_UPLOAD_BYTES) {
-    showToast('File exceeds 4.2 MB Vercel limit. Please upload a smaller PDF/DOCX or paste text.', true);
+    showToast('File exceeds 4.2 MB limit. Please upload a smaller resume or paste text.', true);
     return;
   }
   const form = new FormData();
@@ -897,10 +1319,7 @@ async function handleResumeFileUpload(file) {
 
 async function handleResumePaste() {
   const txt = document.getElementById('resume-paste-text')?.value.trim();
-  if (!txt) {
-    showToast('Paste your resume text first.', true);
-    return;
-  }
+  if (!txt) { showToast('Paste your resume text first.', true); return; }
   try {
     const res = await fetch('/api/resume/upload', {
       method: 'POST',
@@ -926,26 +1345,26 @@ function renderResumeSuggestions(parsed) {
   const skillsHtml = (parsed.detected_skills || []).map(s => `<span class="tag">${esc(s)}</span>`).join('') || '<span style="color:var(--ink-subtle); font-size:12px;">None matched</span>';
   const nocsHtml = (parsed.suggested_nocs || []).map(n => `
     <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:7px;">
-      <span style="font-size:12.5px;"><strong>NOC ${esc(n.noc)} (TEER ${Number(n.teer)})</strong> — ${esc(n.title)} <em>(matched: ${esc((n.matched_keywords || []).join(', '))})</em></span>
+      <span style="font-size:12.5px;"><strong>NOC ${esc(n.noc)} (TEER ${Number(n.teer)})</strong> — ${esc(n.title)}</span>
       <button type="button" class="btn btn-sm" onclick="applyNocChoice('${esc(n.noc)}', ${Number(n.teer)}, '${esc(n.title)}')">Use as Target</button>
     </div>
-  `).join('') || '<div style="font-size:12.5px; color:var(--ink-subtle); margin-top:4px;">No automatic NOC match — search your exact job title below.</div>';
+  `).join('') || '<div style="font-size:12.5px; color:var(--ink-subtle); margin-top:4px;">No automatic NOC match — search below.</div>';
 
   box.innerHTML = `
     <div style="font-size:13px; font-weight:700; margin-bottom:6px;">Extracted Resume Signals</div>
     <div class="tag-row" style="margin-bottom:8px;">${skillsHtml}</div>
-    <div style="font-size:12px; color:var(--ink-muted);">Top Suggested NOC 2021 Matches (verify duties on noc.esdc.gc.ca):</div>
+    <div style="font-size:12px; color:var(--ink-muted);">Top Suggested NOC 2021 Matches:</div>
     ${nocsHtml}
   `;
 }
 
 // --------------------------------------------------------------------------
-// 14 Participating Communities
+// 14 RCIP Communities
 // --------------------------------------------------------------------------
 
 function filterCommunities(prov, btnEl) {
   state.provinceFilter = prov;
-  document.querySelectorAll('.prov-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#rcip-sub-communities .prov-btn').forEach(b => b.classList.remove('active'));
   if (btnEl) btnEl.classList.add('active');
   renderCommunities();
 }
@@ -957,38 +1376,27 @@ async function loadCommunities() {
     state.communitiesCatalog = data.communities || [];
     renderCommunities();
     populateCommunitySelect();
-  } catch (err) {
-    showToast('Could not load participating communities.', true);
-  }
+  } catch (err) {}
 }
 
 function populateCommunitySelect() {
   const sel = document.getElementById('f-target-community');
   if (!sel || !state.communitiesCatalog.length) return;
   const current = state.profile?.target_community_id || sel.value || '';
-  sel.innerHTML =
-    '<option value="">Select community...</option>' +
-    state.communitiesCatalog
-      .map(c => `<option value="${esc(c.id)}">${esc(c.name)}, ${esc(c.province_code)}</option>`)
-      .join('');
+  sel.innerHTML = '<option value="">Select community...</option>' +
+    state.communitiesCatalog.map(c => `<option value="${esc(c.id)}">${esc(c.name)}, ${esc(c.province_code)}</option>`).join('');
   if (current) sel.value = current;
 }
 
 function renderCommunities() {
   const grid = document.getElementById('communities-grid');
   if (!grid) return;
-
   const q = strVal('comm-search').toLowerCase();
   const prov = state.provinceFilter.toLowerCase();
 
   const merged = state.communitiesCatalog.map(c => {
     const sl = state.shortlists[c.id] || {};
-    return {
-      ...c,
-      shortlisted: !!sl.shortlisted,
-      notes: sl.notes || '',
-      employers_contacted: Number(sl.employers_contacted || 0),
-    };
+    return { ...c, shortlisted: !!sl.shortlisted, notes: sl.notes || '', employers_contacted: Number(sl.employers_contacted || 0) };
   });
 
   const filtered = merged.filter(c => {
@@ -1020,18 +1428,14 @@ function renderCommunities() {
               <h3 style="font-size:16px; font-weight:700;">${esc(c.name)}</h3>
               <div style="font-size:12px; color:var(--ink-muted);">${esc(c.edo_name)}</div>
             </div>
-            <button type="button" class="btn btn-sm ${c.shortlisted ? 'btn-emerald' : ''}"
-                    onclick="updateCommunityState('${esc(c.id)}', ${!c.shortlisted}, ${c.employers_contacted})">
+            <button type="button" class="btn btn-sm ${c.shortlisted ? 'btn-emerald' : ''}" onclick="updateCommunityState('${esc(c.id)}', ${!c.shortlisted}, ${c.employers_contacted})">
               ${c.shortlisted ? 'Shortlisted' : 'Shortlist'}
             </button>
           </div>
           <div class="tag-row" style="margin:10px 0;">${sectors}</div>
-          <div style="font-size:12px; color:var(--ink-muted); margin-bottom:6px;">
-            <strong>Local Schools:</strong> ${esc(insts)}
-          </div>
+          <div style="font-size:12px; color:var(--ink-muted); margin-bottom:6px;"><strong>Local Schools:</strong> ${esc(insts)}</div>
           <div style="font-size:11.5px; color:var(--ink-subtle);">${esc(c.verification_note)}</div>
         </div>
-
         <div style="border-top:1px solid var(--border-subtle); padding-top:10px; display:flex; flex-direction:column; gap:8px;">
           <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px;">
             <span>Employers Contacted: <strong class="tabular">${c.employers_contacted}</strong></span>
@@ -1058,7 +1462,6 @@ async function updateCommunityState(communityId, shortlisted, employersContacted
   persistBrowserState();
   renderCommunities();
   updateHeroSummary();
-
   if (state.environment === 'local') {
     try {
       await fetch('/api/communities/shortlist', {
@@ -1066,24 +1469,19 @@ async function updateCommunityState(communityId, shortlisted, employersContacted
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(state.shortlists[communityId]),
       });
-    } catch (err) {
-      console.warn('Local SQLite shortlist sync failed', err);
-    }
+    } catch (err) {}
   }
   showToast('Community tracker updated.');
 }
 
 // --------------------------------------------------------------------------
-// Live Canada.ca Sync, Official Sources, RAG Copilot & Stateless Export
+// Live Canada.ca Sync, Official Sources, RAG Copilot & RCIP Export
 // --------------------------------------------------------------------------
 
 async function triggerCanadaSync() {
   const btn = document.getElementById('btn-sync-canada');
   const origHtml = btn ? btn.innerHTML : '';
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Syncing Canada.ca...';
-  }
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing Canada.ca...'; }
   try {
     const res = await fetch('/api/sync-canada', { method: 'POST' });
     const data = await res.json();
@@ -1094,10 +1492,7 @@ async function triggerCanadaSync() {
   } catch (err) {
     showToast('Live Canada.ca sync encountered an error.', true);
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = origHtml || 'Sync Canada.ca';
-    }
+    if (btn) { btn.disabled = false; btn.innerHTML = origHtml || 'Sync Canada.ca'; }
   }
 }
 
@@ -1108,7 +1503,6 @@ async function loadSources() {
     state.sources = data.sources || [];
     const pill = document.getElementById('sources-count-pill');
     if (pill) pill.textContent = `${state.sources.length} official pages`;
-
     const tbody = document.getElementById('sources-table-body');
     if (tbody) {
       tbody.innerHTML = state.sources.map(s => `
@@ -1121,13 +1515,13 @@ async function loadSources() {
       `).join('');
     }
     updateHeroSummary();
-  } catch (err) {
-    console.error(err);
-  }
+  } catch (err) {}
 }
 
-function askCopilotPrompt(prompt) {
+function askCopilotPrompt(prompt, countryScope = 'all') {
   const input = document.getElementById('chat-input');
+  const scopeEl = document.getElementById('copilot-country-scope');
+  if (scopeEl && countryScope) scopeEl.value = countryScope;
   if (input) input.value = prompt;
   sendCopilotQuery();
 }
@@ -1135,21 +1529,23 @@ function askCopilotPrompt(prompt) {
 async function sendCopilotQuery() {
   const input = document.getElementById('chat-input');
   const history = document.getElementById('chat-history');
+  const scopeEl = document.getElementById('copilot-country-scope');
   if (!input || !history) return;
   const query = input.value.trim();
   if (!query) return;
+  const countryId = scopeEl ? scopeEl.value : 'all';
 
   input.value = '';
   history.innerHTML += `<div class="chat-msg user">${esc(query)}</div>`;
   const loadingId = `loading-${Date.now()}`;
-  history.innerHTML += `<div id="${loadingId}" class="chat-msg bot">Searching indexed Canada.ca RCIP pages...</div>`;
+  history.innerHTML += `<div id="${loadingId}" class="chat-msg bot">Searching official government sources...</div>`;
   history.scrollTop = history.scrollHeight;
 
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, profile: state.profile || {} }),
+      body: JSON.stringify({ query, profile: state.profile || {}, country_id: countryId }),
     });
     const data = await res.json();
     const loadingEl = document.getElementById(loadingId);
@@ -1195,11 +1591,11 @@ async function exportRoadmapReport() {
     if (!win) {
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'RCIP_Canada_Roadmap_Report.html';
+      a.download = 'JapaAI_Canada_RCIP_Roadmap.html';
       a.click();
     }
     setTimeout(() => URL.revokeObjectURL(url), 15000);
   } catch (err) {
-    showToast('Failed to export roadmap report.', true);
+    showToast('Failed to export RCIP dossier.', true);
   }
 }

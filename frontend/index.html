@@ -3,29 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RCIP Canada AI — Official Canada.ca Guided Roadmap &amp; Eligibility Platform</title>
-  <link rel="stylesheet" href="/static/styles.css?v=2">
+  <title>JapaAI.ng — Official 12-Country Immigration &amp; PR Roadmap Platform</title>
+  <link rel="stylesheet" href="/static/styles.css?v=3">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <!-- Sticky Minimal Navbar -->
+  <!-- Sticky Navbar -->
   <header class="navbar">
     <div class="container navbar-inner">
-      <div class="brand">
+      <div class="brand" onclick="switchTab('tab-matcher')">
         <div class="brand-mark" aria-hidden="true">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 1.5l1.9 4.5 3.6-1.4-1.1 4.6 3.9-.8-1.4 2.5 2.6 1.5-3.9 2.6.7 2-4.7-.5v6h-2.2v-6l-4.7.5.7-2-3.9-2.6 2.6-1.5-1.4-2.5 3.9.8-1.1-4.6 3.6 1.4z"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
           </svg>
         </div>
         <div class="brand-text">
           <div class="brand-title">
-            RCIP Canada AI
-            <span class="verified-dot">Canada.ca Verified</span>
+            JapaAI.ng
+            <span class="verified-dot">12 Countries · Official Gov Sources</span>
           </div>
-          <span class="brand-sub" id="env-storage-label">Guided Pathway &amp; Eligibility Engine</span>
+          <span class="brand-sub" id="env-storage-label">Official Immigration &amp; PR Roadmaps for Nigerians</span>
         </div>
       </div>
 
@@ -34,9 +36,8 @@
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
           Sync Canada.ca
         </button>
-        <button class="btn btn-sm" onclick="exportRoadmapReport()">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          Export Report
+        <button class="btn btn-sm" onclick="switchTab('tab-rcip')">
+          Canada RCIP Engine
         </button>
         <button class="btn btn-icon" id="btn-theme-toggle" onclick="toggleTheme()" title="Toggle Light / Dark Theme" aria-label="Toggle Theme">
           <svg class="icon" id="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
@@ -44,7 +45,7 @@
         </button>
         <button class="btn btn-primary btn-sm" onclick="switchTab('tab-copilot')">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Ask Copilot
+          Official Copilot
         </button>
       </div>
 
@@ -53,7 +54,7 @@
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
         </button>
         <button class="btn btn-primary btn-sm" onclick="switchTab('tab-copilot')">Copilot</button>
-        <button class="btn btn-icon" onclick="toggleMobileDrawer()" aria-label="Open Navigation Menu">
+        <button class="btn btn-icon" onclick="toggleMobileDrawer()" aria-label="Menu">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
         </button>
       </div>
@@ -64,550 +65,608 @@
   <div id="mobile-drawer" class="mobile-drawer" onclick="if(event.target===this) toggleMobileDrawer()">
     <div class="mobile-sheet">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <strong>RCIP Canada AI</strong>
+        <strong>JapaAI.ng</strong>
         <button class="btn btn-ghost btn-sm" onclick="toggleMobileDrawer()">Close</button>
       </div>
-      <button class="btn" onclick="switchTab('tab-roadmap'); toggleMobileDrawer()">Guided Roadmap</button>
-      <button class="btn" onclick="switchTab('tab-eligibility'); toggleMobileDrawer()">Eligibility Wizard</button>
-      <button class="btn" onclick="switchTab('tab-communities'); toggleMobileDrawer()">14 Communities</button>
-      <button class="btn" onclick="switchTab('tab-copilot'); toggleMobileDrawer()">Canada.ca Copilot</button>
+      <button class="btn" onclick="switchTab('tab-matcher'); toggleMobileDrawer()">Find My Pathway</button>
+      <button class="btn" onclick="switchTab('tab-countries'); toggleMobileDrawer()">12 Country Hubs</button>
+      <button class="btn" onclick="switchTab('tab-rcip'); toggleMobileDrawer()">Canada RCIP Engine</button>
+      <button class="btn" onclick="switchTab('tab-copilot'); toggleMobileDrawer()">Official Copilot</button>
+      <button class="btn" onclick="switchTab('tab-saved'); toggleMobileDrawer()">My Saved Progress</button>
       <button class="btn" onclick="triggerCanadaSync(); toggleMobileDrawer()">Sync Canada.ca</button>
-      <button class="btn btn-emerald" onclick="exportRoadmapReport(); toggleMobileDrawer()">Export Report</button>
     </div>
   </div>
 
   <main class="container">
-    <!-- Editorial Hero + Animated SVG Readiness Ring -->
+    <!-- Hero Card -->
     <section class="hero-card">
       <div>
         <div class="hero-eyebrow">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          IRCC Rural Community Immigration Pathway
+          Official Government Source Intelligence · Built for Nigerians
         </div>
-        <h1 class="hero-title">Your Official Roadmap to Canada's Rural Community Immigration Program</h1>
+        <h1 class="hero-title">Official Government Immigration Roadmaps — Built for Nigerians.</h1>
         <p class="hero-sub">
-          Evaluate honest PR readiness across work experience, CLB/NCLC language thresholds, ECA, and settlement funds—tailored to whether you apply from outside or inside Canada.
+          Grounded directly in <strong>canada.ca</strong>, <strong>gov.uk</strong>, <strong>uscis.gov</strong>, <strong>make-it-in-germany.com</strong>, <strong>ind.nl</strong>, <strong>migrationsverket.se</strong>, <strong>politsei.ee</strong>, <strong>mvr.bg</strong>, <strong>migracija.lrv.lt</strong>, <strong>inclusion.gob.es</strong>, <strong>france-visas.gouv.fr</strong>, and <strong>gov.br</strong>.
         </p>
 
-        <div class="transition-strip">
-          <div>
-            <strong>Jan 1, 2027 Transition:</strong> Recommendations dated <strong>Dec 31, 2026 or earlier</strong> apply under the Pilot; newer applications route to the <strong>Permanent Program</strong>.
-          </div>
-          <div class="transition-links">
-            <a class="btn btn-sm" href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/rural-franco-pilots/rural-immigration.html" target="_blank" rel="noopener">Pilot Portal ↗</a>
-            <a class="btn btn-primary btn-sm" href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/rural-franco-pilots/rural-immigration-program.html" target="_blank" rel="noopener">Permanent 2027 ↗</a>
-          </div>
-        </div>
+        <div class="country-jump-strip" id="hero-country-strip"></div>
 
-        <div class="hero-cta-row">
-          <button class="btn btn-primary" onclick="switchTab('tab-eligibility')">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-            Start Eligibility Check
-          </button>
-          <button class="btn" onclick="switchTab('tab-communities')">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Explore 14 Communities
-          </button>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="switchTab('tab-matcher')">Find My Best Country &amp; Pathway</button>
+          <button class="btn btn-crimson" onclick="switchTab('tab-rcip')">Canada RCIP Deep Calculator</button>
         </div>
       </div>
 
-      <div class="readiness-box">
-        <div class="donut-row">
-          <div class="donut-wrap">
-            <svg class="donut-svg" viewBox="0 0 100 100">
-              <circle class="donut-track" cx="50" cy="50" r="42"/>
-              <circle class="donut-fill" id="hero-donut-ring" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="263.89"/>
-            </svg>
-            <div class="donut-center">
-              <span class="donut-pct tabular" id="kpi-score">0%</span>
-              <span class="donut-label">Ready</span>
-            </div>
+      <div class="hero-summary-box">
+        <div class="stat-mini-grid">
+          <div class="stat-mini">
+            <div class="stat-mini-val tabular" id="hero-countries-count">12</div>
+            <div class="stat-mini-lbl">Destination Countries</div>
           </div>
-          <div>
-            <div class="verdict-title">Eligibility Status</div>
-            <div class="verdict-text" id="kpi-verdict">Profile incomplete — complete assessment to score readiness.</div>
+          <div class="stat-mini">
+            <div class="stat-mini-val tabular" id="hero-pathways-count">43</div>
+            <div class="stat-mini-lbl">Official Pathways</div>
           </div>
-        </div>
-
-        <div class="progress-bar-wrap">
-          <div class="progress-bar-meta">
-            <span>Roadmap Checklist</span>
-            <span class="tabular" id="kpi-progress">0 / 0 steps (0%)</span>
+          <div class="stat-mini">
+            <div class="stat-mini-val tabular" id="hero-rcip-score">0%</div>
+            <div class="stat-mini-lbl">Canada RCIP Score</div>
           </div>
-          <div class="progress-track">
-            <div class="progress-fill" id="kpi-progress-bar" style="width:0%"></div>
+          <div class="stat-mini">
+            <div class="stat-mini-val tabular" id="hero-saved-steps">0</div>
+            <div class="stat-mini-lbl">Saved Checklist Steps</div>
           </div>
         </div>
-
-        <div class="hero-meta-pills">
-          <span class="pill pill-red" id="kpi-track">Permanent 2027</span>
-          <span class="pill pill-blue" id="kpi-branch">Outside Canada</span>
-          <span class="pill pill-emerald tabular" id="kpi-pages">0 Canada.ca pages</span>
-          <span class="pill tabular" id="kpi-shortlisted">0 shortlisted</span>
+        <div style="font-size:12px; color:var(--ink-muted);">
+          Match across all 12 countries with zero inflated scores, or inspect country-specific rules for Nigerian applicants (including US DV Lottery eligibility, UKVI IELTS, anabin, and IND sponsors).
         </div>
       </div>
     </section>
 
-    <!-- Segmented Workspace Navigation -->
-    <nav class="workspace-nav" aria-label="Primary Workspace">
-      <button class="ws-tab active" data-tab="tab-roadmap" onclick="switchTab('tab-roadmap')">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
-        Guided Roadmap
-        <span class="tab-count tabular" id="tab-badge-roadmap">0/0</span>
+    <!-- 5 Workspace Tabs -->
+    <nav class="workspace-nav" aria-label="JapaAI.ng Workspace">
+      <button class="ws-tab active" data-tab="tab-matcher" onclick="switchTab('tab-matcher')">
+        Find My Pathway
+        <span class="tab-count">12 Countries</span>
       </button>
-      <button class="ws-tab" data-tab="tab-eligibility" onclick="switchTab('tab-eligibility')">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        Eligibility Wizard
+      <button class="ws-tab" data-tab="tab-countries" onclick="switchTab('tab-countries')">
+        12 Country Hubs
+        <span class="tab-count tabular" id="tab-badge-countries">12</span>
+      </button>
+      <button class="ws-tab" data-tab="tab-rcip" onclick="switchTab('tab-rcip')">
+        Canada RCIP Engine
         <span class="tab-count tabular" id="tab-badge-score">0%</span>
       </button>
-      <button class="ws-tab" data-tab="tab-communities" onclick="switchTab('tab-communities')">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        14 Communities
-        <span class="tab-count tabular" id="tab-badge-comm">14</span>
-      </button>
       <button class="ws-tab" data-tab="tab-copilot" onclick="switchTab('tab-copilot')">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Canada.ca Copilot
+        Official Gov Copilot
+      </button>
+      <button class="ws-tab" data-tab="tab-saved" onclick="switchTab('tab-saved')">
+        My Saved Progress
+        <span class="tab-count tabular" id="tab-badge-saved">0</span>
       </button>
     </nav>
 
-    <!-- TAB 1: GUIDED ROADMAP -->
-    <section id="tab-roadmap" class="tab-panel active">
+    <!-- TAB 1: UNIVERSAL 12-COUNTRY MATCHER -->
+    <section id="tab-matcher" class="tab-panel active">
       <div class="card">
         <div class="card-header">
           <div>
-            <h2 class="card-title">6-Stage RCIP Milestone Journey</h2>
-            <p class="card-desc">Click any stage to focus it, or view all 6 stages tailored to your branch.</p>
+            <h2 class="card-title">Universal Cross-Country Pathway Matcher</h2>
+            <p class="card-desc">Enter your profile once to compare realistic PR, Skilled Worker, EU Blue Card, Self-Petition, and Digital Nomad eligibility across all 12 countries.</p>
           </div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;" id="roadmap-branch-badges"></div>
+          <button type="button" class="btn btn-primary" onclick="runGlobalMatcher()">Match Across All 12 Countries</button>
         </div>
 
-        <div class="stage-rail" id="stage-rail"></div>
-
-        <label class="check-row" style="margin-bottom:0;">
-          <input type="checkbox" id="toggle-show-all-steps" onchange="renderRoadmap()">
-          <span>Show steps from other applicant branches (marked as optional / inactive for your profile)</span>
-        </label>
-      </div>
-
-      <div class="roadmap-grid">
-        <div id="roadmap-stages-container"></div>
-
-        <aside class="sticky-rail">
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <h3 class="card-title">Priority Next Actions</h3>
-                <p class="card-desc">Blocking gaps surfaced by your eligibility check</p>
-              </div>
-              <button class="btn btn-sm" onclick="switchTab('tab-eligibility')">Edit Profile</button>
-            </div>
-            <div id="roadmap-action-plan"></div>
-          </div>
-
-          <div class="card">
-            <details open>
-              <summary style="cursor:pointer; font-family:var(--font-display); font-weight:700; font-size:15px;">
-                Official IRCC IMM Forms Directory
-              </summary>
-              <div id="official-forms-list" style="display:flex; flex-direction:column; gap:8px; margin-top:12px;"></div>
-            </details>
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <!-- TAB 2: ELIGIBILITY & PROFILE WIZARD -->
-    <section id="tab-eligibility" class="tab-panel">
-      <!-- 6-Pillar Scorecard Strip -->
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <h2 class="card-title">6-Pillar Honest Readiness Scorecard</h2>
-            <p class="card-desc" id="eval-verdict-line">Complete the wizard steps below and save to calculate your verified RCIP readiness.</p>
-          </div>
-          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <span class="pill pill-blue tabular" id="eval-score-pill">0 / 100</span>
-            <button class="btn btn-primary btn-sm" onclick="saveAndEvaluateProfile()">Save &amp; Recalculate</button>
-          </div>
-        </div>
-        <div class="pillars-strip" id="pillars-scorecard"></div>
-      </div>
-
-      <!-- 6-Step Interactive Wizard -->
-      <div class="card" id="wizard-card">
-        <div class="card-header">
-          <div>
-            <h3 class="card-title">Applicant Profile &amp; Eligibility Wizard</h3>
-            <p class="card-desc">Walk through one step at a time or toggle full-form view.</p>
-          </div>
-          <label class="check-row" style="margin-bottom:0;">
-            <input type="checkbox" id="toggle-wizard-all" onchange="toggleWizardViewAll()">
-            <span>Show all 6 sections</span>
-          </label>
-        </div>
-
-        <div class="wizard-stepper" id="wizard-stepper">
-          <button type="button" class="wiz-step-btn active" onclick="setWizardStep(1)"><span>Step 1</span>Location &amp; Funds</button>
-          <button type="button" class="wiz-step-btn" onclick="setWizardStep(2)"><span>Step 2</span>Occupation &amp; Resume</button>
-          <button type="button" class="wiz-step-btn" onclick="setWizardStep(3)"><span>Step 3</span>Work Experience</button>
-          <button type="button" class="wiz-step-btn" onclick="setWizardStep(4)"><span>Step 4</span>Language &amp; CLB</button>
-          <button type="button" class="wiz-step-btn" onclick="setWizardStep(5)"><span>Step 5</span>Education &amp; ECA</button>
-          <button type="button" class="wiz-step-btn" onclick="setWizardStep(6)"><span>Step 6</span>Offer &amp; Cert</button>
-        </div>
-
-        <!-- Step 1: Location & Settlement Funds -->
-        <div class="wizard-pane active" data-step="1">
-          <div class="grid-2">
-            <div class="field">
-              <label>Full Name</label>
-              <input type="text" id="f-name" class="input" placeholder="e.g. Amina Okafor">
-            </div>
-            <div class="field">
-              <label>Email Address</label>
-              <input type="email" id="f-email" class="input" placeholder="applicant@example.com">
-            </div>
-          </div>
-
-          <label class="check-row">
-            <input type="checkbox" id="f-in-canada" onchange="updateLiveFundsCalc()">
-            <span>I am currently inside Canada</span>
-          </label>
-          <label class="check-row">
-            <input type="checkbox" id="f-wp-exempt" onchange="updateLiveFundsCalc()">
-            <span>I am already legally working in Canada with a valid work permit (Exempt from settlement funds)</span>
-          </label>
-          <label class="check-row">
-            <input type="checkbox" id="f-has-spouse">
-            <span>Applying with a spouse or common-law partner (enables community-restricted open work permit step)</span>
-          </label>
-
-          <div class="grid-2" style="margin-top:8px;">
-            <div class="field">
-              <label>Family Size (include spouse &amp; all dependent children even if non-accompanying)</label>
-              <input type="number" min="1" max="20" id="f-family-size" class="input" placeholder="1" oninput="updateLiveFundsCalc()">
-            </div>
-            <div class="field">
-              <label>Available Unencumbered Funds (CAD $)</label>
-              <input type="number" min="0" id="f-funds-cad" class="input" placeholder="e.g. 16500" oninput="updateLiveFundsCalc()">
-            </div>
-          </div>
-
-          <div class="funds-card" id="live-funds-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-              <strong style="font-size:13px;">Canada.ca Settlement Funds Check</strong>
-              <span class="pill pill-blue tabular" id="live-funds-readout">Enter family size to calculate CAD requirement</span>
-            </div>
-            <div class="progress-track" style="margin-top:10px;">
-              <div class="progress-fill" id="live-funds-bar" style="width:0%"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 2: Occupation, Resume Upload & Community -->
-        <div class="wizard-pane" data-step="2">
-          <div class="grid-2" style="margin-bottom:14px;">
-            <div>
-              <div id="resume-dropzone" class="dropzone" onclick="document.getElementById('resume-file-input').click()">
-                <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt" class="hidden" onchange="handleResumeFileUpload(this.files[0])">
-                <div style="font-weight:700; font-size:13.5px; color:var(--brand);">Upload Resume (PDF, DOCX, or TXT — max 4.2 MB)</div>
-                <div style="font-size:12px; color:var(--ink-muted); margin-top:4px;">Detects stated skills and suggests matching NOC 2021 codes</div>
-              </div>
-            </div>
-            <div>
-              <textarea id="resume-paste-text" class="textarea" rows="4" placeholder="Or paste resume text here to detect skills &amp; suggested NOC 2021 codes..."></textarea>
-              <button type="button" class="btn btn-sm" style="margin-top:8px;" onclick="handleResumePaste()">Analyze Pasted Resume</button>
-            </div>
-          </div>
-
-          <div id="resume-suggestions-box" class="hidden funds-card" style="margin-bottom:14px;"></div>
-
+        <div class="grid-4">
           <div class="field">
-            <label>Search Representative NOC 2021 Codes</label>
-            <input type="text" id="noc-quick-search" class="input" placeholder="Search job title or NOC (e.g. nurse, software, welder, 72106)..." oninput="searchNocCatalog()">
-            <div id="noc-search-results" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;"></div>
+            <label>Highest Education</label>
+            <select id="gm-edu" class="select">
+              <option value="">Select education...</option>
+              <option value="secondary">Secondary / WAEC / High School</option>
+              <option value="diploma">OND / HND / Diploma / Trade</option>
+              <option value="bachelors">Bachelor's Degree (B.Sc / B.Eng / B.A)</option>
+              <option value="masters">Master's Degree (M.Sc / MBA)</option>
+              <option value="phd">Doctorate (Ph.D)</option>
+            </select>
           </div>
-
-          <div class="grid-2">
-            <div class="field">
-              <label>Target Job 5-Digit NOC Code</label>
-              <input type="text" id="f-target-noc" class="input" placeholder="e.g. 21231">
-            </div>
-            <div class="field">
-              <label>Target Job TEER Category</label>
-              <select id="f-target-teer" class="select">
-                <option value="">Select TEER...</option>
-                <option value="0">TEER 0 (Management — CLB 6)</option>
-                <option value="1">TEER 1 (University degree — CLB 6)</option>
-                <option value="2">TEER 2 (College / apprenticeship — CLB 5)</option>
-                <option value="3">TEER 3 (Training / secondary — CLB 5)</option>
-                <option value="4">TEER 4 (Secondary / on-the-job — CLB 4)</option>
-                <option value="5">TEER 5 (Short demonstration — CLB 4, same NOC)</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid-2">
-            <div class="field">
-              <label>Target Job Title</label>
-              <input type="text" id="f-target-title" class="input" placeholder="e.g. Software Engineer">
-            </div>
-            <div class="field">
-              <label>Target Participating Community</label>
-              <select id="f-target-community" class="select">
-                <option value="">Select community...</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Step 3: Work Experience & Local Graduate Exemption -->
-        <div class="wizard-pane" data-step="3">
-          <label class="check-row">
-            <input type="checkbox" id="f-is-local-grad" onchange="toggleLocalGradBox()">
-            <span>I graduated from a publicly funded post-secondary institution inside the target community</span>
-          </label>
-
-          <div id="local-grad-box" class="hidden funds-card" style="margin-bottom:14px;">
-            <div class="grid-2">
-              <div class="field">
-                <label>Credential Program Length</label>
-                <select id="f-grad-type" class="select">
-                  <option value="">Select...</option>
-                  <option value="2yr_plus">2 years or longer credential</option>
-                  <option value="masters_phd">Master's or Doctoral degree (&lt;= 2 years)</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Months Since Credential Awarded</label>
-                <input type="number" min="0" step="0.5" id="f-grad-months-since" class="input" placeholder="Must be <= 18 months">
-              </div>
-            </div>
-            <div class="field">
-              <label>Months Lived in Community During Studies (need 16 of last 24 for 2+ yr programs)</label>
-              <input type="number" min="0" step="1" id="f-grad-lived-months" class="input" placeholder="e.g. 18">
-            </div>
-            <label class="check-row"><input type="checkbox" id="f-grad-public"><span>Publicly funded post-secondary institution in the recommending community</span></label>
-            <label class="check-row"><input type="checkbox" id="f-grad-fulltime"><span>Studied full-time for the entire program</span></label>
-            <label class="check-row"><input type="checkbox" id="f-grad-entire"><span>Lived in community for entire duration (Master's/PhD &lt;= 2 yrs)</span></label>
-            <label class="check-row"><input type="checkbox" id="f-grad-lang-half"><span>Disqualifier: &gt;50% of program was English/French study</span></label>
-            <label class="check-row"><input type="checkbox" id="f-grad-dist-half"><span>Disqualifier: &gt;50% of program was distance learning</span></label>
-            <label class="check-row"><input type="checkbox" id="f-grad-return-sch"><span>Disqualifier: Scholarship requires returning to home country</span></label>
-          </div>
-
-          <div class="grid-2">
-            <div class="field">
-              <label>Paid Work Hours in Past 3 Years (minimum 1,560)</label>
-              <input type="number" min="0" id="f-work-hours" class="input" placeholder="e.g. 2080">
-            </div>
-            <div class="field">
-              <label>Prior Work Experience TEER Category</label>
-              <select id="f-exp-teer" class="select">
-                <option value="">Select TEER...</option>
-                <option value="0">TEER 0</option>
-                <option value="1">TEER 1</option>
-                <option value="2">TEER 2</option>
-                <option value="3">TEER 3</option>
-                <option value="4">TEER 4</option>
-                <option value="5">TEER 5</option>
-              </select>
-            </div>
-          </div>
-
           <div class="field">
-            <label>Prior Work Experience 5-Digit NOC Code (mandatory for TEER 5 &amp; NOC 31301 nurse exception)</label>
-            <input type="text" id="f-exp-noc" class="input" placeholder="e.g. 21231">
+            <label>Primary Profession / Field</label>
+            <select id="gm-field" class="select">
+              <option value="">Select field...</option>
+              <option value="tech">Tech / Software / Data / AI / IT</option>
+              <option value="healthcare">Healthcare / Nursing / Medicine / Pharmacy</option>
+              <option value="engineering">Engineering (Civil / Mech / Elec)</option>
+              <option value="trades">Skilled Trades / Construction / Welding / Driving</option>
+              <option value="business">Business / Finance / Management / HR</option>
+              <option value="education">Education / Childcare / Teaching</option>
+              <option value="research">Academic / Scientific Research</option>
+              <option value="hospitality">Hospitality / Culinary / Retail</option>
+              <option value="agriculture">Agriculture / Food Processing</option>
+              <option value="arts">Creative / Media / Design</option>
+            </select>
           </div>
-
-          <label class="check-row">
-            <input type="checkbox" id="f-unpaid-self">
-            <span>These hours were self-employed, volunteer, or unpaid internship (excluded under IRCC rules)</span>
-          </label>
-        </div>
-
-        <!-- Step 4: Language & Live CLB Converter -->
-        <div class="wizard-pane" data-step="4">
-          <div class="grid-2">
-            <div class="field">
-              <label>Approved Language Test</label>
-              <select id="f-lang-test" class="select" onchange="updateLiveCLB()">
-                <option value="">Select test...</option>
-                <option value="celpip_general">CELPIP-General (English)</option>
-                <option value="ielts_general">IELTS General Training (English)</option>
-                <option value="pte_core">PTE Core (English)</option>
-                <option value="tef_canada">TEF Canada (French 0–699)</option>
-                <option value="tcf_canada">TCF Canada (French)</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Test Age in Months (must be &lt; 24 at PR submission)</label>
-              <input type="number" min="0" id="f-lang-age" class="input" placeholder="e.g. 6">
-            </div>
+          <div class="field">
+            <label>Years of Paid Experience</label>
+            <input type="number" min="0" step="0.5" id="gm-exp" class="input" placeholder="e.g. 4">
           </div>
-
-          <div class="grid-4">
-            <div class="field">
-              <label>Reading</label>
-              <input type="number" step="0.5" id="f-lang-r" class="input" placeholder="R" oninput="updateLiveCLB()">
-            </div>
-            <div class="field">
-              <label>Writing</label>
-              <input type="number" step="0.5" id="f-lang-w" class="input" placeholder="W" oninput="updateLiveCLB()">
-            </div>
-            <div class="field">
-              <label>Listening</label>
-              <input type="number" step="0.5" id="f-lang-l" class="input" placeholder="L" oninput="updateLiveCLB()">
-            </div>
-            <div class="field">
-              <label>Speaking</label>
-              <input type="number" step="0.5" id="f-lang-s" class="input" placeholder="S" oninput="updateLiveCLB()">
-            </div>
-          </div>
-
-          <div class="funds-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-              <strong style="font-size:13px;">IRCC CLB / NCLC Conversion (Lowest Skill Governs)</strong>
-              <span class="pill pill-blue tabular" id="live-clb-readout">Enter test &amp; all 4 scores</span>
-            </div>
-            <div class="clb-mini-grid" id="live-clb-cards"></div>
+          <div class="field">
+            <label>Age (Optional)</label>
+            <input type="number" min="18" max="75" id="gm-age" class="input" placeholder="e.g. 29">
           </div>
         </div>
 
-        <!-- Step 5: Education & ECA -->
-        <div class="wizard-pane" data-step="5">
-          <div class="grid-2">
-            <div class="field">
-              <label>Where Highest Credential Was Completed</label>
-              <select id="f-edu-origin" class="select" onchange="toggleECABox()">
-                <option value="">Select origin...</option>
-                <option value="foreign">Outside Canada (requires ECA &lt; 5 yrs old)</option>
-                <option value="canada">Inside Canada (Secondary or DLI Post-Secondary)</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Credential Level</label>
-              <input type="text" id="f-edu-level" class="input" placeholder="e.g. Bachelor's Degree">
-            </div>
+        <div class="grid-4">
+          <div class="field">
+            <label>English Level</label>
+            <select id="gm-eng" class="select">
+              <option value="">Select...</option>
+              <option value="fluent">Fluent / IELTS 7.0+ / CLB 7+</option>
+              <option value="intermediate">Intermediate / IELTS 5.5–6.5 / CLB 5–6</option>
+              <option value="basic">Basic / CLB 4</option>
+              <option value="none">None</option>
+            </select>
           </div>
+          <div class="field">
+            <label>French Level</label>
+            <select id="gm-fr" class="select">
+              <option value="none">None</option>
+              <option value="basic">Basic (A1–A2)</option>
+              <option value="intermediate">Intermediate (B1–B2 / NCLC 5+)</option>
+              <option value="fluent">Fluent (C1+ / NCLC 7+)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>German Level</label>
+            <select id="gm-de" class="select">
+              <option value="none">None</option>
+              <option value="basic">Basic (A1–A2)</option>
+              <option value="intermediate">Intermediate (B1–B2)</option>
+              <option value="fluent">Fluent (C1+)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Target Region</label>
+            <select id="gm-region" class="select">
+              <option value="all">All 12 Countries</option>
+              <option value="North America">North America (Canada, USA)</option>
+              <option value="Europe">Europe (UK, DE, NL, SE, EE, BG, LT, ES, FR)</option>
+              <option value="South America">South America (Brazil)</option>
+            </select>
+          </div>
+        </div>
 
-          <div id="eca-fields-box">
-            <label class="check-row">
-              <input type="checkbox" id="f-has-eca">
-              <span>I have a completed Educational Credential Assessment (ECA) report</span>
+        <div class="grid-3">
+          <div class="field">
+            <label>Relocation / Settlement Budget (USD $)</label>
+            <input type="number" min="0" id="gm-budget" class="input" placeholder="e.g. 12000">
+          </div>
+          <div class="field">
+            <label>Monthly Remote Income (USD $/mo — for Digital Nomad routes)</label>
+            <input type="number" min="0" id="gm-remote" class="input" placeholder="e.g. 0 or 3200">
+          </div>
+          <div class="field" style="justify-content:flex-end;">
+            <label class="check-row" style="margin-bottom:6px;">
+              <input type="checkbox" id="gm-offer">
+              <span>I already hold a foreign job offer</span>
             </label>
-            <div class="grid-2">
-              <div class="field">
-                <label>Designated ECA Body</label>
-                <select id="f-eca-org" class="select">
-                  <option value="">Select organization...</option>
-                  <option value="WES">World Education Services (WES)</option>
-                  <option value="CES">CES – University of Toronto</option>
-                  <option value="ICAS">ICAS</option>
-                  <option value="IQAS">IQAS</option>
-                  <option value="ICES">ICES</option>
-                  <option value="CACB">CACB (Architects NOC 21200)</option>
-                  <option value="MCC">MCC (Physicians NOC 31100/31101/31102)</option>
-                  <option value="PEBC">PEBC (Pharmacists NOC 31120)</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>ECA Report Age in Years (must be &lt; 5)</label>
-                <input type="number" min="0" step="0.5" id="f-eca-age" class="input" placeholder="e.g. 1.5">
-              </div>
-            </div>
           </div>
         </div>
 
-        <!-- Step 6: Job Offer & Community Recommendation -->
-        <div class="wizard-pane" data-step="6">
-          <label class="check-row">
-            <input type="checkbox" id="f-has-offer" onchange="toggleOfferChecks()">
-            <span>I hold a job offer from an employer in a participating community</span>
-          </label>
-          <div id="offer-checks-box" class="hidden funds-card" style="margin-bottom:14px;">
-            <label class="check-row"><input type="checkbox" id="f-offer-designated"><span>Employer is designated by the local community EDO</span></label>
-            <label class="check-row"><input type="checkbox" id="f-offer-ft"><span>Full-time (&gt;= 30 paid hours per week)</span></label>
-            <label class="check-row"><input type="checkbox" id="f-offer-nonseasonal"><span>Non-seasonal (year-round)</span></label>
-            <label class="check-row"><input type="checkbox" id="f-offer-indet"><span>Indeterminate (no fixed end date)</span></label>
-            <label class="check-row"><input type="checkbox" id="f-offer-inside"><span>&gt;= 75% of work performed inside community boundaries</span></label>
-          </div>
-
-          <label class="check-row">
-            <input type="checkbox" id="f-has-rec" onchange="toggleRecDate()">
-            <span>I have received an official Community Recommendation Certificate</span>
-          </label>
-          <div id="rec-date-box" class="hidden field">
-            <label>Certificate Issuance Date (Dec 31, 2026 or earlier = Pilot; Jan 1, 2027+ = Permanent Program)</label>
-            <input type="date" id="f-rec-date" class="input" style="max-width:260px;">
-          </div>
-        </div>
-
-        <div class="wizard-footer">
-          <div style="display:flex; gap:8px;">
-            <button type="button" class="btn" id="wiz-prev-btn" onclick="prevWizardStep()">Previous Step</button>
-            <button type="button" class="btn" id="wiz-next-btn" onclick="nextWizardStep()">Next Step</button>
-          </div>
-          <button type="button" class="btn btn-primary" onclick="saveAndEvaluateProfile()">Save Profile &amp; Recalculate Roadmap</button>
-        </div>
+        <button type="button" class="btn btn-primary" onclick="runGlobalMatcher()">Find Matching Countries &amp; Pathways</button>
       </div>
+
+      <div id="global-matcher-results"></div>
     </section>
 
-    <!-- TAB 3: 14 PARTICIPATING COMMUNITIES -->
-    <section id="tab-communities" class="tab-panel">
+    <!-- TAB 2: 12 COUNTRY HUBS -->
+    <section id="tab-countries" class="tab-panel">
       <div class="card">
         <div class="card-header">
           <div>
-            <h2 class="card-title">All 14 Participating RCIP Communities</h2>
-            <p class="card-desc">Direct official Economic Development Organization (EDO) portals listed on Canada.ca. Check each EDO site for current priority NOCs and designated employer lists.</p>
+            <h2 class="card-title">12 Destination Country Hubs</h2>
+            <p class="card-desc">Explore every major permanent residence, work, study, and digital nomad pathway sourced straight from official government ministries.</p>
           </div>
         </div>
 
         <div class="filter-toolbar">
           <div class="prov-pills">
-            <button type="button" class="prov-btn active" onclick="filterCommunities('all', this)">All 14</button>
-            <button type="button" class="prov-btn" onclick="filterCommunities('NS', this)">Nova Scotia</button>
-            <button type="button" class="prov-btn" onclick="filterCommunities('ON', this)">Ontario (5)</button>
-            <button type="button" class="prov-btn" onclick="filterCommunities('MB', this)">Manitoba (3)</button>
-            <button type="button" class="prov-btn" onclick="filterCommunities('SK', this)">Saskatchewan</button>
-            <button type="button" class="prov-btn" onclick="filterCommunities('AB', this)">Alberta</button>
-            <button type="button" class="prov-btn" onclick="filterCommunities('BC', this)">British Columbia (3)</button>
-            <button type="button" class="prov-btn" onclick="filterCommunities('shortlisted', this)">Shortlisted</button>
+            <button type="button" class="prov-btn active" onclick="filterCountries('all', this)">All 12</button>
+            <button type="button" class="prov-btn" onclick="filterCountries('North America', this)">North America (2)</button>
+            <button type="button" class="prov-btn" onclick="filterCountries('Europe', this)">Europe (9)</button>
+            <button type="button" class="prov-btn" onclick="filterCountries('South America', this)">South America (1)</button>
           </div>
-          <input type="text" id="comm-search" class="input" style="max-width:300px;" placeholder="Search community, school, sector..." oninput="loadCommunities()">
+          <input type="text" id="country-search" class="input" style="max-width:300px;" placeholder="Search country, Blue Card, NIW, RCIP..." oninput="renderCountriesGrid()">
         </div>
 
-        <div class="communities-grid" id="communities-grid"></div>
+        <div class="countries-grid" id="countries-grid"></div>
+      </div>
+
+      <div id="country-hub-workspace" class="hidden"></div>
+    </section>
+
+    <!-- TAB 3: CANADA RCIP DEEP ENGINE -->
+    <section id="tab-rcip" class="tab-panel">
+      <div class="card">
+        <div class="rcip-hero-strip">
+          <div>
+            <div class="pill pill-red" style="margin-bottom:8px;">Canada Deep Engine · RCIP Pilot &amp; Jan 1, 2027 Permanent Program</div>
+            <h2 style="font-size:22px; font-weight:800; margin-bottom:6px;">Canada RCIP Readiness &amp; 14-Community Engine</h2>
+            <p style="font-size:13.5px; color:var(--ink-muted);">
+              Full IRCC verification: 1,560-hr / Local Graduate exemption, TEER 0–5 cross-matching, exact CELPIP/IELTS/PTE/TEF/TCF CLB conversion, and CAD settlement funds.
+            </p>
+            <div class="transition-strip">
+              <span><strong>Jan 1, 2027 Cutoff:</strong> Recommendations dated Dec 31, 2026 or earlier apply under the Pilot; newer recommendations route to the Permanent Program.</span>
+              <button type="button" class="btn btn-sm" onclick="exportRoadmapReport()">Export RCIP Dossier</button>
+            </div>
+          </div>
+
+          <div class="hero-summary-box">
+            <div class="donut-row">
+              <div class="donut-wrap">
+                <svg class="donut-svg" viewBox="0 0 100 100">
+                  <circle class="donut-track" cx="50" cy="50" r="42"/>
+                  <circle class="donut-fill" id="hero-donut-ring" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="263.89"/>
+                </svg>
+                <div class="donut-center">
+                  <span class="donut-pct tabular" id="kpi-score">0%</span>
+                  <span class="donut-label">RCIP</span>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--ink-subtle);">RCIP Verdict</div>
+                <div style="font-size:13px; font-weight:600; margin-top:2px;" id="kpi-verdict">Complete the 6-step RCIP wizard to calculate readiness.</div>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:var(--ink-muted);">
+              <span>RCIP Checklist</span>
+              <span class="tabular" id="kpi-progress">0 / 0 steps (0%)</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" id="kpi-progress-bar" style="width:0%"></div></div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <span class="pill pill-red" id="kpi-track">Permanent 2027</span>
+              <span class="pill pill-blue" id="kpi-branch">Outside Canada</span>
+              <span class="pill pill-emerald tabular" id="kpi-pages">0 Canada.ca pages</span>
+              <span class="pill tabular" id="kpi-shortlisted">0 shortlisted</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subtabs">
+        <button type="button" class="subtab-btn active" data-subtab="rcip-sub-roadmap" onclick="switchRcipSubtab('rcip-sub-roadmap')">Guided 6-Stage Roadmap</button>
+        <button type="button" class="subtab-btn" data-subtab="rcip-sub-wizard" onclick="switchRcipSubtab('rcip-sub-wizard')">6-Step Eligibility Wizard &amp; Resume NOC</button>
+        <button type="button" class="subtab-btn" data-subtab="rcip-sub-communities" onclick="switchRcipSubtab('rcip-sub-communities')">14 Participating Communities</button>
+      </div>
+
+      <!-- RCIP Subtab 1: 6-Stage Roadmap -->
+      <div id="rcip-sub-roadmap" class="subtab-pane active">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">6-Stage Official Canada.ca RCIP Journey</h3>
+              <p class="card-desc">Click any stage pill to focus, or view all 6 stages tailored to your branch.</p>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;" id="roadmap-branch-badges"></div>
+          </div>
+          <div class="stage-rail" id="stage-rail"></div>
+          <label class="check-row" style="margin-bottom:0;">
+            <input type="checkbox" id="toggle-show-all-steps" onchange="renderRoadmap()">
+            <span>Show steps from other applicant branches (marked inactive)</span>
+          </label>
+        </div>
+
+        <div class="roadmap-grid">
+          <div id="roadmap-stages-container"></div>
+          <aside class="sticky-rail">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">Priority Next Actions</h3>
+                  <p class="card-desc">Blocking gaps from eligibility check</p>
+                </div>
+                <button type="button" class="btn btn-sm" onclick="switchRcipSubtab('rcip-sub-wizard')">Edit Wizard</button>
+              </div>
+              <div id="roadmap-action-plan"></div>
+            </div>
+            <div class="card">
+              <details open>
+                <summary style="cursor:pointer; font-family:var(--font-display); font-weight:700; font-size:15px;">Official IRCC IMM Forms</summary>
+                <div id="official-forms-list" style="display:flex; flex-direction:column; gap:8px; margin-top:12px;"></div>
+              </details>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- RCIP Subtab 2: 6-Step Eligibility Wizard -->
+      <div id="rcip-sub-wizard" class="subtab-pane">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">6-Pillar Honest RCIP Scorecard</h3>
+              <p class="card-desc" id="eval-verdict-line">Complete the wizard steps below and save to calculate your verified RCIP readiness.</p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="pill pill-blue tabular" id="eval-score-pill">0 / 100</span>
+              <button type="button" class="btn btn-crimson btn-sm" onclick="saveAndEvaluateProfile()">Save &amp; Recalculate</button>
+            </div>
+          </div>
+          <div class="pillars-strip" id="pillars-scorecard"></div>
+        </div>
+
+        <div class="card" id="wizard-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">RCIP Eligibility &amp; Profile Wizard</h3>
+              <p class="card-desc">Walk step-by-step or toggle full-form view.</p>
+            </div>
+            <label class="check-row" style="margin-bottom:0;">
+              <input type="checkbox" id="toggle-wizard-all" onchange="toggleWizardViewAll()">
+              <span>Show all 6 sections</span>
+            </label>
+          </div>
+
+          <div class="wizard-stepper" id="wizard-stepper">
+            <button type="button" class="wiz-step-btn active" onclick="setWizardStep(1)"><span>Step 1</span>Location &amp; Funds</button>
+            <button type="button" class="wiz-step-btn" onclick="setWizardStep(2)"><span>Step 2</span>NOC &amp; Resume</button>
+            <button type="button" class="wiz-step-btn" onclick="setWizardStep(3)"><span>Step 3</span>Work Experience</button>
+            <button type="button" class="wiz-step-btn" onclick="setWizardStep(4)"><span>Step 4</span>Language &amp; CLB</button>
+            <button type="button" class="wiz-step-btn" onclick="setWizardStep(5)"><span>Step 5</span>Education &amp; ECA</button>
+            <button type="button" class="wiz-step-btn" onclick="setWizardStep(6)"><span>Step 6</span>Offer &amp; Cert</button>
+          </div>
+
+          <!-- Step 1 -->
+          <div class="wizard-pane active" data-step="1">
+            <div class="grid-2">
+              <div class="field"><label>Full Name</label><input type="text" id="f-name" class="input" placeholder="e.g. Amina Okafor"></div>
+              <div class="field"><label>Email Address</label><input type="email" id="f-email" class="input" placeholder="applicant@example.com"></div>
+            </div>
+            <label class="check-row"><input type="checkbox" id="f-in-canada" onchange="updateLiveFundsCalc()"><span>I am currently inside Canada</span></label>
+            <label class="check-row"><input type="checkbox" id="f-wp-exempt" onchange="updateLiveFundsCalc()"><span>I am already legally working in Canada with a valid work permit (Exempt from settlement funds)</span></label>
+            <label class="check-row"><input type="checkbox" id="f-has-spouse"><span>Applying with a spouse or common-law partner</span></label>
+            <div class="grid-2" style="margin-top:8px;">
+              <div class="field"><label>Family Size (include spouse &amp; all dependents)</label><input type="number" min="1" max="20" id="f-family-size" class="input" placeholder="1" oninput="updateLiveFundsCalc()"></div>
+              <div class="field"><label>Available Unencumbered Funds (CAD $)</label><input type="number" min="0" id="f-funds-cad" class="input" placeholder="e.g. 16500" oninput="updateLiveFundsCalc()"></div>
+            </div>
+            <div class="funds-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <strong style="font-size:13px;">Canada.ca Settlement Funds Check</strong>
+                <span class="pill pill-blue tabular" id="live-funds-readout">Enter family size to calculate CAD requirement</span>
+              </div>
+              <div class="progress-track" style="margin-top:10px;"><div class="progress-fill" id="live-funds-bar" style="width:0%"></div></div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="wizard-pane" data-step="2">
+            <div class="grid-2" style="margin-bottom:14px;">
+              <div>
+                <div id="resume-dropzone" class="dropzone" onclick="document.getElementById('resume-file-input').click()">
+                  <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt" class="hidden" onchange="handleResumeFileUpload(this.files[0])">
+                  <div style="font-weight:700; font-size:13.5px; color:var(--brand);">Upload Resume (PDF, DOCX, or TXT — max 4.2 MB)</div>
+                  <div style="font-size:12px; color:var(--ink-muted); margin-top:4px;">Detects stated skills &amp; top 3 NOC 2021 codes</div>
+                </div>
+              </div>
+              <div>
+                <textarea id="resume-paste-text" class="textarea" rows="4" placeholder="Or paste resume text here..."></textarea>
+                <button type="button" class="btn btn-sm" style="margin-top:8px;" onclick="handleResumePaste()">Analyze Pasted Resume</button>
+              </div>
+            </div>
+            <div id="resume-suggestions-box" class="hidden funds-card" style="margin-bottom:14px;"></div>
+            <div class="field">
+              <label>Search Representative NOC 2021 Codes</label>
+              <input type="text" id="noc-quick-search" class="input" placeholder="Search job title or NOC (e.g. nurse, software, welder)..." oninput="searchNocCatalog()">
+              <div id="noc-search-results" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;"></div>
+            </div>
+            <div class="grid-2">
+              <div class="field"><label>Target Job 5-Digit NOC Code</label><input type="text" id="f-target-noc" class="input" placeholder="e.g. 21231"></div>
+              <div class="field">
+                <label>Target Job TEER Category</label>
+                <select id="f-target-teer" class="select">
+                  <option value="">Select TEER...</option>
+                  <option value="0">TEER 0 (Management — CLB 6)</option>
+                  <option value="1">TEER 1 (University degree — CLB 6)</option>
+                  <option value="2">TEER 2 (College / apprenticeship — CLB 5)</option>
+                  <option value="3">TEER 3 (Training / secondary — CLB 5)</option>
+                  <option value="4">TEER 4 (Secondary / on-the-job — CLB 4)</option>
+                  <option value="5">TEER 5 (Same 5-digit NOC — CLB 4)</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="field"><label>Target Job Title</label><input type="text" id="f-target-title" class="input" placeholder="e.g. Software Engineer"></div>
+              <div class="field"><label>Target Participating Community</label><select id="f-target-community" class="select"><option value="">Select community...</option></select></div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="wizard-pane" data-step="3">
+            <label class="check-row"><input type="checkbox" id="f-is-local-grad" onchange="toggleLocalGradBox()"><span>I graduated from a public post-secondary school inside the target community</span></label>
+            <div id="local-grad-box" class="hidden funds-card" style="margin-bottom:14px;">
+              <div class="grid-2">
+                <div class="field">
+                  <label>Credential Program Length</label>
+                  <select id="f-grad-type" class="select">
+                    <option value="">Select...</option>
+                    <option value="2yr_plus">2 years or longer credential</option>
+                    <option value="masters_phd">Master's or Doctoral degree (&lt;= 2 years)</option>
+                  </select>
+                </div>
+                <div class="field"><label>Months Since Credential Awarded</label><input type="number" min="0" step="0.5" id="f-grad-months-since" class="input" placeholder="<= 18 months"></div>
+              </div>
+              <div class="field"><label>Months Lived in Community During Studies</label><input type="number" min="0" step="1" id="f-grad-lived-months" class="input" placeholder="Need 16 of last 24 for 2+ yr"></div>
+              <label class="check-row"><input type="checkbox" id="f-grad-public"><span>Publicly funded institution in recommending community</span></label>
+              <label class="check-row"><input type="checkbox" id="f-grad-fulltime"><span>Studied full-time for the entire program</span></label>
+              <label class="check-row"><input type="checkbox" id="f-grad-entire"><span>Lived in community for entire duration (Master's/PhD &lt;= 2 yrs)</span></label>
+              <label class="check-row"><input type="checkbox" id="f-grad-lang-half"><span>Disqualifier: &gt;50% English/French study</span></label>
+              <label class="check-row"><input type="checkbox" id="f-grad-dist-half"><span>Disqualifier: &gt;50% distance learning</span></label>
+              <label class="check-row"><input type="checkbox" id="f-grad-return-sch"><span>Disqualifier: Scholarship requires returning home</span></label>
+            </div>
+            <div class="grid-2">
+              <div class="field"><label>Paid Work Hours in Past 3 Years (min 1,560)</label><input type="number" min="0" id="f-work-hours" class="input" placeholder="e.g. 2080"></div>
+              <div class="field">
+                <label>Prior Experience TEER</label>
+                <select id="f-exp-teer" class="select">
+                  <option value="">Select TEER...</option>
+                  <option value="0">TEER 0</option><option value="1">TEER 1</option><option value="2">TEER 2</option>
+                  <option value="3">TEER 3</option><option value="4">TEER 4</option><option value="5">TEER 5</option>
+                </select>
+              </div>
+            </div>
+            <div class="field"><label>Prior Experience 5-Digit NOC (mandatory for TEER 5 &amp; NOC 31301 nurse exception)</label><input type="text" id="f-exp-noc" class="input" placeholder="e.g. 21231"></div>
+            <label class="check-row"><input type="checkbox" id="f-unpaid-self"><span>These hours were self-employed, volunteer, or unpaid internship</span></label>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="wizard-pane" data-step="4">
+            <div class="grid-2">
+              <div class="field">
+                <label>Approved Language Test</label>
+                <select id="f-lang-test" class="select" onchange="updateLiveCLB()">
+                  <option value="">Select test...</option>
+                  <option value="celpip_general">CELPIP-General (English)</option>
+                  <option value="ielts_general">IELTS General Training (English)</option>
+                  <option value="pte_core">PTE Core (English)</option>
+                  <option value="tef_canada">TEF Canada (French 0–699)</option>
+                  <option value="tcf_canada">TCF Canada (French)</option>
+                </select>
+              </div>
+              <div class="field"><label>Test Age in Months (&lt; 24 at submission)</label><input type="number" min="0" id="f-lang-age" class="input" placeholder="e.g. 6"></div>
+            </div>
+            <div class="grid-4">
+              <div class="field"><label>Reading</label><input type="number" step="0.5" id="f-lang-r" class="input" placeholder="R" oninput="updateLiveCLB()"></div>
+              <div class="field"><label>Writing</label><input type="number" step="0.5" id="f-lang-w" class="input" placeholder="W" oninput="updateLiveCLB()"></div>
+              <div class="field"><label>Listening</label><input type="number" step="0.5" id="f-lang-l" class="input" placeholder="L" oninput="updateLiveCLB()"></div>
+              <div class="field"><label>Speaking</label><input type="number" step="0.5" id="f-lang-s" class="input" placeholder="S" oninput="updateLiveCLB()"></div>
+            </div>
+            <div class="funds-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <strong style="font-size:13px;">IRCC CLB / NCLC Conversion (Lowest Skill Governs)</strong>
+                <span class="pill pill-blue tabular" id="live-clb-readout">Enter test &amp; all 4 scores</span>
+              </div>
+              <div class="clb-mini-grid" id="live-clb-cards"></div>
+            </div>
+          </div>
+
+          <!-- Step 5 -->
+          <div class="wizard-pane" data-step="5">
+            <div class="grid-2">
+              <div class="field">
+                <label>Credential Origin</label>
+                <select id="f-edu-origin" class="select" onchange="toggleECABox()">
+                  <option value="">Select origin...</option>
+                  <option value="foreign">Outside Canada (requires ECA &lt; 5 yrs)</option>
+                  <option value="canada">Inside Canada (Secondary / DLI Post-Secondary)</option>
+                </select>
+              </div>
+              <div class="field"><label>Credential Level</label><input type="text" id="f-edu-level" class="input" placeholder="e.g. Bachelor's Degree"></div>
+            </div>
+            <div id="eca-fields-box">
+              <label class="check-row"><input type="checkbox" id="f-has-eca"><span>I have a completed Educational Credential Assessment (ECA)</span></label>
+              <div class="grid-2">
+                <div class="field">
+                  <label>Designated ECA Body</label>
+                  <select id="f-eca-org" class="select">
+                    <option value="">Select organization...</option>
+                    <option value="WES">World Education Services (WES)</option>
+                    <option value="CES">CES – University of Toronto</option>
+                    <option value="ICAS">ICAS</option>
+                    <option value="IQAS">IQAS</option>
+                    <option value="ICES">ICES</option>
+                    <option value="CACB">CACB (Architects NOC 21200)</option>
+                    <option value="MCC">MCC (Physicians NOC 31100/31101/31102)</option>
+                    <option value="PEBC">PEBC (Pharmacists NOC 31120)</option>
+                  </select>
+                </div>
+                <div class="field"><label>ECA Age in Years (&lt; 5)</label><input type="number" min="0" step="0.5" id="f-eca-age" class="input" placeholder="e.g. 1.5"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 6 -->
+          <div class="wizard-pane" data-step="6">
+            <label class="check-row"><input type="checkbox" id="f-has-offer" onchange="toggleOfferChecks()"><span>I hold a job offer from an employer in a participating community</span></label>
+            <div id="offer-checks-box" class="hidden funds-card" style="margin-bottom:14px;">
+              <label class="check-row"><input type="checkbox" id="f-offer-designated"><span>Employer is designated by local community EDO</span></label>
+              <label class="check-row"><input type="checkbox" id="f-offer-ft"><span>Full-time (&gt;= 30 paid hours/week)</span></label>
+              <label class="check-row"><input type="checkbox" id="f-offer-nonseasonal"><span>Non-seasonal (year-round)</span></label>
+              <label class="check-row"><input type="checkbox" id="f-offer-indet"><span>Indeterminate (no fixed end date)</span></label>
+              <label class="check-row"><input type="checkbox" id="f-offer-inside"><span>&gt;= 75% of work inside community boundaries</span></label>
+            </div>
+            <label class="check-row"><input type="checkbox" id="f-has-rec" onchange="toggleRecDate()"><span>I have received an official Community Recommendation Certificate</span></label>
+            <div id="rec-date-box" class="hidden field">
+              <label>Certificate Date (Dec 31, 2026 or earlier = Pilot; Jan 1, 2027+ = Permanent)</label>
+              <input type="date" id="f-rec-date" class="input" style="max-width:260px;">
+            </div>
+          </div>
+
+          <div class="wizard-footer">
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn" id="wiz-prev-btn" onclick="prevWizardStep()">Previous</button>
+              <button type="button" class="btn" id="wiz-next-btn" onclick="nextWizardStep()">Next</button>
+            </div>
+            <button type="button" class="btn btn-crimson" onclick="saveAndEvaluateProfile()">Save &amp; Recalculate RCIP</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RCIP Subtab 3: 14 Communities -->
+      <div id="rcip-sub-communities" class="subtab-pane">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">All 14 Official RCIP Participating Communities</h3>
+              <p class="card-desc">Direct official EDO portals listed on Canada.ca.</p>
+            </div>
+          </div>
+          <div class="filter-toolbar">
+            <div class="prov-pills">
+              <button type="button" class="prov-btn active" onclick="filterCommunities('all', this)">All 14</button>
+              <button type="button" class="prov-btn" onclick="filterCommunities('NS', this)">NS</button>
+              <button type="button" class="prov-btn" onclick="filterCommunities('ON', this)">ON (5)</button>
+              <button type="button" class="prov-btn" onclick="filterCommunities('MB', this)">MB (3)</button>
+              <button type="button" class="prov-btn" onclick="filterCommunities('SK', this)">SK</button>
+              <button type="button" class="prov-btn" onclick="filterCommunities('AB', this)">AB</button>
+              <button type="button" class="prov-btn" onclick="filterCommunities('BC', this)">BC (3)</button>
+              <button type="button" class="prov-btn" onclick="filterCommunities('shortlisted', this)">Shortlisted</button>
+            </div>
+            <input type="text" id="comm-search" class="input" style="max-width:300px;" placeholder="Search community, school, sector..." oninput="renderCommunities()">
+          </div>
+          <div class="communities-grid" id="communities-grid"></div>
+        </div>
       </div>
     </section>
 
-    <!-- TAB 4: CANADA.CA RAG COPILOT & OFFICIAL SOURCES -->
+    <!-- TAB 4: OFFICIAL GOV RAG COPILOT -->
     <section id="tab-copilot" class="tab-panel">
       <div class="copilot-layout">
         <div class="card">
           <div class="card-header">
             <div>
-              <h2 class="card-title">Canada.ca Grounded RCIP Copilot</h2>
-              <p class="card-desc">Answers are grounded in synced Canada.ca Rural Community Immigration pages and cite exact URLs.</p>
+              <h2 class="card-title">Official Government RAG Copilot</h2>
+              <p class="card-desc">Ask about any of the 12 countries — responses cite official immigration ministries directly.</p>
             </div>
-            <button class="btn btn-sm" onclick="triggerCanadaSync()">Re-Sync Live</button>
+            <select id="copilot-country-scope" class="select" style="max-width:210px;">
+              <option value="all">All 12 Countries</option>
+            </select>
           </div>
 
           <div class="prompt-chips">
-            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('What changes on January 1, 2027 between the RCIP Pilot and Permanent Program?')">Jan 1, 2027 transition?</button>
-            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('How much settlement funds do I need for a family of 3?')">Funds for family of 3?</button>
-            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('Am I exempt from work experience as an international graduate in the community?')">Local graduate rule?</button>
-            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('What IELTS General score do I need for TEER 2 and TEER 1?')">IELTS for TEER 1 &amp; 2?</button>
-            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('How does the 2-year optional work permit and spouse open work permit work?')">2-year work permit?</button>
+            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('Are Nigerians eligible for the US Diversity Visa DV Lottery and what are EB-2 NIW requirements?', 'usa')">USA DV Lottery &amp; EB-2 NIW?</button>
+            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('What are the 2026 Germany EU Blue Card salary thresholds and Opportunity Card rules?', 'germany')">Germany 2026 Blue Card?</button>
+            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('What are UK Skilled Worker, Health and Care, and Global Talent requirements?', 'uk')">UK Visas &amp; ILR?</button>
+            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('What changes on January 1, 2027 between the Canada RCIP Pilot and Permanent Program?', 'canada')">Canada RCIP Jan 1, 2027?</button>
+            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('Compare Spain Digital Nomad Visa and Brazil VITEM XIV income thresholds', 'all')">Spain vs Brazil Digital Nomad?</button>
+            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('What are the 2026 Netherlands IND Kennismigrant salary requirements?', 'netherlands')">Netherlands IND 2026?</button>
           </div>
 
           <div id="chat-history" class="chat-thread">
             <div class="chat-msg bot">
-              Ask any question about the <strong>Rural Community Immigration Pilot / Program (RCIP)</strong>. Responses cite indexed <code>canada.ca</code> pages and automatically factor in your profile when relevant.
+              Ask any question across <strong>Canada, UK, USA, Germany, Netherlands, Sweden, Estonia, Bulgaria, Lithuania, Spain, France, or Brazil</strong>. Answers cite indexed official government websites.
             </div>
           </div>
 
           <div class="chat-compose">
-            <input type="text" id="chat-input" class="input" placeholder="Ask about TEER rules, CLB tables, IMM forms, ECA bodies, work permits..." onkeydown="if(event.key==='Enter') sendCopilotQuery()">
+            <input type="text" id="chat-input" class="input" placeholder="Ask about salary thresholds, PR timelines, Nigerian rules, MIGRIS, IND, RCIP..." onkeydown="if(event.key==='Enter') sendCopilotQuery()">
             <button type="button" class="btn btn-primary" onclick="sendCopilotQuery()">Send</button>
           </div>
         </div>
@@ -615,20 +674,15 @@
         <div class="card">
           <div class="card-header">
             <div>
-              <h3 class="card-title">Indexed Canada.ca Sources</h3>
-              <p class="card-desc">Live snapshots synced from official IRCC pages</p>
+              <h3 class="card-title">Live Canada.ca &amp; Official Index</h3>
+              <p class="card-desc">Synced official IRCC pages &amp; 12-country authority registry</p>
             </div>
             <span class="pill pill-emerald tabular" id="sources-count-pill">0 pages</span>
           </div>
-          <div style="max-height:520px; overflow:auto;">
+          <div style="max-height:480px; overflow:auto;">
             <table class="sources-table">
               <thead>
-                <tr>
-                  <th>Track</th>
-                  <th>Official Page</th>
-                  <th>Modified</th>
-                  <th>URL</th>
-                </tr>
+                <tr><th>Track</th><th>Official Page</th><th>Modified</th><th>URL</th></tr>
               </thead>
               <tbody id="sources-table-body"></tbody>
             </table>
@@ -637,13 +691,27 @@
       </div>
     </section>
 
+    <!-- TAB 5: MY SAVED PROGRESS -->
+    <section id="tab-saved" class="tab-panel">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">My Saved Roadmaps &amp; Progress</h2>
+            <p class="card-desc">All checklist steps and shortlisted communities saved privately in your browser across all 12 countries.</p>
+          </div>
+          <button type="button" class="btn btn-sm" onclick="exportRoadmapReport()">Export Canada RCIP Dossier</button>
+        </div>
+        <div id="saved-progress-container"></div>
+      </div>
+    </section>
+
     <footer class="footer">
-      RCIP Canada AI — Guided by official Government of Canada (<a href="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/rural-franco-pilots/rural-immigration.html" target="_blank" rel="noopener">Canada.ca RCIP</a>) documentation. Informational planning assistant only; not legal immigration advice.
+      JapaAI.ng — Grounded exclusively in official government immigration portals across 12 destination countries. Informational planning tool only; not legal immigration advice.
     </footer>
   </main>
 
   <div id="toast-container" class="toast-container"></div>
 
-  <script src="/static/app.js?v=2"></script>
+  <script src="/static/app.js?v=3"></script>
 </body>
 </html>

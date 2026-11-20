@@ -27,7 +27,7 @@ class TestStoreAndAPI(unittest.TestCase):
     def test_frontend_static_and_health(self):
         idx = self.client.get("/")
         self.assertEqual(idx.status_code, 200)
-        self.assertIn("RCIP Canada AI", idx.text)
+        self.assertIn("JapaAI.ng", idx.text)
 
         css = self.client.get("/static/styles.css")
         self.assertEqual(css.status_code, 200)
@@ -165,7 +165,7 @@ class TestStoreAndAPI(unittest.TestCase):
     def test_vercel_entrypoint_and_stateless_endpoints(self):
         import app as vercel_entry
 
-        self.assertIn("RCIP Canada AI", vercel_entry.app.title)
+        self.assertIn("JapaAI.ng", vercel_entry.app.title)
 
         health = self.client.get("/api/health").json()
         self.assertIn(health["environment"], ("local", "vercel"))

@@ -12,12 +12,14 @@ from pydantic import BaseModel, Field
 
 from backend.canada_crawler import SEED_CANADA_PAGES, crawl_official_canada_pages
 from backend.config import BASE_DIR, DB_PATH, IS_VERCEL
+from backend.countries_data import COUNTRIES_CATALOG
 from backend.eligibility_engine import (
     build_tailored_roadmap,
     compute_clb_from_test,
     evaluate_rcip_eligibility,
     required_settlement_funds,
 )
+from backend.matcher_engine import match_global_pathways
 from backend.rag_service import CanadaRAGService
 from backend.rcip_data import (
     COMMON_NOC_CATALOG,
@@ -42,9 +44,9 @@ from backend.store import (
 )
 
 app = FastAPI(
-    title="RCIP Canada AI — Official Roadmap & Eligibility Platform",
-    description="Guided roadmap, eligibility & gap engine, 14-community directory, and Canada.ca grounded RAG copilot.",
-    version="1.0.0",
+    title="JapaAI.ng — Official Global Immigration & PR Roadmap Platform",
+    description="Multi-country official immigration roadmaps across 12 countries, cross-country matcher, deep Canada RCIP engine, and official government RAG copilot.",
+    version="2.0.0",
 )
 
 app.add_middleware(
@@ -174,6 +176,15 @@ class CommunityShortlistPayload(BaseModel):
 class ChatPayload(BaseModel):
     query: str
     profile: Optional[Dict[str, Any]] = None
+    country_id: Optional[str] = None
+
+
+class GlobalRoadmapExportPayload(BaseModel):
+    country_id: str
+    pathway_id: str
+    applicant_name: str = "Applicant"
+    checked_steps: Dict[str, bool] = Field(default_factory=dict)
+    notes: Dict[str, str] = Field(default_factory=dict)
 
 
 class RoadmapComputePayload(BaseModel):
@@ -199,7 +210,8 @@ def health_check() -> Dict[str, Any]:
     pages = rag_engine.pages or ensure_seeded_and_indexed()
     return {
         "status": "healthy",
-        "service": "RCIP Canada AI",
+        "service": "JapaAI.ng",
+        "countries_count": len(COUNTRIES_CATALOG),
         "indexed_pages": len(pages),
         "environment": "vercel" if IS_VERCEL else "local",
         "storage_mode": "browser_local_plus_tmp" if IS_VERCEL else "sqlite_local",
@@ -561,8 +573,142 @@ def chat_endpoint(payload: ChatPayload) -> Dict[str, Any]:
     else:
         with store_session(db_path) as conn:
             profile = store_get_profile(conn)
-    result = rag_engine.answer_query(payload.query, profile=profile)
+    result = rag_engine.answer_query(
+        payload.query,
+        profile=profile,
+        country_id=payload.country_id,
+    )
     return {"status": "success", **result}
+
+
+# --------------------------------------------------------------------------
+# Multi-Country JapaAI.ng Endpoints
+# --------------------------------------------------------------------------
+
+@app.get("/api/countries")
+def list_countries_endpoint(
+    region: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+) -> Dict[str, Any]:
+    reg_filter = (region or "").strip().lower()
+    q_filter = (search or "").strip().lower()
+
+    results = []
+    for c in COUNTRIES_CATALOG:
+        if reg_filter and reg_filter != "all" and c["region"].lower() != reg_filter:
+            continue
+        if q_filter:
+            blob = " ".join(
+                [
+                    c["name"],
+                    c["code"],
+                    c["region"],
+                    c["authority"],
+                    c["summary"],
+                    *(p["name"] for p in c["pathways"]),
+                ]
+            ).lower()
+            if q_filter not in blob:
+                continue
+        results.append(
+            {
+                "id": c["id"],
+                "name": c["name"],
+                "code": c["code"],
+                "flag": c["flag"],
+                "region": c["region"],
+                "currency": c["currency"],
+                "authority": c["authority"],
+                "official_portal": c["official_portal"],
+                "summary": c["summary"],
+                "pathway_count": len(c["pathways"]),
+                "pathway_names": [p["name"] for p in c["pathways"]],
+                "has_deep_rcip": any(p.get("has_deep_engine") for p in c["pathways"]),
+            }
+        )
+
+    return {
+        "status": "success",
+        "total": len(results),
+        "countries": results,
+    }
+
+
+@app.get("/api/countries/{country_id}")
+def get_country_hub_endpoint(country_id: str) -> Dict[str, Any]:
+    target = next((c for c in COUNTRIES_CATALOG if c["id"] == country_id.strip().lower()), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="Country not found in catalog.")
+    return {"status": "success", "country": target}
+
+
+@app.post("/api/global/match")
+def global_match_endpoint(payload: Dict[str, Any]) -> Dict[str, Any]:
+    result = match_global_pathways(payload or {})
+    return {"status": "success", **result}
+
+
+@app.post("/api/global/roadmap/export/html", response_class=HTMLResponse)
+def export_global_roadmap_html(payload: GlobalRoadmapExportPayload) -> HTMLResponse:
+    country = next((c for c in COUNTRIES_CATALOG if c["id"] == payload.country_id.strip().lower()), None)
+    if not country:
+        raise HTTPException(status_code=404, detail="Country not found.")
+    pathway = next((p for p in country["pathways"] if p["id"] == payload.pathway_id.strip()), None)
+    if not pathway:
+        raise HTTPException(status_code=404, detail="Pathway not found.")
+
+    esc = html_lib.escape
+    name_safe = esc(payload.applicant_name or "Applicant")
+    steps_html = ""
+    done_count = 0
+    for idx, step in enumerate(pathway["stages"], 1):
+        is_done = bool(payload.checked_steps.get(step["id"]))
+        if is_done:
+            done_count += 1
+        note = esc(str(payload.notes.get(step["id"], "") or ""))
+        note_html = f"<div style='margin-top:4px; color:#047857; font-size:13px;'><strong>Note:</strong> {note}</div>" if note else ""
+        steps_html += (
+            f"<li><strong>[{'DONE' if is_done else 'TODO'}] Step {idx}: {esc(step['title'])}</strong><br>"
+            f"<span>{esc(step['description'])}</span> "
+            f"(<a href='{esc(step['url'])}'>Official Guide</a>){note_html}</li>"
+        )
+
+    notes_html = "".join(f"<li>{esc(n)}</li>" for n in country["nigerian_notes"])
+
+    doc_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JapaAI.ng — {esc(country['name'])}: {esc(pathway['name'])}</title>
+<style>
+  body {{ font-family: Arial, sans-serif; color: #0f172a; max-width: 880px; margin: 32px auto; padding: 0 20px; line-height: 1.55; }}
+  h1 {{ color: #047857; border-bottom: 2px solid #047857; padding-bottom: 8px; }}
+  .box {{ background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px 16px; border-radius: 8px; margin-bottom: 18px; }}
+  li {{ margin-bottom: 10px; }}
+  @media print {{ .no-print {{ display: none; }} }}
+</style>
+</head>
+<body>
+  <div class="no-print" style="margin-bottom:16px;"><button onclick="window.print()">Print / Save PDF</button></div>
+  <h1>JapaAI.ng — {esc(country['name'])} Immigration Roadmap</h1>
+  <div class="box">
+    <p><strong>Applicant:</strong> {name_safe}</p>
+    <p><strong>Pathway:</strong> {esc(pathway['name'])} ({esc(pathway['category'])})</p>
+    <p><strong>Official Authority:</strong> {esc(country['authority'])} (<a href="{esc(pathway['official_url'])}">{esc(pathway['official_url'])}</a>)</p>
+    <p><strong>PR / Settlement Path:</strong> {esc(pathway['leads_to_pr'])}</p>
+    <p><strong>Key Thresholds:</strong> {esc(pathway['threshold_label'])}</p>
+    <p><strong>Checklist Progress:</strong> {done_count} / {len(pathway['stages'])} completed</p>
+  </div>
+  <h2>Official Step-by-Step Roadmap</h2>
+  <ol>{steps_html}</ol>
+  <h2>Nigerian Applicant Notes &amp; Watch-Outs</h2>
+  <ul>{notes_html}</ul>
+  <p style="margin-top:28px; font-size:12px; color:#64748b;">
+    Grounded in official government portals indexed by JapaAI.ng. Informational guidance only; not legal immigration advice.
+  </p>
+</body>
+</html>"""
+    return HTMLResponse(content=doc_html)
 
 
 def _render_export_html(

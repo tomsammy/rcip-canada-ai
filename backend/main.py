@@ -555,16 +555,42 @@ def sync_all_official_sources_endpoint(
     country_id: Optional[str] = Query(None),
 ) -> Dict[str, Any]:
     """Concurrently sync verbatim content from live official government portals across all 12 or 1 country."""
+    from concurrent.futures import ThreadPoolExecutor
+
     scope = (country_id or "all").strip().lower()
     if scope not in ("", "all") and not any(c["id"] == scope for c in COUNTRIES_CATALOG):
         raise HTTPException(status_code=404, detail="Country not found in catalog.")
 
-    crawl_global = crawl_official_global_sources(
-        country_id=None if scope in ("", "all") else scope,
-        timeout=8,
-        max_workers=8,
-    )
-    ca_errors: List[Dict[str, str]] = []
+    is_all = scope in ("", "all")
+    crawl_canada_too = scope in ("", "all", "canada")
+
+    if crawl_canada_too:
+        pool = ThreadPoolExecutor(max_workers=2)
+        try:
+            f_global = pool.submit(
+                crawl_official_global_sources,
+                None if is_all else "canada",
+                4 if is_all else 5,
+                16 if is_all else 6,
+                1 if is_all else 3,
+                9.0,
+            )
+            f_ca = pool.submit(crawl_official_canada_pages, 4, 10)
+            crawl_global = f_global.result()
+            ca_crawl = f_ca.result()
+        finally:
+            pool.shutdown(wait=False, cancel_futures=True)
+    else:
+        crawl_global = crawl_official_global_sources(
+            country_id=scope,
+            timeout=5,
+            max_workers=6,
+            max_pathways_per_country=3,
+            overall_timeout=9.0,
+        )
+        ca_crawl = {"pages": [], "errors": []}
+
+    ca_errors: List[Dict[str, str]] = ca_crawl.get("errors", [])
     counts = {"inserted": 0, "updated": 0, "unchanged": 0}
 
     db_path = _resolve_db_path()
@@ -573,12 +599,9 @@ def sync_all_official_sources_endpoint(
             outcome = store_upsert_global_official_page(conn, page)
             counts[outcome] = counts.get(outcome, 0) + 1
 
-        if scope in ("", "all", "canada"):
-            ca_crawl = crawl_official_canada_pages(timeout=8)
-            ca_errors = ca_crawl.get("errors", [])
-            for ca_page in ca_crawl.get("pages", []):
-                outcome = store_upsert_canada_page(conn, ca_page)
-                counts[outcome] = counts.get(outcome, 0) + 1
+        for ca_page in ca_crawl.get("pages", []):
+            outcome = store_upsert_canada_page(conn, ca_page)
+            counts[outcome] = counts.get(outcome, 0) + 1
 
         all_canada = store_list_canada_pages(conn)
         all_global = store_list_global_official_pages(conn)

@@ -1,6 +1,6 @@
 """Live multi-country official immigration portal crawler and offline curated seed snapshots."""
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError, as_completed
 import hashlib
 import re
 from datetime import datetime, timezone
@@ -95,37 +95,49 @@ def parse_canada_page_html(
     }
 
 
-def crawl_official_canada_pages(timeout: int = 20) -> Dict[str, Any]:
-    """Fetch all official RCIP Pilot and Permanent Program pages from Canada.ca."""
+def crawl_official_canada_pages(timeout: int = 6, max_workers: int = 10) -> Dict[str, Any]:
+    """Concurrently fetch official RCIP Pilot and Permanent Program pages from Canada.ca within bounded latency."""
     pages: List[Dict[str, Any]] = []
     errors: List[Dict[str, str]] = []
+    req_timeout = httpx.Timeout(connect=3.0, read=float(timeout), write=3.0, pool=3.0)
 
-    with httpx.Client(
-        follow_redirects=True,
-        timeout=timeout,
-        headers={"User-Agent": USER_AGENT},
-    ) as client:
-        for meta in OFFICIAL_CANADA_PAGES:
+    def _fetch_ca(meta: Dict[str, str]) -> Dict[str, Any]:
+        resp = httpx.get(
+            meta["url"],
+            follow_redirects=True,
+            timeout=req_timeout,
+            headers={"User-Agent": USER_AGENT},
+        )
+        if resp.status_code != 200:
+            return {"_error": f"HTTP {resp.status_code}", "url": meta["url"]}
+        parsed = parse_canada_page_html(
+            resp.text,
+            url=meta["url"],
+            track=meta["track"],
+            slug=meta["slug"],
+            title_fallback=meta["title"],
+        )
+        return {"_page": parsed}
+
+    pool = ThreadPoolExecutor(max_workers=max_workers)
+    fut_to_meta = {pool.submit(_fetch_ca, meta): meta for meta in OFFICIAL_CANADA_PAGES}
+    try:
+        for fut in as_completed(fut_to_meta, timeout=10.0):
+            meta = fut_to_meta[fut]
             try:
-                resp = client.get(meta["url"])
-                if resp.status_code != 200:
-                    errors.append(
-                        {
-                            "url": meta["url"],
-                            "error": f"HTTP {resp.status_code}",
-                        }
-                    )
-                    continue
-                parsed = parse_canada_page_html(
-                    resp.text,
-                    url=meta["url"],
-                    track=meta["track"],
-                    slug=meta["slug"],
-                    title_fallback=meta["title"],
-                )
-                pages.append(parsed)
+                res = fut.result()
+                if "_page" in res:
+                    pages.append(res["_page"])
+                else:
+                    errors.append({"url": res["url"], "error": res.get("_error", "Fetch error")})
             except Exception as exc:
-                errors.append({"url": meta["url"], "error": str(exc)})
+                errors.append({"url": meta["url"], "error": str(exc)[:160]})
+    except FuturesTimeoutError:
+        for fut, meta in fut_to_meta.items():
+            if not fut.done():
+                errors.append({"url": meta["url"], "error": "Timed out fetching Canada.ca"})
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
 
     return {
         "pages": pages,
@@ -386,8 +398,11 @@ def parse_official_page_html(
     }
 
 
-def build_global_crawl_targets(country_id: Optional[str] = None) -> List[Dict[str, str]]:
-    """Build curated official URL targets (portal + top 2 unique pathway URLs) across all 12 or 1 country."""
+def build_global_crawl_targets(
+    country_id: Optional[str] = None,
+    max_pathways_per_country: int = 2,
+) -> List[Dict[str, str]]:
+    """Build curated official URL targets (portal + top pathway URLs) across all 12 or 1 country."""
     scope = (country_id or "").strip().lower()
     targets: List[Dict[str, str]] = []
     seen_urls = set()
@@ -408,7 +423,7 @@ def build_global_crawl_targets(country_id: Optional[str] = None) -> List[Dict[st
             )
         added_pathways = 0
         for p in c["pathways"]:
-            if added_pathways >= 2:
+            if added_pathways >= max_pathways_per_country:
                 break
             purl = p["official_url"]
             if purl and purl not in seen_urls:
@@ -427,20 +442,26 @@ def build_global_crawl_targets(country_id: Optional[str] = None) -> List[Dict[st
 
 def crawl_official_global_sources(
     country_id: Optional[str] = None,
-    timeout: int = 8,
-    max_workers: int = 8,
+    timeout: int = 5,
+    max_workers: int = 16,
+    max_pathways_per_country: int = 2,
+    overall_timeout: float = 10.0,
 ) -> Dict[str, Any]:
-    """Concurrently fetch live verbatim HTML from official ministry portals across all 12 or 1 country."""
-    targets = build_global_crawl_targets(country_id=country_id)
+    """Concurrently fetch live verbatim HTML from official ministry portals within a strict wall-clock bound."""
+    targets = build_global_crawl_targets(
+        country_id=country_id,
+        max_pathways_per_country=max_pathways_per_country,
+    )
     pages: List[Dict[str, Any]] = []
     errors: List[Dict[str, str]] = []
     synced_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    req_timeout = httpx.Timeout(connect=2.5, read=float(timeout), write=2.5, pool=2.5)
 
     def _fetch_one(target: Dict[str, str]) -> Dict[str, Any]:
         resp = httpx.get(
             target["url"],
             follow_redirects=True,
-            timeout=timeout,
+            timeout=req_timeout,
             headers={
                 "User-Agent": USER_AGENT,
                 "Accept-Language": "en-US,en;q=0.9",
@@ -460,9 +481,11 @@ def crawl_official_global_sources(
             return {"_error": "Insufficient readable text returned", **target}
         return {"_page": parsed}
 
-    with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        futures = [pool.submit(_fetch_one, t) for t in targets]
-        for fut in as_completed(futures):
+    pool = ThreadPoolExecutor(max_workers=max_workers)
+    fut_to_target = {pool.submit(_fetch_one, t): t for t in targets}
+    try:
+        for fut in as_completed(fut_to_target, timeout=overall_timeout):
+            target = fut_to_target[fut]
             try:
                 res = fut.result()
                 if "_page" in res:
@@ -470,13 +493,31 @@ def crawl_official_global_sources(
                 else:
                     errors.append(
                         {
-                            "country_id": res.get("country_id", ""),
-                            "url": res.get("url", ""),
+                            "country_id": res.get("country_id", target["country_id"]),
+                            "url": res.get("url", target["url"]),
                             "error": res.get("_error", "Fetch error"),
                         }
                     )
             except Exception as exc:
-                errors.append({"country_id": "", "url": "", "error": str(exc)[:160]})
+                errors.append(
+                    {
+                        "country_id": target["country_id"],
+                        "url": target["url"],
+                        "error": str(exc)[:160],
+                    }
+                )
+    except FuturesTimeoutError:
+        for fut, target in fut_to_target.items():
+            if not fut.done():
+                errors.append(
+                    {
+                        "country_id": target["country_id"],
+                        "url": target["url"],
+                        "error": "Timed out waiting for portal response",
+                    }
+                )
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
 
     return {
         "pages": pages,

@@ -10,7 +10,11 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from backend.canada_crawler import SEED_CANADA_PAGES, crawl_official_canada_pages
+from backend.canada_crawler import (
+    SEED_CANADA_PAGES,
+    crawl_official_canada_pages,
+    crawl_official_global_sources,
+)
 from backend.config import BASE_DIR, DB_PATH, IS_VERCEL
 from backend.countries_data import COUNTRIES_CATALOG
 from backend.eligibility_engine import (
@@ -34,18 +38,20 @@ from backend.resume_parser import parse_resume_file, parse_resume_text
 from backend.store import (
     get_profile as store_get_profile,
     list_canada_pages as store_list_canada_pages,
+    list_global_official_pages as store_list_global_official_pages,
     list_progress as store_list_progress,
     list_shortlists as store_list_shortlists,
     save_profile as store_save_profile,
     store_session,
     upsert_canada_page as store_upsert_canada_page,
+    upsert_global_official_page as store_upsert_global_official_page,
     upsert_progress as store_upsert_progress,
     upsert_shortlist as store_upsert_shortlist,
 )
 
 app = FastAPI(
     title="JapaAI.ng — Official Global Immigration & PR Roadmap Platform",
-    description="Multi-country official immigration roadmaps across 12 countries, cross-country matcher, deep Canada RCIP engine, and official government RAG copilot.",
+    description="Real-time curated official immigration & permanent residence roadmaps across 12 destination countries directly from national government portals.",
     version="2.0.0",
 )
 
@@ -65,7 +71,7 @@ def _resolve_db_path() -> str:
 
 
 def ensure_seeded_and_indexed(db_path: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Seed offline Canada.ca baseline pages if DB is empty and load RAG index."""
+    """Seed offline Canada.ca baseline pages if DB is empty and load RAG index with any live global snapshots."""
     target_db = db_path or _resolve_db_path()
     with store_session(target_db) as conn:
         pages = store_list_canada_pages(conn)
@@ -73,7 +79,8 @@ def ensure_seeded_and_indexed(db_path: Optional[str] = None) -> List[Dict[str, A
             for seed_page in SEED_CANADA_PAGES:
                 store_upsert_canada_page(conn, seed_page)
             pages = store_list_canada_pages(conn)
-    rag_engine.index_pages(pages)
+        global_pages = store_list_global_official_pages(conn)
+    rag_engine.index_pages(pages, global_live_pages=global_pages)
     return pages
 
 
@@ -208,11 +215,19 @@ MAX_UPLOAD_BYTES = int(4.2 * 1024 * 1024)
 @app.get("/api/health")
 def health_check() -> Dict[str, Any]:
     pages = rag_engine.pages or ensure_seeded_and_indexed()
+    live_pages = rag_engine.global_live_pages
+    timestamps = [
+        p.get("fetched_at", "")
+        for p in [*live_pages, *pages]
+        if p.get("fetched_at") and not str(p.get("fetched_at", "")).startswith("2026-11-09T00:00:00")
+    ]
     return {
         "status": "healthy",
         "service": "JapaAI.ng",
         "countries_count": len(COUNTRIES_CATALOG),
-        "indexed_pages": len(pages),
+        "indexed_pages": len(pages) + len(live_pages),
+        "live_global_pages": len(live_pages),
+        "last_synced_at": max(timestamps, default=""),
         "environment": "vercel" if IS_VERCEL else "local",
         "storage_mode": "browser_local_plus_tmp" if IS_VERCEL else "sqlite_local",
     }
@@ -509,7 +524,6 @@ def shortlist_community_endpoint(payload: CommunityShortlistPayload) -> Dict[str
     return {"status": "success", "shortlist": record}
 
 
-@app.post("/api/sync-sources")
 @app.post("/api/sync-canada")
 def sync_canada_endpoint() -> Dict[str, Any]:
     crawl_result = crawl_official_canada_pages()
@@ -521,8 +535,9 @@ def sync_canada_endpoint() -> Dict[str, Any]:
             outcome = store_upsert_canada_page(conn, page)
             counts[outcome] = counts.get(outcome, 0) + 1
         all_pages = store_list_canada_pages(conn)
+        global_pages = store_list_global_official_pages(conn)
 
-    rag_engine.index_pages(all_pages)
+    rag_engine.index_pages(all_pages, global_live_pages=global_pages)
     return {
         "status": "success",
         "inserted": counts["inserted"],
@@ -535,28 +550,121 @@ def sync_canada_endpoint() -> Dict[str, Any]:
     }
 
 
+@app.post("/api/sync-sources")
+def sync_all_official_sources_endpoint(
+    country_id: Optional[str] = Query(None),
+) -> Dict[str, Any]:
+    """Concurrently sync verbatim content from live official government portals across all 12 or 1 country."""
+    scope = (country_id or "all").strip().lower()
+    if scope not in ("", "all") and not any(c["id"] == scope for c in COUNTRIES_CATALOG):
+        raise HTTPException(status_code=404, detail="Country not found in catalog.")
+
+    crawl_global = crawl_official_global_sources(
+        country_id=None if scope in ("", "all") else scope,
+        timeout=8,
+        max_workers=8,
+    )
+    ca_errors: List[Dict[str, str]] = []
+    counts = {"inserted": 0, "updated": 0, "unchanged": 0}
+
+    db_path = _resolve_db_path()
+    with store_session(db_path) as conn:
+        for page in crawl_global["pages"]:
+            outcome = store_upsert_global_official_page(conn, page)
+            counts[outcome] = counts.get(outcome, 0) + 1
+
+        if scope in ("", "all", "canada"):
+            ca_crawl = crawl_official_canada_pages(timeout=8)
+            ca_errors = ca_crawl.get("errors", [])
+            for ca_page in ca_crawl.get("pages", []):
+                outcome = store_upsert_canada_page(conn, ca_page)
+                counts[outcome] = counts.get(outcome, 0) + 1
+
+        all_canada = store_list_canada_pages(conn)
+        all_global = store_list_global_official_pages(conn)
+
+    rag_engine.index_pages(all_canada, global_live_pages=all_global)
+    return {
+        "status": "success",
+        "scope": scope or "all",
+        "synced_at": crawl_global["synced_at"],
+        "countries_indexed": len(COUNTRIES_CATALOG),
+        "live_fetched": crawl_global["total_fetched"],
+        "inserted": counts["inserted"],
+        "updated": counts["updated"],
+        "unchanged": counts["unchanged"],
+        "failed": len(crawl_global["errors"]) + len(ca_errors),
+        "errors": (crawl_global["errors"] + ca_errors)[:10],
+        "total_indexed": len(all_canada) + len(all_global),
+        "live_global_pages": len(all_global),
+    }
+
+
 @app.get("/api/sources")
 def get_sources_endpoint() -> Dict[str, Any]:
     db_path = _resolve_db_path()
     with store_session(db_path) as conn:
         pages = store_list_canada_pages(conn)
+        global_live = store_list_global_official_pages(conn)
     if not pages:
         pages = ensure_seeded_and_indexed(db_path)
-    summary_pages = [
-        {
-            "url": p["url"],
-            "track": p["track"],
-            "slug": p["slug"],
-            "title": p["title"],
-            "site_last_modified": p["site_last_modified"],
-            "alert_text": p["alert_text"],
-            "fetched_at": p["fetched_at"],
-        }
-        for p in pages
-    ]
+
+    live_urls = {p["url"] for p in global_live}
+    summary_pages: List[Dict[str, Any]] = []
+
+    for gp in global_live:
+        summary_pages.append(
+            {
+                "url": gp["url"],
+                "country_id": gp["country_id"],
+                "track": gp["country_name"],
+                "slug": gp["country_id"],
+                "title": gp["title"],
+                "site_last_modified": gp["site_last_modified"],
+                "alert_text": gp["alert_text"],
+                "fetched_at": gp["fetched_at"],
+                "source_mode": gp.get("source_mode", "live"),
+            }
+        )
+
+    for p in pages:
+        is_live_ca = bool(p.get("fetched_at") and not str(p.get("fetched_at", "")).startswith("2026-11-09T00:00:00"))
+        summary_pages.append(
+            {
+                "url": p["url"],
+                "country_id": "canada",
+                "track": p["track"],
+                "slug": p["slug"],
+                "title": p["title"],
+                "site_last_modified": p["site_last_modified"],
+                "alert_text": p["alert_text"],
+                "fetched_at": p["fetched_at"],
+                "source_mode": "live" if is_live_ca else "verified_registry",
+            }
+        )
+
+    for c in COUNTRIES_CATALOG:
+        if c["official_portal"] not in live_urls:
+            summary_pages.append(
+                {
+                    "url": c["official_portal"],
+                    "country_id": c["id"],
+                    "track": c["name"],
+                    "slug": c["id"],
+                    "title": f"{c['name']} — {c['authority']}",
+                    "site_last_modified": "",
+                    "alert_text": "",
+                    "fetched_at": "",
+                    "source_mode": "verified_registry",
+                }
+            )
+
+    live_timestamps = [p["fetched_at"] for p in summary_pages if p.get("source_mode") == "live" and p.get("fetched_at")]
     return {
         "status": "success",
         "count": len(summary_pages),
+        "live_count": len(live_timestamps),
+        "last_synced_at": max(live_timestamps, default=""),
         "sources": summary_pages,
         "language_charts": LANGUAGE_TEST_CHARTS,
         "eca_organizations": ECA_ORGANIZATIONS,
@@ -638,10 +746,35 @@ def list_countries_endpoint(
 
 @app.get("/api/countries/{country_id}")
 def get_country_hub_endpoint(country_id: str) -> Dict[str, Any]:
-    target = next((c for c in COUNTRIES_CATALOG if c["id"] == country_id.strip().lower()), None)
+    cid = country_id.strip().lower()
+    target = next((c for c in COUNTRIES_CATALOG if c["id"] == cid), None)
     if not target:
         raise HTTPException(status_code=404, detail="Country not found in catalog.")
-    return {"status": "success", "country": target}
+
+    db_path = _resolve_db_path()
+    with store_session(db_path) as conn:
+        live_rows = store_list_global_official_pages(conn, country_id=cid)
+
+    # Also check in-memory RAG live pages (e.g. during tests or warm cache)
+    if not live_rows and rag_engine.global_live_pages:
+        live_rows = [p for p in rag_engine.global_live_pages if p.get("country_id") == cid]
+
+    live_snapshots = [
+        {
+            "url": lp["url"],
+            "title": lp["title"],
+            "site_last_modified": lp.get("site_last_modified", ""),
+            "fetched_at": lp.get("fetched_at", ""),
+            "alert_text": lp.get("alert_text", ""),
+            "excerpt": (lp.get("content_text", "")[:450].strip() + ("..." if len(lp.get("content_text", "")) > 450 else "")),
+        }
+        for lp in live_rows
+    ]
+    timestamps = [s["fetched_at"] for s in live_snapshots if s.get("fetched_at")]
+    enriched = dict(target)
+    enriched["live_snapshots"] = live_snapshots
+    enriched["last_verified_at"] = max(timestamps, default="")
+    return {"status": "success", "country": enriched}
 
 
 @app.post("/api/global/match")
@@ -675,7 +808,7 @@ def export_global_roadmap_html(payload: GlobalRoadmapExportPayload) -> HTMLRespo
             f"(<a href='{esc(step['url'])}'>Official Guide</a>){note_html}</li>"
         )
 
-    notes_html = "".join(f"<li>{esc(n)}</li>" for n in country["nigerian_notes"])
+    notes_html = "".join(f"<li>{esc(n)}</li>" for n in (country.get("applicant_notes") or []))
 
     doc_html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -703,10 +836,10 @@ def export_global_roadmap_html(payload: GlobalRoadmapExportPayload) -> HTMLRespo
   </div>
   <h2>Official Step-by-Step Roadmap</h2>
   <ol>{steps_html}</ol>
-  <h2>Nigerian Applicant Notes &amp; Watch-Outs</h2>
+  <h2>Official Applicant Notes &amp; Key Requirements</h2>
   <ul>{notes_html}</ul>
   <p style="margin-top:28px; font-size:12px; color:#64748b;">
-    Grounded in official government portals indexed by JapaAI.ng. Informational guidance only; not legal immigration advice.
+    Curated directly from official government portals indexed by JapaAI.ng with no added assumptions. Informational planning guide only; not legal immigration advice.
   </p>
 </body>
 </html>"""

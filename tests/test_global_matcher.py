@@ -45,7 +45,16 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
                 country["official_portal"].startswith("https://"),
                 f"{country['id']} portal must use https://",
             )
-            self.assertTrue(country.get("nigerian_notes"), f"{country['id']} missing Nigerian notes")
+            self.assertTrue(country.get("applicant_notes"), f"{country['id']} missing applicant_notes")
+            notes_blob = " ".join(
+                [
+                    country.get("summary", ""),
+                    *country.get("applicant_notes", []),
+                    *(s.get("title", "") + " " + s.get("description", "") for p in country["pathways"] for s in p.get("stages", [])),
+                ]
+            )
+            for localized in ("Nigeria", "Nigerian", "Lagos", "Abuja"):
+                self.assertNotIn(localized, notes_blob, f"{country['id']} leaked localized term {localized}")
             pathways = country["pathways"]
             if country["id"] == "canada":
                 self.assertEqual(len(pathways), 6)
@@ -162,7 +171,7 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
         chat_resp = self.client.post(
             "/api/chat",
             json={
-                "query": "Can Nigerians apply for the USA Diversity Visa lottery?",
+                "query": "What are the USA Diversity Visa lottery eligibility rules and EB-2 NIW requirements?",
                 "country_id": "usa",
             },
         )
@@ -170,7 +179,7 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
         chat_json = chat_resp.json()
         answer_text = chat_json.get("answer", "")
         self.assertTrue(
-            "diversity" in answer_text.lower() or "nigeria" in answer_text.lower(),
+            "diversity" in answer_text.lower() and "50,000" in answer_text.lower(),
             f"Unexpected USA chat answer: {answer_text[:200]}",
         )
 
@@ -190,6 +199,7 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
         self.assertNotIn("<img src=x onerror=alert(2)>", html_body)
         self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;Ada", html_body)
         self.assertIn("Skilled Worker", html_body)
+        self.assertNotIn("Nigerian", html_body)
 
     def test_pwa_install_assets_and_clean_ui_naming(self):
         manifest_resp = self.client.get("/manifest.webmanifest")
@@ -198,6 +208,7 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
         self.assertEqual(manifest["short_name"], "JapaAI.ng")
         self.assertEqual(manifest["display"], "standalone")
         self.assertGreaterEqual(len(manifest.get("icons", [])), 3)
+        self.assertNotIn("Nigerian", manifest.get("description", ""))
 
         for icon in manifest["icons"]:
             icon_resp = self.client.get(icon["src"])
@@ -224,19 +235,119 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
             "Refresh Gov Data",
             "Canada RCIP Toolkit",
             "mobile-bottom-nav",
+            "Straight From the Source",
         ]:
             self.assertIn(required, html_text)
-        for forbidden in ["Vercel Production", "Sync Canada.ca", "Canada RCIP Engine"]:
+        self.assertIn("real time", html_text.lower())
+        for forbidden in [
+            "Vercel Production",
+            "Sync Canada.ca",
+            "Canada RCIP Engine",
+            "Built for Nigerians",
+            "Nigerian Applicant",
+        ]:
             self.assertNotIn(forbidden, html_text)
 
         js_resp = self.client.get("/static/app.js")
         self.assertEqual(js_resp.status_code, 200)
-        for forbidden_js in ["Vercel Production", "Sync Canada.ca"]:
+        for forbidden_js in [
+            "Vercel Production",
+            "Sync Canada.ca",
+            "Built for Nigerians",
+            "Nigerian Applicant",
+        ]:
             self.assertNotIn(forbidden_js, js_resp.text)
 
         route_paths = {getattr(r, "path", None) for r in app.routes}
         self.assertIn("/api/sync-sources", route_paths)
         self.assertIn("/api/sync-canada", route_paths)
+
+    def test_global_live_parser_store_and_rag_integration(self):
+        import tempfile
+        from pathlib import Path
+        from backend.canada_crawler import parse_official_page_html
+        from backend.main import rag_engine
+        from backend.store import (
+            list_global_official_pages,
+            store_session,
+            upsert_global_official_page,
+        )
+
+        sample_html = """<!doctype html>
+        <html>
+        <head><title>EU Blue Card - Make it in Germany</title></head>
+        <body>
+          <nav>Top navigation noise</nav>
+          <main>
+            <h1>EU Blue Card Germany</h1>
+            <div class="alert-notice">Official update: 2026 threshold active for IT and STEM graduates.</div>
+            <time datetime="2026-11-18">2026-11-18</time>
+            <p>Qualified academics with a recognized degree earn at least EUR 50,700 gross annually.</p>
+            <p>Shortage occupations qualify at a lower salary threshold of EUR 45,934.20 gross annually.</p>
+          </main>
+          <footer>Cookie banner footer noise</footer>
+          <script>window.trackAnalytics = true;</script>
+        </body>
+        </html>"""
+
+        parsed = parse_official_page_html(
+            sample_html,
+            url="https://www.make-it-in-germany.com/en/visa-residence/types/eu-blue-card",
+            country_id="germany",
+            country_name="Germany",
+        )
+        self.assertEqual(parsed["title"], "EU Blue Card Germany")
+        self.assertEqual(parsed["site_last_modified"], "2026-11-18")
+        self.assertEqual(parsed["source_mode"], "live")
+        self.assertIn("50,700", parsed["content_text"])
+        self.assertIn("2026 threshold active", parsed["alert_text"])
+        self.assertNotIn("Top navigation noise", parsed["content_text"])
+        self.assertNotIn("trackAnalytics", parsed["content_text"])
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_db = str(Path(tmpdir) / "live_test.db")
+            prev_db = getattr(app.state, "db_path", None)
+            app.state.db_path = tmp_db
+            try:
+                with store_session(tmp_db) as conn:
+                    self.assertEqual(upsert_global_official_page(conn, parsed), "inserted")
+                    self.assertEqual(upsert_global_official_page(conn, parsed), "unchanged")
+                    updated_page = dict(parsed)
+                    updated_page["content_text"] = parsed["content_text"] + "\nAdditional official clarification added."
+                    updated_page["content_hash"] = "updatedhash001"
+                    self.assertEqual(upsert_global_official_page(conn, updated_page), "updated")
+
+                    stored = list_global_official_pages(conn, country_id="germany")
+                    self.assertEqual(len(stored), 1)
+                    self.assertEqual(stored[0]["source_mode"], "live")
+
+                rag_engine.index_pages(rag_engine.pages, global_live_pages=[updated_page])
+
+                de_resp = self.client.get("/api/countries/germany")
+                self.assertEqual(de_resp.status_code, 200)
+                de_country = de_resp.json()["country"]
+                self.assertEqual(len(de_country["live_snapshots"]), 1)
+                self.assertEqual(de_country["live_snapshots"][0]["title"], "EU Blue Card Germany")
+                self.assertTrue(de_country["last_verified_at"])
+
+                src_resp = self.client.get("/api/sources")
+                self.assertEqual(src_resp.status_code, 200)
+                live_srcs = [s for s in src_resp.json()["sources"] if s.get("source_mode") == "live"]
+                self.assertTrue(any(s["url"] == parsed["url"] for s in live_srcs))
+
+                live_chat = self.client.post(
+                    "/api/chat",
+                    json={
+                        "query": "Additional official clarification Blue Card 50,700",
+                        "country_id": "germany",
+                    },
+                )
+                self.assertEqual(live_chat.status_code, 200)
+                lcj = live_chat.json()
+                self.assertTrue(any(c.get("source_mode") == "live" for c in lcj.get("citations", [])))
+            finally:
+                app.state.db_path = prev_db
+                rag_engine.index_pages(rag_engine.pages, global_live_pages=[])
 
 
 if __name__ == "__main__":

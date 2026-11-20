@@ -1,17 +1,19 @@
-"""Live Canada.ca RCIP web crawler and offline verified seed snapshots."""
+"""Live multi-country official immigration portal crawler and offline curated seed snapshots."""
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import re
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
 import httpx
 from bs4 import BeautifulSoup
 
 from backend.config import OFFICIAL_CANADA_PAGES
+from backend.countries_data import COUNTRIES_CATALOG
 
-USER_AGENT = "RCIP-Canada-AI/1.0 (+https://www.canada.ca)"
+USER_AGENT = "JapaAI-Official-Sync/2.0 (+https://rcip-canada-ai.vercel.app)"
 
 
 def _hash_text(text: str) -> str:
@@ -310,3 +312,176 @@ SEED_CANADA_PAGES: List[Dict[str, Any]] = [
         ),
     ),
 ]
+
+
+def parse_official_page_html(
+    html: str,
+    url: str,
+    country_id: str,
+    country_name: str,
+    title_fallback: str = "",
+    last_modified_header: str = "",
+) -> Dict[str, Any]:
+    """Parse any official national government immigration page into verbatim cleaned text, alert notices, and freshness metadata."""
+    soup = BeautifulSoup(html or "", "html.parser")
+    main = soup.find("main") or soup.find("article") or soup.body or soup
+
+    for tag in main.find_all(["script", "style", "noscript", "nav", "header", "footer", "aside", "form", "svg"]):
+        tag.decompose()
+
+    h1 = main.find("h1")
+    title = (
+        h1.get_text(" ", strip=True)
+        if h1
+        else (soup.title.get_text(" ", strip=True) if soup.title else title_fallback)
+    )
+    title = re.sub(r"\s+", " ", (title or title_fallback)).strip()[:180]
+
+    alerts: List[str] = []
+    for sec in main.find_all(["section", "div"]):
+        classes = " ".join(sec.get("class") or []).lower()
+        if any(tok in classes for tok in ("alert", "notice", "warning", "banner")):
+            txt = " ".join(sec.get_text(" ", strip=True).split())
+            if 15 <= len(txt) <= 600 and txt not in alerts:
+                alerts.append(txt)
+    alert_text = " | ".join(alerts[:3])
+
+    site_last_modified = ""
+    time_tag = (
+        main.find("time", attrs={"property": "dateModified"})
+        or soup.find("time", attrs={"datetime": True})
+        or soup.find("time")
+    )
+    if time_tag:
+        site_last_modified = (time_tag.get("datetime") or time_tag.get_text(" ", strip=True)).strip()[:32]
+    if not site_last_modified:
+        for meta_name in ("article:modified_time", "dcterms.modified", "last-modified"):
+            meta_tag = soup.find("meta", attrs={"name": meta_name}) or soup.find("meta", attrs={"property": meta_name})
+            if meta_tag and meta_tag.get("content"):
+                site_last_modified = meta_tag["content"].strip()[:32]
+                break
+    if not site_last_modified:
+        raw_text = main.get_text(" ", strip=True)
+        m = re.search(r"(?:Date modified|Last updated|Updated on)[:\s]+([0-9]{4}-[0-9]{2}-[0-9]{2}|[A-Za-z]+\s+\d{1,2},\s+\d{4})", raw_text, re.I)
+        if m:
+            site_last_modified = m.group(1).strip()[:32]
+    if not site_last_modified and last_modified_header:
+        site_last_modified = last_modified_header.strip()[:32]
+
+    lines = [line.strip() for line in main.get_text("\n").splitlines() if len(line.strip()) > 1]
+    content_text = "\n".join(lines)[:12000]
+
+    return {
+        "url": url,
+        "country_id": country_id,
+        "country_name": country_name,
+        "title": title or title_fallback or country_name,
+        "site_last_modified": site_last_modified,
+        "alert_text": alert_text,
+        "content_text": content_text,
+        "content_hash": _hash_text(content_text),
+        "http_status": 200,
+        "source_mode": "live",
+        "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+
+
+def build_global_crawl_targets(country_id: Optional[str] = None) -> List[Dict[str, str]]:
+    """Build curated official URL targets (portal + top 2 unique pathway URLs) across all 12 or 1 country."""
+    scope = (country_id or "").strip().lower()
+    targets: List[Dict[str, str]] = []
+    seen_urls = set()
+
+    for c in COUNTRIES_CATALOG:
+        if scope not in ("", "all") and c["id"] != scope:
+            continue
+        portal_url = c["official_portal"]
+        if portal_url not in seen_urls:
+            seen_urls.add(portal_url)
+            targets.append(
+                {
+                    "country_id": c["id"],
+                    "country_name": c["name"],
+                    "title": f"{c['name']} — {c['authority']}",
+                    "url": portal_url,
+                }
+            )
+        added_pathways = 0
+        for p in c["pathways"]:
+            if added_pathways >= 2:
+                break
+            purl = p["official_url"]
+            if purl and purl not in seen_urls:
+                seen_urls.add(purl)
+                added_pathways += 1
+                targets.append(
+                    {
+                        "country_id": c["id"],
+                        "country_name": c["name"],
+                        "title": f"{c['name']}: {p['name']}",
+                        "url": purl,
+                    }
+                )
+    return targets
+
+
+def crawl_official_global_sources(
+    country_id: Optional[str] = None,
+    timeout: int = 8,
+    max_workers: int = 8,
+) -> Dict[str, Any]:
+    """Concurrently fetch live verbatim HTML from official ministry portals across all 12 or 1 country."""
+    targets = build_global_crawl_targets(country_id=country_id)
+    pages: List[Dict[str, Any]] = []
+    errors: List[Dict[str, str]] = []
+    synced_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+    def _fetch_one(target: Dict[str, str]) -> Dict[str, Any]:
+        resp = httpx.get(
+            target["url"],
+            follow_redirects=True,
+            timeout=timeout,
+            headers={
+                "User-Agent": USER_AGENT,
+                "Accept-Language": "en-US,en;q=0.9",
+            },
+        )
+        if resp.status_code != 200:
+            return {"_error": f"HTTP {resp.status_code}", **target}
+        parsed = parse_official_page_html(
+            resp.text,
+            url=target["url"],
+            country_id=target["country_id"],
+            country_name=target["country_name"],
+            title_fallback=target["title"],
+            last_modified_header=resp.headers.get("last-modified", ""),
+        )
+        if len(parsed.get("content_text", "")) < 120:
+            return {"_error": "Insufficient readable text returned", **target}
+        return {"_page": parsed}
+
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = [pool.submit(_fetch_one, t) for t in targets]
+        for fut in as_completed(futures):
+            try:
+                res = fut.result()
+                if "_page" in res:
+                    pages.append(res["_page"])
+                else:
+                    errors.append(
+                        {
+                            "country_id": res.get("country_id", ""),
+                            "url": res.get("url", ""),
+                            "error": res.get("_error", "Fetch error"),
+                        }
+                    )
+            except Exception as exc:
+                errors.append({"country_id": "", "url": "", "error": str(exc)[:160]})
+
+    return {
+        "pages": pages,
+        "errors": errors,
+        "total_attempted": len(targets),
+        "total_fetched": len(pages),
+        "synced_at": synced_at,
+    }

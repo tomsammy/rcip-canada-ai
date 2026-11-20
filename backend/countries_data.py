@@ -63,10 +63,10 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
             {"label": "ESDC NOC 2021 Finder", "url": "https://noc.esdc.gc.ca/"},
         ],
         "summary": "Direct permanent residence via RCIP (rural communities), Express Entry (points/category draws), PNP, Atlantic Immigration, Francophone Pilot, and Study-to-PR.",
-        "nigerian_notes": [
-            "Foreign degrees require an Educational Credential Assessment (ECA <5 yrs old) from WES, CES, ICAS, IQAS, or ICES (allow extra buffer for Nigerian university transcript verification).",
+        "applicant_notes": [
+            "Foreign degrees require an Educational Credential Assessment (ECA <5 yrs old) from WES, CES, ICAS, IQAS, or ICES (confirm academic transcript verification lead times early).",
             "Language proofs for PR must be IELTS General Training, CELPIP-General, PTE Core, TEF Canada, or TCF Canada — IELTS Academic is NOT accepted for PR.",
-            "Biometrics for Nigerians are collected via VFS Global in Lagos or Abuja after IRCC issues the Biometric Instruction Letter.",
+            "Biometrics (fingerprints and photo) are collected at an official IRCC Visa Application Centre (VAC) after IRCC issues your Biometric Instruction Letter.",
         ],
         "pathways": [
             _p(
@@ -111,7 +111,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                     _s("ca-ee-1", "Complete ECA & IELTS General / CELPIP / TEF Canada", "Obtain WES/ECA report and achieve at least CLB 7 in all 4 abilities (or NCLC 7+ for French category draws).", "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/eligibility.html"),
                     _s("ca-ee-2", "Calculate CRS & create Express Entry profile", "Verify 67/100 FSW points and submit free profile to the Express Entry pool.", "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/submit-profile.html"),
                     _s("ca-ee-3", "Receive Invitation to Apply (ITA) & submit e-APR within 60 days", "Upload police clearances, medical exam upfront/receipt, reference letters, and proof of unencumbered settlement funds.", "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/apply-permanent-residence.html"),
-                    _s("ca-ee-4", "Complete VFS biometrics & receive COPR", "Give fingerprints/photo via VFS Lagos/Abuja and land in Canada as a Permanent Resident.", "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/after-apply-next-steps.html"),
+                    _s("ca-ee-4", "Complete VAC biometrics & receive COPR", "Submit fingerprints/photo at an official IRCC Visa Application Centre (VAC) and land in Canada as a Permanent Resident.", "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/after-apply-next-steps.html"),
                 ],
             ),
             _p(
@@ -222,9 +222,9 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
             {"label": "Indefinite Leave to Remain (ILR)", "url": "https://www.gov.uk/indefinite-leave-to-remain"},
         ],
         "summary": "Employer-sponsored Skilled Worker and Health & Care routes, zero-salary-floor Global Talent endorsement, and Student-to-Graduate transition toward ILR (settlement).",
-        "nigerian_notes": [
-            "English proof requires an approved SELT (e.g. IELTS for UKVI) OR Ecctis qualification verification confirming a Nigerian degree taught in English.",
-            "Nigerian applicants must obtain a Tuberculosis (TB) clearance certificate from an IOM-approved clinic in Lagos or Abuja before visa submission.",
+        "applicant_notes": [
+            "English proof requires a Home Office-approved Secure English Language Test (e.g. IELTS for UKVI) or Ecctis qualification/English-language verification where eligible.",
+            "Applicants resident in Home Office-listed TB-testing countries must obtain a Tuberculosis clearance certificate from an approved clinic (gov.uk/tb-test-visa) before submission.",
             "Always cross-check any UK job offer against the official GOV.UK Register of Licensed Sponsors — avoid unlicensed agency certificates.",
         ],
         "pathways": [
@@ -246,8 +246,8 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 [
                     _s("uk-sw-1", "Verify target employer holds a Home Office Sponsor Licence", "Search the official GOV.UK Register of Licensed Sponsors before applying.", "https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers"),
                     _s("uk-sw-2", "Secure job offer & Certificate of Sponsorship (CoS)", "Confirm SOC 2020 code meets £41,700/yr (or eligible discount/going rate).", "https://www.gov.uk/skilled-worker-visa/your-job"),
-                    _s("uk-sw-3", "Complete IELTS for UKVI (or Ecctis) & IOM TB test in Nigeria", "Book approved SELT and IOM clinic TB screening in Lagos/Abuja.", "https://www.gov.uk/tb-test-visa"),
-                    _s("uk-sw-4", "Apply online on GOV.UK, pay IHS + visa fee, & reach ILR at 5 yrs", "Submit biometrics via TLScontact and maintain qualifying continuous residence for ILR.", "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk"),
+                    _s("uk-sw-3", "Complete IELTS for UKVI (or Ecctis) & TB test if required", "Book an approved SELT test and approved clinic TB screening if applying from a listed country.", "https://www.gov.uk/tb-test-visa"),
+                    _s("uk-sw-4", "Apply online on GOV.UK, pay IHS + visa fee, & reach ILR at 5 yrs", "Submit biometrics at an accredited UKVI visa centre and maintain qualifying continuous residence for ILR.", "https://www.gov.uk/skilled-worker-visa/apply-from-outside-the-uk"),
                 ],
             ),
             _p(
@@ -268,8 +268,8 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 [
                     _s("uk-hc-1", "Check professional registration (NMC / GMC / HCPC) & employer licence", "Nurses/doctors require UK regulatory registration alongside a licensed NHS/private sponsor.", "https://www.gov.uk/health-care-worker-visa/different-roles"),
                     _s("uk-hc-2", "Obtain Certificate of Sponsorship (CoS) & verify going rate", "Ensure salary meets £25,000+ floor or national Agenda for Change band.", "https://www.gov.uk/health-care-worker-visa/how-much-you-need-to-be-paid"),
-                    _s("uk-hc-3", "Complete OET/IELTS UKVI, IOM TB test & Nigeria Police clearance", "Prepare criminal record certificates for healthcare roles.", "https://www.gov.uk/health-care-worker-visa/documents-you-must-provide"),
-                    _s("uk-hc-4", "Submit GOV.UK application (IHS-exempt) & settle after 5 yrs", "Biometrics via TLScontact Lagos/Abuja; apply for ILR after 5 continuous years.", "https://www.gov.uk/health-care-worker-visa/apply-from-outside-the-uk"),
+                    _s("uk-hc-3", "Complete OET/IELTS UKVI, TB test (if applicable) & criminal record checks", "Prepare police clearance certificates from countries where you lived 12+ months in the past 10 years.", "https://www.gov.uk/health-care-worker-visa/documents-you-must-provide"),
+                    _s("uk-hc-4", "Submit GOV.UK application (IHS-exempt) & settle after 5 yrs", "Submit biometrics at an accredited UKVI visa centre; apply for ILR after 5 continuous years.", "https://www.gov.uk/health-care-worker-visa/apply-from-outside-the-uk"),
                 ],
             ),
             _p(
@@ -290,7 +290,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 [
                     _s("uk-gt-1", "Confirm eligibility under Digital Technology, Research, or Arts", "Choose Exceptional Talent (3-yr ILR) or Exceptional Promise (5-yr ILR).", "https://www.gov.uk/global-talent"),
                     _s("uk-gt-2", "Apply for Stage 1 Endorsement with evidence portfolio", "Compile 3 recommendation letters + proof of innovation, leadership, or commercial/academic impact.", "https://www.gov.uk/global-talent-digital-technology"),
-                    _s("uk-gt-3", "Apply for Stage 2 Visa on GOV.UK + IOM TB test", "Pay visa fee and Immigration Health Surcharge after receiving endorsement approval.", "https://www.gov.uk/global-talent/apply-for-a-visa"),
+                    _s("uk-gt-3", "Apply for Stage 2 Visa on GOV.UK + TB test if required", "Pay visa fee and Immigration Health Surcharge after receiving endorsement approval.", "https://www.gov.uk/global-talent/apply-for-a-visa"),
                     _s("uk-gt-4", "Work freely / found companies & apply for ILR in 3–5 years", "Switch roles, freelance, or launch ventures without sponsor restrictions.", "https://www.gov.uk/indefinite-leave-to-remain-business-investor-global-talent"),
                 ],
             ),
@@ -311,7 +311,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "Study at a licensed UK university, transition into the unsponsored Graduate Route after degree completion, then switch to Skilled Worker or Global Talent toward ILR.",
                 [
                     _s("uk-st-1", "Secure unconditional offer & CAS from licensed UK Sponsor", "Verify institution is on the UKVI Student Sponsor register.", "https://www.gov.uk/student-visa"),
-                    _s("uk-st-2", "Prove 28-day maintenance funds & complete IOM TB test", "Hold required tuition + monthly living balance in an acceptable Nigerian/UK account for 28 consecutive days.", "https://www.gov.uk/student-visa/money"),
+                    _s("uk-st-2", "Prove 28-day maintenance funds & complete TB test (if required)", "Hold required tuition + monthly living balance in an eligible financial institution for 28 consecutive days.", "https://www.gov.uk/student-visa/money"),
                     _s("uk-st-3", "Graduate & apply for Graduate Route inside the UK", "Gain UK work experience without sponsorship while interviewing with licensed employers.", "https://www.gov.uk/graduate-visa"),
                     _s("uk-st-4", "Switch to Skilled Worker (or Global Talent) to start 5-yr ILR clock", "Move onto a settlement-qualifying visa before Graduate Route expiry.", "https://www.gov.uk/skilled-worker-visa/switch-to-this-visa"),
                 ],
@@ -336,10 +336,10 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
             {"label": "State Dept. Visa Info", "url": "https://travel.state.gov/content/travel/en/us-visas.html"},
         ],
         "summary": "Employment-based Green Cards (EB-2 NIW self-petition & EB-1A), O-1A extraordinary ability, H-1B specialty occupation, and F-1 STEM OPT pathways.",
-        "nigerian_notes": [
-            "IMPORTANT: Natives of Nigeria are NOT eligible to enter the U.S. Diversity Visa (DV) Lottery because Nigeria exceeds the 50,000 5-year immigrant admission cap (rare exceptions apply only via spouse or parent cross-chargeability).",
-            "Nigeria is normally in the 'Rest of World' EB chargeability category — meaning EB-2 NIW avoids the multi-decade per-country backlogs seen by India/China, subject to the monthly Visa Bulletin.",
-            "Consular immigrant interviews occur at U.S. Consulate General Lagos (or Embassy Abuja for nonimmigrant visas).",
+        "applicant_notes": [
+            "Diversity Visa (DV) Lottery eligibility depends on country of birth: nationals of countries that sent more than 50,000 immigrants to the U.S. in the prior 5 years are excluded (verify the annual official eligible-country list on travel.state.gov).",
+            "Employment-Based (EB-1 / EB-2 NIW) Green Card wait times follow country-of-birth chargeability on the monthly DOS Visa Bulletin; 'Rest of World' chargeability is typically faster than oversubscribed categories.",
+            "Consular immigrant interviews take place at the designated U.S. Embassy or Consulate for your country of residence.",
         ],
         "pathways": [
             _p(
@@ -361,7 +361,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                     _s("us-niw-1", "Confirm EB-2 qualification (Master's/PhD OR Bachelor's + 5 yrs progressive exp)", "Verify foreign degree equivalence if educated outside the U.S.", "https://www.uscis.gov/working-in-the-united-states/permanent-workers/employment-based-immigration-second-preference-eb-2"),
                     _s("us-niw-2", "Build Dhanasar 3-prong National Interest petition (Form I-140)", "Document proposed endeavor, publications/patents/revenue/impact, and independent recommendation letters.", "https://www.uscis.gov/i-140"),
                     _s("us-niw-3", "File Form I-140 (optional Premium Processing I-907)", "Track priority date against the monthly DOS Visa Bulletin.", "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html"),
-                    _s("us-niw-4", "Complete DS-260 Consular Processing (Lagos) or I-485 Adjustment", "Receive immigrant visa / Green Card once priority date is current.", "https://www.uscis.gov/green-card/green-card-processes-and-procedures/consular-processing"),
+                    _s("us-niw-4", "Complete DS-260 Consular Processing or I-485 Adjustment", "Receive immigrant visa / Green Card once priority date is current.", "https://www.uscis.gov/green-card/green-card-processes-and-procedures/consular-processing"),
                 ],
             ),
             _p(
@@ -424,7 +424,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "Complete a U.S. STEM degree (often funded for PhD/research Master's), work up to 36 months on OPT/STEM OPT with E-Verify employers, and transition to H-1B or EB-2 NIW.",
                 [
                     _s("us-f1-1", "Obtain I-20 from SEVP-certified U.S. university (target STEM CIP code)", "Look for assistantships/fellowships or STEM-designated programs.", "https://studyinthestates.dhs.gov/students"),
-                    _s("us-f1-2", "Pay SEVIS I-901 fee & attend F-1 interview in Abuja/Lagos", "Prove genuine study intent and funding for initial academic year.", "https://travel.state.gov/content/travel/en/us-visas/study/student-visa.html"),
+                    _s("us-f1-2", "Pay SEVIS I-901 fee & attend F-1 interview at your U.S. Embassy/Consulate", "Prove genuine study intent and funding for initial academic year.", "https://travel.state.gov/content/travel/en/us-visas/study/student-visa.html"),
                     _s("us-f1-3", "Graduate & work up to 36 months on OPT + STEM OPT", "Work with E-Verify employers in your major field.", "https://www.uscis.gov/working-in-the-united-states/students-and-exchange-visitors/optional-practical-training-extension-for-stem-students-stem-opt"),
                     _s("us-f1-4", "Transition to H-1B, O-1A, or self-petition EB-2 NIW", "File status change before OPT expiration.", "https://www.uscis.gov/working-in-the-united-states"),
                 ],
@@ -449,10 +449,10 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
             {"label": "Opportunity Card Self-Check", "url": "https://www.make-it-in-germany.com/en/visa-residence/types/job-search-opportunity-card"},
         ],
         "summary": "Fast-track EU Blue Card (PR in 21–27 months), points-based Opportunity Card (Chancenkarte) without a job offer, Skilled Worker visas, and free/low-tuition university & Ausbildung tracks.",
-        "nigerian_notes": [
-            "Check whether your Nigerian university & degree carry 'H+' / 'entspricht' status in anabin, or apply for a ZAB Statement of Comparability before embassy booking.",
+        "applicant_notes": [
+            "Check whether your university & degree hold 'H+' / 'entspricht' status in anabin, or apply for a ZAB Statement of Comparability before visa booking.",
             "Opportunity Card and Student visas require a German Blocked Account (Sperrkonto) showing living funds for 12 months.",
-            "German Missions in Abuja & Lagos process long-term national D-visas.",
+            "Accredited German Embassies & Consulates process long-term national D-visas for your country of residence.",
         ],
         "pathways": [
             _p(
@@ -473,7 +473,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 [
                     _s("de-bc-1", "Verify degree in anabin (or ZAB) / IT 3-yr experience rule", "Ensure university is H+ and degree matches German equivalency (or 3 yrs IT experience in past 7 yrs).", "https://www.make-it-in-germany.com/en/working-in-germany/recognition"),
                     _s("de-bc-2", "Secure German contract meeting 2026 Blue Card salary (€50,700 or €45,934.20)", "Contract must be at least 6 months and align with your qualifications.", "https://www.make-it-in-germany.com/en/visa-residence/types/eu-blue-card"),
-                    _s("de-bc-3", "Apply for National D-Visa at German Mission (Lagos / Abuja)", "Bring signed Declaration of Employment (Erklärung zum Beschäftigungsverhältnis) and degree proof.", "https://www.make-it-in-germany.com/en/visa-residence/visa-process"),
+                    _s("de-bc-3", "Apply for National D-Visa at accredited German Embassy/Consulate", "Bring signed Declaration of Employment (Erklärung zum Beschäftigungsverhältnis) and degree proof.", "https://www.make-it-in-germany.com/en/visa-residence/visa-process"),
                     _s("de-bc-4", "Convert to EU Blue Card & apply for PR at 21–27 months", "Reach B1 German for 21-month settlement permit or A1 for 27-month settlement.", "https://www.make-it-in-germany.com/en/visa-residence/living-permanently/settlement-permit"),
                 ],
             ),
@@ -561,9 +561,9 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
             {"label": "IND 2026 Income Requirements", "url": "https://ind.nl/en/required-amounts-income-requirements"},
         ],
         "summary": "Fast employer-sponsored Highly Skilled Migrant (Kennismigrant) permits via IND-recognised sponsors, Orientation Year (Zoekjaar), and EU Blue Card leading to 5-year PR.",
-        "nigerian_notes": [
+        "applicant_notes": [
             "Only employers listed on the official IND Public Register of Recognised Sponsors can sponsor the fast-track Highly Skilled Migrant permit (typically decided in ~2 weeks).",
-            "Once IND approves the sponsor's TEV application, you collect your MVV entry visa sticker at the Dutch Embassy in Abuja or Lagos.",
+            "If an MVV entry visa is required for your nationality, once IND approves the sponsor's TEV application you collect the MVV sticker at the accredited Dutch Embassy or Consulate.",
         ],
         "pathways": [
             _p(
@@ -584,7 +584,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 [
                     _s("nl-km-1", "Confirm target employer is on IND's Recognised Sponsor Register", "Check ind.nl public register before prioritizing interviews.", "https://ind.nl/en/public-register-recognised-sponsors/public-register-work"),
                     _s("nl-km-2", "Receive offer meeting 2026 IND age-based salary (€4,357 or €5,942/mo)", "Verify gross monthly base excludes the 8% holiday allowance.", "https://ind.nl/en/required-amounts-income-requirements"),
-                    _s("nl-km-3", "Sponsor files TEV (MVV + Residence Permit) with IND", "IND processes recognised-sponsor filings quickly; collect MVV visa in Nigeria.", "https://ind.nl/en/residence-permits/work/highly-skilled-migrant"),
+                    _s("nl-km-3", "Sponsor files TEV (MVV + Residence Permit) with IND", "IND processes recognised-sponsor filings quickly; collect MVV visa at your Dutch Embassy/Consulate if required.", "https://ind.nl/en/residence-permits/work/highly-skilled-migrant"),
                     _s("nl-km-4", "Register at municipality (BRP/BSN) & reach PR at 5 years", "Complete Dutch civic integration (inburgering) for permanent residence or naturalization.", "https://ind.nl/en/residence-permits/permanent-residency"),
                 ],
             ),
@@ -649,10 +649,10 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
             {"label": "2026 Salary Threshold Rules", "url": "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Employed/Work-permit-requirements/Salary-requirements-for-a-work-permit.html"},
         ],
         "summary": "Employer-sponsored Sweden Work Permits (with updated June 2026 90% median salary rules), EU Blue Card, and advanced-degree Job-Seeker residence permits.",
-        "nigerian_notes": [
+        "applicant_notes": [
             "Effective June 1, 2026, general Swedish work permits require at least 90% of Sweden's median salary (SEK 34,470/month before tax; SEK 28,725/mo for eligible 75% exemptions).",
             "Employers must advertise the position in Sweden/EU/EEA (Arbetsförmedlingen/EURES) for at least 10 days before issuing the offer.",
-            "Original passport verification and biometrics for Nigerians are handled via the Embassy of Sweden in Abuja.",
+            "Original passport verification and biometrics are handled via your designated Swedish Embassy or Consulate abroad.",
         ],
         "pathways": [
             _p(
@@ -673,7 +673,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 [
                     _s("se-wp-1", "Confirm 10-day EU/EEA job advertisement & 2026 salary threshold", "Ensure salary is at least SEK 34,470/month (or qualifies for 75% SEK 28,725/mo exemption).", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Employed/Work-permit-requirements/Salary-requirements-for-a-work-permit.html"),
                     _s("se-wp-2", "Employer initiates online permit & union opinion; complete application", "Respond to Migrationsverket digital link with passport & insurance proof.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Employed/How-to-apply.html"),
-                    _s("se-wp-3", "Complete Embassy Abuja passport check & biometrics", "Show original passport in person at the Swedish Embassy in Abuja when instructed.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden.html"),
+                    _s("se-wp-3", "Complete Embassy passport check & biometrics", "Show original passport in person at your designated Swedish Embassy or Consulate when instructed.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden.html"),
                     _s("se-wp-4", "Work 4 years in Sweden → apply for Permanent Residence", "Must demonstrate ability to support yourself + valid employment at PR renewal.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Extending-a-permit.html"),
                 ],
             ),
@@ -694,7 +694,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "For highly qualified professionals with a university degree (or 5 yrs specialist experience) earning above Sweden's EU Blue Card salary multiplier.",
                 [
                     _s("se-bc-1", "Confirm 180-credit university degree (or 5 yrs experience) & qualifying salary", "Check current Blue Card salary threshold on Migrationsverket.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Employed/Special-rules-for-certain-occupations-and-citizens/EU-Blue-Card.html"),
-                    _s("se-bc-2", "Submit EU Blue Card application online & verify passport in Abuja", "Includes union consultation and comprehensive health insurance proof.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Employed/How-to-apply.html"),
+                    _s("se-bc-2", "Submit EU Blue Card application online & verify passport at Embassy", "Includes union consultation and comprehensive health insurance proof.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Employed/How-to-apply.html"),
                     _s("se-bc-3", "Transition to Permanent Residence", "Maintain continuous qualifying employment in Sweden/EU.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden.html"),
                 ],
             ),
@@ -716,7 +716,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 [
                     _s("se-js-1", "Confirm advanced degree & obtain UHR evaluation consent", "Only Master's, PhD, or 4–5 yr advanced professional degrees qualify.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Look-for-work-or-start-a-business.html"),
                     _s("se-js-2", "Prove living funds for 3–9 months + comprehensive health insurance", "Show unencumbered funds in your own name + return travel funds.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Look-for-work-or-start-a-business.html"),
-                    _s("se-js-3", "Apply online, verify passport in Abuja, & convert once hired", "Can apply for a Sweden Work Permit from inside Sweden once offered a qualifying job.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Employed/Work-permit-requirements.html"),
+                    _s("se-js-3", "Apply online, verify passport at Swedish Embassy, & convert once hired", "Can apply for a Sweden Work Permit from inside Sweden once offered a qualifying job.", "https://www.migrationsverket.se/English/Private-individuals/Working-in-Sweden/Employed/Work-permit-requirements.html"),
                 ],
             ),
         ],
@@ -739,8 +739,8 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
             {"label": "Startup Estonia Visa", "url": "https://startupestonia.ee/visa/"},
         ],
         "summary": "Tech-forward Baltic EU hub where ICT specialists, EU Blue Card holders, and approved Startup employees are 100% exempt from Estonia's annual immigration quota.",
-        "nigerian_notes": [
-            "Estonia does NOT have a resident embassy in Nigeria — visa/TRP biometrics must be submitted at a designated Estonian foreign mission (such as Cairo or an EU capital where you hold legal stay).",
+        "applicant_notes": [
+            "If Estonia does not operate a resident visa-issuing embassy in your country, visa/TRP biometrics must be submitted at the designated Estonian foreign mission handling your country of legal residence.",
             "Employers typically register short-term employment (STR) first so you can enter on a D-visa and apply for your Temporary Residence Permit (TRP) locally.",
         ],
         "pathways": [
@@ -762,7 +762,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 [
                     _s("ee-ict-1", "Secure ICT job offer in Estonia", "Role must fall under ICT classification to qualify for quota exemption.", "https://www.workinestonia.com/coming-to-estonia/temporary-residence-permit/"),
                     _s("ee-ict-2", "Employer registers Short-Term Employment (STR) with Politsei", "Allows fast entry on a long-stay Type D visa while TRP is prepared.", "https://www.politsei.ee/en/instructions/working-in-estonia-for-a-short-period"),
-                    _s("ee-ict-3", "Submit Type D Visa / TRP at designated Estonian mission", "Check closest handling Estonian embassy for Nigerian residents.", "https://www.politsei.ee/en/instructions/residence-permit-for-employment"),
+                    _s("ee-ict-3", "Submit Type D Visa / TRP at designated Estonian mission", "Check which accredited Estonian foreign mission handles your country of residence.", "https://www.politsei.ee/en/instructions/residence-permit-for-employment"),
                     _s("ee-ict-4", "Receive Estonian ID Card & renew toward 5-yr Long-Term Residence", "Maintain continuous residence and pass Estonian A2/B1 for long-term residence.", "https://www.politsei.ee/en/instructions/long-term-residents-residence-permit"),
                 ],
             ),
@@ -847,9 +847,9 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
             {"label": "Bulgarian Employment Agency", "url": "https://www.az.government.bg"},
         ],
         "summary": "EU & Schengen member state offering EU Blue Card, Single Residence/Work Permits, and Startup/Freelance permits with lower living costs and 10% flat income tax.",
-        "nigerian_notes": [
-            "Bulgarian work permits involve Employment Agency labour access approval first, followed by a Type D visa at the Embassy of Bulgaria in Abuja, then MVR Migration card registration upon arrival.",
-            "Original degrees and Nigerian Police Clearance certificates must be legalized/authenticated before translation into Bulgarian.",
+        "applicant_notes": [
+            "Bulgarian work permits involve Employment Agency labour access approval first, followed by a Type D visa at the accredited Bulgarian Embassy/Consulate, then MVR Migration card registration upon arrival.",
+            "Original degrees and official police clearance certificates must be legalized/apostilled before sworn translation into Bulgarian.",
         ],
         "pathways": [
             _p(
@@ -869,7 +869,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "Combined work & residence permit up to 5 years for degree-qualified specialists hired by a Bulgarian company; no labour market test required.",
                 [
                     _s("bg-bc-1", "Employer submits EU Blue Card access package to Employment Agency / Migration", "Submit legalized/translated university diploma and signed contract.", "https://www.az.government.bg"),
-                    _s("bg-bc-2", "Apply for Type D Long-Stay Visa at Bulgarian Embassy in Abuja", "Present work access approval, Nigerian police clearance, accommodation & insurance.", "https://www.mvr.bg"),
+                    _s("bg-bc-2", "Apply for Type D Long-Stay Visa at accredited Bulgarian Embassy", "Present work access approval, apostilled police clearance, accommodation & insurance.", "https://www.mvr.bg"),
                     _s("bg-bc-3", "Register with MVR Migration Directorate in Bulgaria within 7 days of entry", "Receive physical EU Blue Card residence ID; eligible for PR after 5 years.", "https://www.mvr.bg"),
                 ],
             ),
@@ -890,7 +890,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "Standard non-EU combined work and residence permit for roles across engineering, logistics, hospitality, and services.",
                 [
                     _s("bg-sp-1", "Employer obtains Employment Agency work authorization", "Includes labour market check unless role qualifies as shortage.", "https://www.az.government.bg"),
-                    _s("bg-sp-2", "Obtain Type D Visa in Abuja & register at local MVR office", "Valid up to 3 years, renewable toward 5-year residency.", "https://www.mvr.bg"),
+                    _s("bg-sp-2", "Obtain Type D Visa at Bulgarian Embassy & register at local MVR office", "Valid up to 3 years, renewable toward 5-year residency.", "https://www.mvr.bg"),
                 ],
             ),
             _p(
@@ -910,7 +910,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "Startup founders obtain an innovative project certificate from the Ministry of Innovation and Growth, enabling Type D visa and residence without an employer.",
                 [
                     _s("bg-sf-1", "Apply for Startup Visa Certificate (innovative tech founders) or Freelance license", "Check Ministry of Innovation / Employment Agency criteria.", "https://www.mvr.bg"),
-                    _s("bg-sf-2", "Apply for Type D Visa in Abuja & obtain Bulgarian residence card", "Maintain business activity toward 5-year PR.", "https://www.mvr.bg"),
+                    _s("bg-sf-2", "Apply for Type D Visa & obtain Bulgarian residence card", "Maintain business activity toward 5-year PR.", "https://www.mvr.bg"),
                 ],
             ),
         ],
@@ -933,8 +933,8 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
             {"label": "Startup Visa Lithuania", "url": "https://startupvisalithuania.com/"},
         ],
         "summary": "Fast Baltic EU fintech & tech hub managed digitally through MIGRIS: EU Blue Card, High-Demand Shortage Work Permits, and Startup Visa Lithuania.",
-        "nigerian_notes": [
-            "All temporary residence permits (TRP) are submitted electronically via MIGRIS; applicants outside Lithuania complete biometrics at designated VFS Global / external service centres.",
+        "applicant_notes": [
+            "All temporary residence permits (TRP) are submitted electronically via MIGRIS; applicants outside Lithuania complete biometrics at designated VFS Global / external service centres or Lithuanian missions.",
             "Lithuania's fintech hub (Vilnius) actively hires English-speaking software, risk/compliance, and data professionals.",
         ],
         "pathways": [
@@ -1018,8 +1018,8 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
             {"label": "Ministry of Foreign Affairs (Consular Visas)", "url": "https://www.exteriores.gob.es/"},
         ],
         "summary": "Europe's most accessible remote-work PR pathway (2026 Digital Nomad Visa at €2,849/mo), fast-track Highly Qualified Professional (PAC) permits, and Study-to-Work modification.",
-        "nigerian_notes": [
-            "Consular visa applications in Nigeria go through the Spanish Embassy Abuja / Consulate Lagos; Nigerian Police Character Certificate & diplomas must be authenticated/apostilled and translated by a Spanish sworn translator (Traductor Jurado).",
+        "applicant_notes": [
+            "Consular national visas are filed at the accredited Spanish Embassy/Consulate for your country of residence; foreign criminal record certificates and diplomas usually require apostille/legalization and translation by an official sworn Spanish translator (Traductor Jurado).",
             "Applying inside Spain via UGE-CE grants a full 3-year Digital Nomad residence permit directly (vs 1-year consular entry visa).",
         ],
         "pathways": [
@@ -1062,7 +1062,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "20-business-day fast-track residence permit processed by Spain's UGE-CE unit for graduate specialists and managers hired by Spanish companies.",
                 [
                     _s("es-pac-1", "Employer files fast-track PAC authorization with UGE-CE", "No regional labour market test required.", "https://www.inclusion.gob.es/"),
-                    _s("es-pac-2", "Obtain national visa at Spanish Consulate in Nigeria & collect TIE card", "Spouse and dependents receive concurrent work authorization.", "https://www.exteriores.gob.es/"),
+                    _s("es-pac-2", "Obtain national visa at accredited Spanish Consulate & collect TIE card", "Spouse and dependents receive concurrent work authorization.", "https://www.exteriores.gob.es/"),
                 ],
             ),
             _p(
@@ -1102,12 +1102,12 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
         "official_portal": "https://france-visas.gouv.fr/en/",
         "extra_official_links": [
             {"label": "Service-Public Residence Guides", "url": "https://www.service-public.fr/"},
-            {"label": "Campus France Nigeria", "url": "https://www.nigeria.campusfrance.org/"},
+            {"label": "Campus France Portal", "url": "https://www.campusfrance.org/en"},
         ],
         "summary": "Multi-year Talent cards (EU Blue Card €59,373/yr, Qualified Employee, Innovative Startup) with automatic full spouse work rights, plus 2-year fast-track citizenship after a French Master's.",
-        "nigerian_notes": [
+        "applicant_notes": [
             "All Talent permits grant accompanying spouses an automatic 'Passeport Talent Famille' card allowing them to work for ANY employer in France without sponsorship.",
-            "Nigerian university applicants must complete the mandatory Etudes en France procedure via Campus France Nigeria before TLScontact visa submission.",
+            "International university applicants from participating Études en France countries complete academic admission & pre-consular verification via Campus France before France-Visas biometrics.",
         ],
         "pathways": [
             _p(
@@ -1127,7 +1127,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "Up to 4-year multi-year French Talent card with automatic full work rights for spouses and no work-authorization labour test.",
                 [
                     _s("fr-bc-1", "Secure >=6-month French employment contract at >=€59,373/yr gross", "Confirm 3-yr higher degree or 5 yrs comparable specialist experience.", "https://www.service-public.fr/"),
-                    _s("fr-bc-2", "Submit online Talent EU Blue Card visa application via France-Visas", "Attend TLScontact biometrics in Lagos or Abuja.", "https://france-visas.gouv.fr/en/"),
+                    _s("fr-bc-2", "Submit online Talent EU Blue Card visa application via France-Visas", "Attend biometrics at your accredited France-Visas / visa application centre.", "https://france-visas.gouv.fr/en/"),
                     _s("fr-bc-3", "Validate visa on ANEF portal & collect 4-year multi-year card", "Eligible for 10-yr Resident Card or naturalization after 5 years (with B1/B2 French).", "https://www.service-public.fr/"),
                 ],
             ),
@@ -1155,10 +1155,10 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "fr-study-rece",
                 "France Master's → RECE Job-Seeker → 2-Yr Fast Citizenship",
                 "Study-to-Citizenship",
-                "https://www.nigeria.campusfrance.org/",
+                "https://www.campusfrance.org/en",
                 "Eligible to apply for French citizenship after 2 years post-Master's residency",
                 False,
-                "Campus France admission + €615/mo living proof · RECE 12-mo job-seeker visa",
+                "University admission (Campus France / Études en France) + €615/mo living proof · RECE 12-mo permit",
                 "bachelors",
                 0.0,
                 ["tech", "business", "engineering", "research", "arts"],
@@ -1167,7 +1167,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 0,
                 "Graduating from a recognized 2-year Master's in France reduces the residency requirement for French citizenship from 5 years down to just 2 years (with French proficiency).",
                 [
-                    _s("fr-st-1", "Apply via Campus France Nigeria (Etudes en France)", "Many French Grandes Écoles & public Master's offer English tracks at low public tuition.", "https://www.nigeria.campusfrance.org/"),
+                    _s("fr-st-1", "Apply via Campus France (or Études en France where applicable)", "Many French Grandes Écoles & public Master's offer English tracks at low public tuition.", "https://www.campusfrance.org/en"),
                     _s("fr-st-2", "Graduate & switch to 12-month RECE job-seeker/founder permit", "Work full-time in France while finalizing qualified employment.", "https://www.service-public.fr/"),
                     _s("fr-st-3", "Reach B1/B2 French & apply for 2-yr reduced residency naturalization", "Hold stable French income/tax filings after graduation.", "https://www.service-public.fr/"),
                 ],
@@ -1191,9 +1191,9 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
             {"label": "MRE Online Visa Form (SCI)", "url": "https://formulario-mre.serpro.gov.br/"},
         ],
         "summary": "Low-threshold Digital Nomad Visa (VITEM XIV at US$1,500/mo), employer-sponsored Work Visa (VITEM V), and Study/Residency routes leading to indefinite residence & naturalization.",
-        "nigerian_notes": [
-            "Brazilian visa forms are completed online via MRE SCI (formulario-mre.serpro.gov.br) and submitted through the Embassy of Brazil in Abuja or Consulate-General in Lagos.",
-            "Nigerian applicants need a valid Yellow Fever vaccination card and authenticated Nigerian Police Character Certificate translated into Portuguese.",
+        "applicant_notes": [
+            "Brazilian visa forms are completed online via MRE SCI (formulario-mre.serpro.gov.br) and submitted through the accredited Embassy or Consulate of Brazil for your jurisdiction.",
+            "Applicants may require apostilled/legalized police clearance certificates translated into Portuguese and a Yellow Fever vaccination certificate when traveling from listed areas.",
         ],
         "pathways": [
             _p(
@@ -1213,7 +1213,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "One of the lowest-threshold digital nomad visas globally (US$1,500/mo remote income or US$18,000 savings) for remote workers employed outside Brazil.",
                 [
                     _s("br-dn-1", "Prepare remote contract & proof of US$1,500/mo income (or US$18,000 savings)", "Local Brazilian employment is prohibited under VITEM XIV.", "https://portaldeimigracao.mj.gov.br/"),
-                    _s("br-dn-2", "Complete MRE online form (RER) & submit at Embassy Abuja / Consulate Lagos", "Include authenticated police clearance, birth certificate, Yellow Fever & health insurance.", "https://formulario-mre.serpro.gov.br/"),
+                    _s("br-dn-2", "Complete MRE online form (RER) & submit at accredited Brazilian Embassy/Consulate", "Include apostilled police clearance, birth certificate, Yellow Fever (if required) & health insurance.", "https://formulario-mre.serpro.gov.br/"),
                     _s("br-dn-3", "Register with Federal Police (Polícia Federal) within 90 days of arrival", "Obtain CRNM (National Migratory Registry Card).", "https://portaldeimigracao.mj.gov.br/"),
                 ],
             ),
@@ -1234,7 +1234,7 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "Sponsored by a Brazilian company via the Ministry of Justice MigranteWeb portal; transitions directly to indefinite residence.",
                 [
                     _s("br-wv-1", "Brazilian employer files MigranteWeb work authorization", "Requires legalized degree/experience proof matching the role.", "https://portaldeimigracao.mj.gov.br/"),
-                    _s("br-wv-2", "Apply for VITEM V at Brazilian Mission in Nigeria upon DOU publication", "Register with Federal Police upon landing and convert to indefinite residence.", "https://formulario-mre.serpro.gov.br/"),
+                    _s("br-wv-2", "Apply for VITEM V at accredited Brazilian Mission upon DOU publication", "Register with Federal Police upon landing and convert to indefinite residence.", "https://formulario-mre.serpro.gov.br/"),
                 ],
             ),
             _p(
@@ -1244,16 +1244,16 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
                 "https://formulario-mre.serpro.gov.br/",
                 "Indefinite Residence after qualifying stay; Citizenship in 4 years (or 1 yr with Brazilian child/spouse)",
                 False,
-                "Brazilian university enrollment (PEC-G / public tuition-free) + living proof",
+                "Brazilian university enrollment (public tuition-free / PEC-G partner tracks) + living proof",
                 "secondary",
                 0.0,
                 ["tech", "engineering", "healthcare", "agriculture", "research"],
                 ["english", "portuguese"],
                 6500,
                 0,
-                "Brazilian federal & state universities charge zero tuition even to international students (including PEC-G scholarships for Nigerians), with fast naturalization paths.",
+                "Brazilian federal & state universities charge zero tuition to international students (including PEC-G tracks for participating countries), with fast naturalization paths.",
                 [
-                    _s("br-st-1", "Apply to Brazilian public university or PEC-G scholarship program", "Many postgraduate research labs accept English while Portuguese is learned.", "https://formulario-mre.serpro.gov.br/"),
+                    _s("br-st-1", "Apply to Brazilian public university or PEC-G program (where participating)", "Many postgraduate research labs accept English while Portuguese is learned.", "https://formulario-mre.serpro.gov.br/"),
                     _s("br-st-2", "Obtain VITEM IV, register CRNM, & progress toward indefinite residence", "Pass Celpe-Bras Portuguese exam when applying for Brazilian citizenship.", "https://portaldeimigracao.mj.gov.br/"),
                 ],
             ),
@@ -1263,14 +1263,14 @@ COUNTRIES_CATALOG: List[Dict[str, Any]] = [
 
 
 def build_global_seed_docs() -> List[Dict[str, Any]]:
-    """Build RAG-ready document records covering all 12 countries, pathways, thresholds, and Nigerian notes."""
+    """Build RAG-ready document records covering all 12 countries, pathways, thresholds, and official applicant notes."""
     docs: List[Dict[str, Any]] = []
     for c in COUNTRIES_CATALOG:
-        # Country overview + Nigerian applicant warnings
+        notes_list = c.get("applicant_notes") or []
         overview_text = (
             f"{c['name']} ({c['code']}) — Official Immigration Authority: {c['authority']} ({c['official_portal']}). "
             f"{c['summary']} "
-            f"Nigerian Applicant Guidance: {' '.join(c['nigerian_notes'])}"
+            f"Official Applicant Notes: {' '.join(notes_list)}"
         )
         docs.append(
             {
@@ -1278,10 +1278,10 @@ def build_global_seed_docs() -> List[Dict[str, Any]]:
                 "country_id": c["id"],
                 "country_name": c["name"],
                 "track": c["name"],
-                "title": f"{c['name']} — Official Portal & Nigerian Applicant Guide",
+                "title": f"{c['name']} — Official Immigration Portal & Requirements",
                 "url": c["official_portal"],
                 "site_last_modified": "2026-11-09",
-                "alert_text": c["nigerian_notes"][0] if c["nigerian_notes"] else "",
+                "alert_text": notes_list[0] if notes_list else "",
                 "content_text": overview_text,
             }
         )

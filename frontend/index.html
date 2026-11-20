@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>JapaAI.ng — Official 12-Country Immigration &amp; PR Roadmap Platform</title>
-  <meta name="description" content="Official government immigration and permanent residence roadmaps across 12 destination countries, built for Nigerians.">
+  <meta name="description" content="Real-time curated official government immigration and permanent residence roadmaps across 12 destination countries, built for applicants worldwide.">
   <meta name="theme-color" content="#047857" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,7 +14,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="stylesheet" href="/static/styles.css?v=4">
+  <link rel="stylesheet" href="/static/styles.css?v=5">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -34,7 +34,7 @@
         </div>
         <div class="brand-text">
           <div class="brand-title">JapaAI.ng</div>
-          <span class="brand-sub">Official Gov Roadmaps · 12 Countries</span>
+          <span class="brand-sub">Official Gov Sources · Real-Time Index</span>
         </div>
       </div>
 
@@ -105,11 +105,11 @@
       <div class="hero-main">
         <div class="hero-eyebrow">
           <span class="hero-dot" aria-hidden="true"></span>
-          12 Official Government Portals · Built for Nigerians
+          Real-Time Official Government Sources · 12 Countries
         </div>
-        <h1 class="hero-title">Official Immigration Roadmaps, Built for Nigerians.</h1>
+        <h1 class="hero-title">Official Immigration Roadmaps, Straight From the Source.</h1>
         <p class="hero-sub">
-          Compare verified permanent residence, work, study, and remote-income pathways sourced directly from 12 national immigration authorities.
+          Well-curated permanent residence, work, study, and remote-income pathways pulled directly from 12 national immigration portals — no additions, no omissions, updated in real time.
         </p>
 
         <div class="hero-cta-row">
@@ -143,7 +143,7 @@
           </div>
         </div>
         <div class="hero-trust-foot">
-          Zero middlemen · Official government portals only · Saved privately on your device
+          <span id="hero-sync-status">Direct official sources · No additions or middlemen · Updated in real time</span>
         </div>
       </div>
     </section>
@@ -692,7 +692,7 @@
           </div>
 
           <div class="prompt-chips">
-            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('Are Nigerians eligible for the US Diversity Visa DV Lottery and what are EB-2 NIW requirements?', 'usa')">USA DV Lottery &amp; EB-2 NIW?</button>
+            <button type="button" class="prompt-chip" onclick="askCopilotPrompt('What are the USA Diversity Visa lottery eligibility rules and EB-2 NIW requirements?', 'usa')">USA EB-2 NIW &amp; DV Rules?</button>
             <button type="button" class="prompt-chip" onclick="askCopilotPrompt('What are the 2026 Germany EU Blue Card salary thresholds and Opportunity Card rules?', 'germany')">Germany 2026 Blue Card?</button>
             <button type="button" class="prompt-chip" onclick="askCopilotPrompt('What are UK Skilled Worker, Health and Care, and Global Talent requirements?', 'uk')">UK Visas &amp; ILR?</button>
             <button type="button" class="prompt-chip" onclick="askCopilotPrompt('What changes on January 1, 2027 between the Canada RCIP Pilot and Permanent Program?', 'canada')">Canada RCIP Jan 1, 2027?</button>
@@ -702,12 +702,12 @@
 
           <div id="chat-history" class="chat-thread">
             <div class="chat-msg bot">
-              Ask any question across <strong>Canada, UK, USA, Germany, Netherlands, Sweden, Estonia, Bulgaria, Lithuania, Spain, France, or Brazil</strong>. Answers cite indexed official government websites.
+              Ask any question across <strong>Canada, UK, USA, Germany, Netherlands, Sweden, Estonia, Bulgaria, Lithuania, Spain, France, or Brazil</strong>. Answers quote curated official government portals directly with clickable citations.
             </div>
           </div>
 
           <div class="chat-compose">
-            <input type="text" id="chat-input" class="input" placeholder="Ask about salary thresholds, PR timelines, Nigerian rules, MIGRIS, IND, RCIP..." onkeydown="if(event.key==='Enter') sendCopilotQuery()">
+            <input type="text" id="chat-input" class="input" placeholder="Ask about salary thresholds, PR timelines, Blue Card, IND, MIGRIS, RCIP..." onkeydown="if(event.key==='Enter') sendCopilotQuery()">
             <button type="button" class="btn btn-primary" onclick="sendCopilotQuery()">Send</button>
           </div>
         </div>
@@ -716,14 +716,14 @@
           <div class="card-header">
             <div>
               <h3 class="card-title">Official Sources Index</h3>
-              <p class="card-desc">Verified government portals &amp; live IRCC registry</p>
+              <p class="card-desc">Real-time verified official portals across all 12 countries</p>
             </div>
             <span class="pill pill-emerald tabular" id="sources-count-pill">0 pages</span>
           </div>
           <div style="max-height:480px; overflow:auto;">
             <table class="sources-table">
               <thead>
-                <tr><th>Track</th><th>Official Page</th><th>Modified</th><th>URL</th></tr>
+                <tr><th>Country / Track</th><th>Official Page</th><th>Freshness</th><th>URL</th></tr>
               </thead>
               <tbody id="sources-table-body"></tbody>
             </table>
@@ -747,7 +747,7 @@
     </section>
 
     <footer class="footer">
-      JapaAI.ng — Grounded exclusively in official government immigration portals across 12 destination countries. Informational planning tool only; not legal immigration advice.
+      JapaAI.ng — Curated directly from official government immigration portals across 12 destination countries with real-time syncing and zero added assumptions. Informational planning tool only; not legal advice.
     </footer>
   </main>
 
@@ -800,6 +800,6 @@
 
   <div id="toast-container" class="toast-container"></div>
 
-  <script src="/static/app.js?v=4"></script>
+  <script src="/static/app.js?v=5"></script>
 </body>
 </html>

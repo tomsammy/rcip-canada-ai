@@ -47,6 +47,20 @@ CREATE TABLE IF NOT EXISTS community_shortlist (
     employers_contacted INTEGER NOT NULL DEFAULT 0,
     updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS global_official_pages (
+    url TEXT PRIMARY KEY,
+    country_id TEXT NOT NULL,
+    country_name TEXT NOT NULL,
+    title TEXT NOT NULL,
+    site_last_modified TEXT NOT NULL DEFAULT '',
+    alert_text TEXT NOT NULL DEFAULT '',
+    content_text TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    http_status INTEGER NOT NULL DEFAULT 200,
+    source_mode TEXT NOT NULL DEFAULT 'live',
+    fetched_at TEXT NOT NULL
+);
 """
 
 
@@ -292,3 +306,101 @@ def upsert_shortlist(
         "employers_contacted": count,
         "updated_at": now,
     }
+
+
+def upsert_global_official_page(conn: sqlite3.Connection, page: Dict[str, Any]) -> str:
+    """Upsert a live-crawled official ministry page and return 'inserted', 'updated', or 'unchanged'."""
+    url = page["url"]
+    existing = conn.execute(
+        "SELECT content_hash FROM global_official_pages WHERE url = ?",
+        (url,),
+    ).fetchone()
+    now = page.get("fetched_at") or _utc_now()
+    status_code = int(page.get("http_status") or 200)
+    source_mode = page.get("source_mode") or "live"
+
+    if existing is None:
+        conn.execute(
+            """
+            INSERT INTO global_official_pages (
+                url, country_id, country_name, title, site_last_modified,
+                alert_text, content_text, content_hash, http_status, source_mode, fetched_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                url,
+                page.get("country_id", ""),
+                page.get("country_name", ""),
+                page.get("title", ""),
+                page.get("site_last_modified", ""),
+                page.get("alert_text", ""),
+                page.get("content_text", ""),
+                page.get("content_hash", ""),
+                status_code,
+                source_mode,
+                now,
+            ),
+        )
+        conn.commit()
+        return "inserted"
+
+    if existing["content_hash"] == page.get("content_hash", ""):
+        conn.execute(
+            "UPDATE global_official_pages SET fetched_at = ?, http_status = ?, source_mode = ? WHERE url = ?",
+            (now, status_code, source_mode, url),
+        )
+        conn.commit()
+        return "unchanged"
+
+    conn.execute(
+        """
+        UPDATE global_official_pages
+        SET country_id = ?, country_name = ?, title = ?, site_last_modified = ?,
+            alert_text = ?, content_text = ?, content_hash = ?, http_status = ?,
+            source_mode = ?, fetched_at = ?
+        WHERE url = ?
+        """,
+        (
+            page.get("country_id", ""),
+            page.get("country_name", ""),
+            page.get("title", ""),
+            page.get("site_last_modified", ""),
+            page.get("alert_text", ""),
+            page.get("content_text", ""),
+            page.get("content_hash", ""),
+            status_code,
+            source_mode,
+            now,
+            url,
+        ),
+    )
+    conn.commit()
+    return "updated"
+
+
+def list_global_official_pages(
+    conn: sqlite3.Connection,
+    country_id: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Return cached live official portal pages ordered by country and title."""
+    if country_id and country_id.strip().lower() not in ("", "all"):
+        rows = conn.execute(
+            """
+            SELECT url, country_id, country_name, title, site_last_modified, alert_text,
+                   content_text, content_hash, http_status, source_mode, fetched_at
+            FROM global_official_pages
+            WHERE country_id = ?
+            ORDER BY country_id ASC, title ASC
+            """,
+            (country_id.strip().lower(),),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """
+            SELECT url, country_id, country_name, title, site_last_modified, alert_text,
+                   content_text, content_hash, http_status, source_mode, fetched_at
+            FROM global_official_pages
+            ORDER BY country_id ASC, title ASC
+            """
+        ).fetchall()
+    return [dict(row) for row in rows]

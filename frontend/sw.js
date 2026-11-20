@@ -1,8 +1,8 @@
-const CACHE_NAME = 'japaai-ng-v4';
+const CACHE_NAME = 'japaai-ng-v5';
 const PRECACHE_URLS = [
   '/',
-  '/static/styles.css?v=4',
-  '/static/app.js?v=4',
+  '/static/styles.css?v=5',
+  '/static/app.js?v=5',
   '/manifest.webmanifest',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',

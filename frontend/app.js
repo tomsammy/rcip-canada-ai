@@ -109,10 +109,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   initPwaSupport();
   setupResumeDropzone();
 
+  let healthData = null;
   try {
     const healthRes = await fetch('/api/health');
-    const health = await healthRes.json();
-    state.environment = health.environment || 'local';
+    healthData = await healthRes.json();
+    state.environment = healthData.environment || 'local';
+    updateHeroSyncStatus(healthData.last_synced_at, healthData.live_global_pages);
   } catch (err) {
     console.error(err);
   }
@@ -133,6 +135,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   populateProfileForm();
   await recomputeRoadmapAndEvaluation();
   renderSavedProgress();
+
+  maybeAutoRefreshRealTime(healthData);
 });
 
 async function hydrateFromLocalServer() {
@@ -512,9 +516,31 @@ function renderCountryHubWorkspace(country) {
     .map(l => `<a class="btn btn-sm" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`)
     .join('');
 
-  const watchoutsHtml = (country.nigerian_notes || [])
+  const watchoutsHtml = (country.applicant_notes || [])
     .map(n => `<li style="margin-top:4px;">${esc(n)}</li>`)
     .join('');
+
+  const liveSnaps = country.live_snapshots || [];
+  const lastVerified = country.last_verified_at
+    ? `Verified ${esc(country.last_verified_at.replace('T', ' ').replace('+00:00', ' UTC'))}`
+    : 'Awaiting live portal refresh';
+
+  const snapsHtml = liveSnaps.length
+    ? liveSnaps
+        .map(
+          s => `
+          <div class="live-snapshot-item">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+              <a href="${esc(s.url)}" target="_blank" rel="noopener" style="font-size:12.5px; font-weight:700;">${esc(s.title)} ↗</a>
+              <span class="pill pill-emerald" style="font-size:10.5px;">LIVE · ${esc((s.fetched_at || '').slice(0, 10))}</span>
+            </div>
+            ${s.alert_text ? `<div style="font-size:12px; color:var(--amber); margin-top:4px;"><strong>Notice:</strong> ${esc(s.alert_text)}</div>` : ''}
+            ${s.excerpt ? `<div style="font-size:12px; color:var(--ink-muted); margin-top:4px;">${esc(s.excerpt)}</div>` : ''}
+          </div>
+        `
+        )
+        .join('')
+    : `<div style="font-size:12px; color:var(--ink-muted);">Click <strong>Fetch Live Update</strong> to pull current verbatim requirements directly from ${esc(country.authority)} now.</div>`;
 
   const pathwayBtns = pathways
     .map(
@@ -575,8 +601,22 @@ function renderCountryHubWorkspace(country) {
         </div>
       </div>
 
+      <div class="live-snapshot-box">
+        <div class="live-snapshot-head">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span class="live-dot-pulse" aria-hidden="true"></span>
+            <strong style="font-size:13px;">Live Official Portal Snapshot</strong>
+            <span class="pill pill-emerald tabular" style="font-size:11px;">${lastVerified}</span>
+          </div>
+          <button type="button" class="btn btn-sm" id="btn-sync-country-${esc(country.id)}" onclick="syncSingleCountry('${esc(country.id)}')">
+            Fetch Live Update
+          </button>
+        </div>
+        ${snapsHtml}
+      </div>
+
       <div class="watchout-box">
-        <strong style="font-size:13px;">Nigerian Applicant Notes &amp; Official Watch-Outs</strong>
+        <strong style="font-size:13px;">Official International Applicant Notes &amp; Key Requirements</strong>
         <ul style="font-size:12.5px; padding-left:18px; margin-top:4px; color:var(--ink);">${watchoutsHtml}</ul>
       </div>
 
@@ -1598,8 +1638,58 @@ async function updateCommunityState(communityId, shortlisted, employersContacted
 }
 
 // --------------------------------------------------------------------------
-// Live Official Gov Sync, Sources Registry, RAG Copilot & RCIP Export
+// Real-Time Official Gov Sync, Sources Registry, RAG Copilot & RCIP Export
 // --------------------------------------------------------------------------
+
+function updateHeroSyncStatus(lastSyncedAt, liveCount) {
+  const el = document.getElementById('hero-sync-status');
+  if (!el) return;
+  if (lastSyncedAt) {
+    const cleanTs = String(lastSyncedAt).replace('T', ' ').replace('+00:00', ' UTC');
+    el.textContent = `Direct official portals · ${liveCount || 'Live'} live snapshots verified (${cleanTs})`;
+  } else {
+    el.textContent = 'Direct official sources · No additions or middlemen · Updated in real time';
+  }
+}
+
+async function maybeAutoRefreshRealTime(healthData) {
+  try {
+    if (sessionStorage.getItem('japaai_auto_synced') === '1') return;
+    if (healthData && Number(healthData.live_global_pages || 0) > 0) return;
+    sessionStorage.setItem('japaai_auto_synced', '1');
+    const res = await fetch('/api/sync-sources', { method: 'POST' });
+    if (!res.ok) return;
+    const data = await res.json();
+    state.countryCache = {};
+    await loadSources();
+    updateHeroSyncStatus(data.synced_at, data.live_global_pages);
+  } catch (err) {
+    // Non-blocking background refresh
+  }
+}
+
+async function syncSingleCountry(countryId) {
+  const btn = document.getElementById(`btn-sync-country-${countryId}`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Fetching live...'; }
+  try {
+    const res = await fetch(`/api/sync-sources?country_id=${encodeURIComponent(countryId)}`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error('Sync failed');
+    delete state.countryCache[countryId];
+    await openCountryHub(countryId, state.activePathwayId);
+    await loadSources();
+    updateHeroSyncStatus(data.synced_at, data.live_global_pages);
+    if ((data.live_fetched || 0) > 0) {
+      showToast(`Live official update fetched (${data.live_fetched} portal page(s) verified).`);
+    } else {
+      showToast('Official portal link verified; automated scrape restricted by remote site.');
+    }
+  } catch (err) {
+    showToast('Could not reach live official portal right now.', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Fetch Live Update'; }
+  }
+}
 
 async function triggerSourcesSync() {
   const btn = document.getElementById('btn-sync-sources');
@@ -1609,9 +1699,14 @@ async function triggerSourcesSync() {
     const res = await fetch('/api/sync-sources', { method: 'POST' });
     const data = await res.json();
     if (!res.ok) throw new Error('Refresh failed');
+    state.countryCache = {};
+    if (state.activeCountryId && !document.getElementById('country-hub-workspace')?.classList.contains('hidden')) {
+      await openCountryHub(state.activeCountryId, state.activePathwayId);
+    }
     await loadSources();
     updateHeroSummary();
-    showToast(`Official sources refreshed: ${data.total_indexed} pages across ${data.countries_indexed || 12} countries (${data.inserted} new, ${data.updated} updated).`);
+    updateHeroSyncStatus(data.synced_at, data.live_global_pages);
+    showToast(`Real-time official sync complete: ${data.live_fetched || 0} live fetches, ${data.total_indexed} indexed pages.`);
   } catch (err) {
     showToast('Could not refresh official sources right now.', true);
   } finally {
@@ -1627,16 +1722,24 @@ async function loadSources() {
     state.sources = data.sources || [];
     const pill = document.getElementById('sources-count-pill');
     if (pill) pill.textContent = `${state.sources.length} official pages`;
+    updateHeroSyncStatus(data.last_synced_at, data.live_count);
     const tbody = document.getElementById('sources-table-body');
     if (tbody) {
-      tbody.innerHTML = state.sources.map(s => `
+      tbody.innerHTML = state.sources.map(s => {
+        const isLive = s.source_mode === 'live';
+        const pillClass = isLive ? 'pill-emerald' : (s.track === 'pilot' ? 'pill-amber' : 'pill-blue');
+        const freshLabel = isLive
+          ? `LIVE · ${(s.fetched_at || '').slice(0, 10) || 'Now'}`
+          : (s.site_last_modified || 'Registry');
+        return `
         <tr>
-          <td><span class="pill ${s.track === 'pilot' ? 'pill-amber' : 'pill-red'}">${esc(s.track)}</span></td>
+          <td><span class="pill ${pillClass}">${esc(s.track)}</span></td>
           <td>${esc(s.title)}</td>
-          <td class="tabular">${esc(s.site_last_modified || 'N/A')}</td>
+          <td class="tabular">${esc(freshLabel)}</td>
           <td><a href="${esc(s.url)}" target="_blank" rel="noopener">Open ↗</a></td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
     }
     updateHeroSummary();
   } catch (err) {}
@@ -1662,7 +1765,7 @@ async function sendCopilotQuery() {
   input.value = '';
   history.innerHTML += `<div class="chat-msg user">${esc(query)}</div>`;
   const loadingId = `loading-${Date.now()}`;
-  history.innerHTML += `<div id="${loadingId}" class="chat-msg bot">Searching official government sources...</div>`;
+  history.innerHTML += `<div id="${loadingId}" class="chat-msg bot">Searching real-time official government sources...</div>`;
   history.scrollTop = history.scrollHeight;
 
   try {
@@ -1680,7 +1783,7 @@ async function sendCopilotQuery() {
       .replace(/\n/g, '<br>');
 
     const cites = (data.citations || []).map(c => `
-      <a class="citation-link" href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)} ↗</a>
+      <a class="citation-link" href="${esc(c.url)}" target="_blank" rel="noopener">${c.source_mode === 'live' ? '[LIVE] ' : ''}${esc(c.title)} ↗</a>
     `).join('');
 
     history.innerHTML += `

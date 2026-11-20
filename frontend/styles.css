@@ -865,6 +865,37 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .toast.error { border-left-color: var(--crimson); }
 
+.live-snapshot-box {
+  background: var(--emerald-soft);
+  border: 1px solid var(--emerald-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.live-snapshot-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.live-snapshot-item {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-top: 8px;
+}
+.live-dot-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--emerald);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.22);
+}
+
 .footer { margin: 36px 0 28px 0; padding-top: 16px; border-top: 1px solid var(--border-subtle); font-size: 12px; color: var(--ink-subtle); text-align: center; }
 .hidden { display: none !important; }
 

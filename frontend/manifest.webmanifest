@@ -1,7 +1,7 @@
 {
   "name": "JapaAI.ng — Official Immigration Roadmaps",
   "short_name": "JapaAI.ng",
-  "description": "Official government immigration & permanent residence roadmaps across 12 countries, built for Nigerians.",
+  "description": "Real-time curated official government immigration & permanent residence roadmaps across 12 destination countries, for applicants worldwide.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

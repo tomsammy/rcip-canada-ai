@@ -95,21 +95,56 @@ class CanadaRAGService:
 
     def __init__(self) -> None:
         self.pages: List[Dict[str, Any]] = []
+        self.global_live_pages: List[Dict[str, Any]] = []
         self.chunks: List[Dict[str, Any]] = []
         self.idf: Dict[str, float] = {}
 
-    def index_pages(self, pages: List[Dict[str, Any]]) -> None:
-        """Index Canada.ca pages, 14 RCIP communities, and all 12-country official government docs."""
+    def index_pages(
+        self,
+        pages: List[Dict[str, Any]],
+        global_live_pages: Optional[List[Dict[str, Any]]] = None,
+    ) -> None:
+        """Index Canada.ca pages, 14 RCIP communities, curated 12-country catalog, and real-time live portal snapshots."""
         self.pages = list(pages or [])
+        self.global_live_pages = list(global_live_pages or [])
         chunks: List[Dict[str, Any]] = []
 
-        # 1. Deep Canada.ca RCIP pages
+        # 1. Live-synced official portal pages across all 12 countries (highest freshness priority)
+        for lp in self.global_live_pages:
+            body = "\n".join(
+                part
+                for part in (lp.get("alert_text", ""), lp.get("content_text", ""))
+                if part
+            )
+            lp_chunks = _split_chunks(body, max_chars=750) or [lp.get("title", "")]
+            for idx, chunk_text in enumerate(lp_chunks):
+                cname = lp.get("country_name") or lp.get("country_id", "")
+                tokens = _tokenize(f"{cname} {lp.get('title', '')} {chunk_text}")
+                chunks.append(
+                    {
+                        "chunk_id": f"live_{lp.get('country_id', 'global')}_{idx}_{hash(lp.get('url', '')) & 0xffff}",
+                        "country_id": lp.get("country_id", ""),
+                        "slug": f"live-{lp.get('country_id', 'global')}",
+                        "track": cname,
+                        "title": lp.get("title", cname),
+                        "url": lp.get("url", ""),
+                        "site_last_modified": lp.get("site_last_modified", ""),
+                        "fetched_at": lp.get("fetched_at", ""),
+                        "source_mode": lp.get("source_mode", "live"),
+                        "text": chunk_text,
+                        "tokens": tokens,
+                    }
+                )
+
+        # 2. Deep Canada.ca RCIP pages
         for page in self.pages:
             body = "\n".join(
                 part
                 for part in (page.get("alert_text", ""), page.get("content_text", ""))
                 if part
             )
+            fetched_at = page.get("fetched_at", "")
+            is_live_ca = bool(fetched_at and not str(fetched_at).startswith("2026-11-09T00:00:00"))
             page_chunks = _split_chunks(body, max_chars=750) or [page.get("title", "")]
             for idx, chunk_text in enumerate(page_chunks):
                 tokens = _tokenize(f"canada rcip {page.get('title', '')} {chunk_text}")
@@ -122,12 +157,14 @@ class CanadaRAGService:
                         "title": page.get("title", "Canada.ca RCIP"),
                         "url": page.get("url", ""),
                         "site_last_modified": page.get("site_last_modified", ""),
+                        "fetched_at": fetched_at,
+                        "source_mode": "live" if is_live_ca else "verified_registry",
                         "text": chunk_text,
                         "tokens": tokens,
                     }
                 )
 
-        # 2. 14 RCIP communities
+        # 3. 14 RCIP communities
         for comm in PARTICIPATING_COMMUNITIES:
             text = (
                 f"{comm['name']}, {comm['province']} ({comm['province_code']}) is one of the 14 participating Canada RCIP communities. "
@@ -143,12 +180,14 @@ class CanadaRAGService:
                     "title": f"{comm['name']}, {comm['province_code']} — Official EDO Portal",
                     "url": comm["official_url"],
                     "site_last_modified": "2026-11-09",
+                    "fetched_at": "",
+                    "source_mode": "verified_registry",
                     "text": text,
                     "tokens": _tokenize(text),
                 }
             )
 
-        # 3. All 12 countries & ~43 pathways official docs
+        # 4. Curated 12-country & 43-pathway official docs
         for doc in build_global_seed_docs():
             doc_chunks = _split_chunks(doc["content_text"], max_chars=750)
             for idx, chunk_text in enumerate(doc_chunks):
@@ -162,6 +201,8 @@ class CanadaRAGService:
                         "title": doc["title"],
                         "url": doc["url"],
                         "site_last_modified": doc["site_last_modified"],
+                        "fetched_at": "",
+                        "source_mode": "verified_registry",
                         "text": chunk_text,
                         "tokens": tokens,
                     }
@@ -240,6 +281,9 @@ class CanadaRAGService:
 
             if chunk["track"] == "pilot":
                 score += 0.25
+
+            if chunk.get("source_mode") == "live":
+                score += 0.8
 
             if score > 0:
                 scored.append((score, chunk))
@@ -324,11 +368,11 @@ class CanadaRAGService:
                 lines.append(f"- {note}")
             lines.append("")
 
-        lines.append("**Grounded Official Government Guidance:**")
+        lines.append("**Direct Excerpts From Official Government Sources:**")
         citations: List[Dict[str, str]] = []
         for idx, chunk in enumerate(matches, 1):
-            excerpt = chunk["text"][:420].strip()
-            if len(chunk["text"]) > 420:
+            excerpt = chunk["text"][:620].strip()
+            if len(chunk["text"]) > 620:
                 excerpt += "..."
             lines.append(f"**{idx}. {chunk['title']}**\n{excerpt}\n")
             citations.append(
@@ -338,18 +382,20 @@ class CanadaRAGService:
                     "track": chunk["track"],
                     "country_id": chunk.get("country_id", "canada"),
                     "site_last_modified": chunk.get("site_last_modified", ""),
+                    "fetched_at": chunk.get("fetched_at", ""),
+                    "source_mode": chunk.get("source_mode", "verified_registry"),
                     "excerpt": excerpt,
                 }
             )
 
         lines.append(
-            "_Note: Official rules are summarized from government websites for planning purposes only and do not constitute legal immigration advice._"
+            "_Curated directly from official government portals with no added assumptions. Always confirm final eligibility on the linked government portal before submitting._"
         )
 
         return {
             "answer": "\n".join(lines),
             "citations": citations,
-            "disclaimer": "Informational guidance grounded in official government websites; verify exact requirements before applying.",
+            "disclaimer": "Informational guidance grounded directly in official government websites; verify exact requirements before applying.",
         }
 
 

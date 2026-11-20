@@ -60,14 +60,11 @@ function initTheme() {
 }
 
 function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
-  localStorage.setItem(THEME_KEY, theme === 'dark' ? 'dark' : 'light');
-  const moon = document.getElementById('theme-icon-moon');
-  const sun = document.getElementById('theme-icon-sun');
-  if (moon && sun) {
-    moon.classList.toggle('hidden', theme === 'dark');
-    sun.classList.toggle('hidden', theme !== 'dark');
-  }
+  const isDark = theme === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+  document.querySelectorAll('.theme-icon-moon').forEach(el => el.classList.toggle('hidden', isDark));
+  document.querySelectorAll('.theme-icon-sun').forEach(el => el.classList.toggle('hidden', !isDark));
 }
 
 function toggleTheme() {
@@ -109,19 +106,13 @@ function persistBrowserState() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
+  initPwaSupport();
   setupResumeDropzone();
 
   try {
     const healthRes = await fetch('/api/health');
     const health = await healthRes.json();
     state.environment = health.environment || 'local';
-    const envLabel = document.getElementById('env-storage-label');
-    if (envLabel) {
-      envLabel.textContent =
-        state.environment === 'vercel'
-          ? 'Vercel Production • Private Browser-Saved Roadmaps'
-          : 'Official Gov Sources • Local + Browser Sync';
-    }
   } catch (err) {
     console.error(err);
   }
@@ -191,6 +182,124 @@ async function hydrateFromLocalServer() {
 }
 
 // --------------------------------------------------------------------------
+// PWA Installation & Service Worker Support
+// --------------------------------------------------------------------------
+
+const INSTALL_DISMISS_KEY = 'japaai_ng_install_dismissed';
+let deferredInstallPrompt = null;
+
+function isStandalonePwa() {
+  return (
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+    window.navigator.standalone === true
+  );
+}
+
+function isIosDevice() {
+  const ua = (navigator.userAgent || '').toLowerCase();
+  const isTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return /iphone|ipad|ipod/.test(ua) || isTouchMac;
+}
+
+function showInstallBannerIfEligible() {
+  const banner = document.getElementById('pwa-install-banner');
+  if (!banner) return;
+  if (isStandalonePwa() || localStorage.getItem(INSTALL_DISMISS_KEY) === '1') {
+    banner.classList.add('hidden');
+    return;
+  }
+  const isCompactViewport = window.innerWidth <= 900 || !!deferredInstallPrompt || isIosDevice();
+  banner.classList.toggle('hidden', !isCompactViewport);
+}
+
+function dismissInstallBanner() {
+  localStorage.setItem(INSTALL_DISMISS_KEY, '1');
+  const banner = document.getElementById('pwa-install-banner');
+  if (banner) banner.classList.add('hidden');
+}
+
+function openPwaInstallModal() {
+  const modal = document.getElementById('pwa-install-modal');
+  const title = document.getElementById('pwa-modal-title');
+  const steps = document.getElementById('pwa-modal-steps');
+  if (!modal || !steps) return;
+
+  if (isIosDevice()) {
+    if (title) title.textContent = 'Install JapaAI.ng on iPhone / iPad';
+    steps.innerHTML = [
+      '<li>Tap the <strong>Share</strong> icon in your Safari toolbar (square with an upward arrow).</li>',
+      '<li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>',
+      '<li>Tap <strong>Add</strong> in the top corner to install JapaAI.ng like a native app.</li>',
+    ].join('');
+  } else {
+    if (title) title.textContent = 'Install JapaAI.ng on Android or Desktop';
+    steps.innerHTML = [
+      '<li>Open your browser menu (<strong>⋮</strong> on Chrome Android or <strong>⋯</strong> in your toolbar).</li>',
+      '<li>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>',
+      '<li>Confirm to add <strong>JapaAI.ng</strong> directly to your phone or desktop.</li>',
+    ].join('');
+  }
+  modal.classList.remove('hidden');
+}
+
+function closePwaInstallModal() {
+  const modal = document.getElementById('pwa-install-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function promptPwaInstall() {
+  if (isStandalonePwa()) {
+    showToast('JapaAI.ng is already running as an installed app.');
+    return;
+  }
+  if (deferredInstallPrompt) {
+    try {
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      if (choice && choice.outcome === 'accepted') {
+        dismissInstallBanner();
+      }
+      return;
+    } catch (err) {
+      deferredInstallPrompt = null;
+    }
+  }
+  openPwaInstallModal();
+}
+
+function initPwaSupport() {
+  if (isStandalonePwa()) {
+    document.documentElement.classList.add('is-pwa-installed');
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(err => {
+        console.warn('ServiceWorker registration skipped:', err);
+      });
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    showInstallBannerIfEligible();
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    document.documentElement.classList.add('is-pwa-installed');
+    closePwaInstallModal();
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner) banner.classList.add('hidden');
+    showToast('JapaAI.ng installed on your device!');
+  });
+
+  showInstallBannerIfEligible();
+}
+
+// --------------------------------------------------------------------------
 // Tab & Subtab Navigation
 // --------------------------------------------------------------------------
 
@@ -198,10 +307,19 @@ function switchTab(tabId) {
   document.querySelectorAll('.ws-tab').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === tabId);
   });
+  document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabId);
+  });
   document.querySelectorAll('.tab-panel').forEach(panel => {
     panel.classList.toggle('active', panel.id === tabId);
   });
   if (tabId === 'tab-saved') renderSavedProgress();
+}
+
+function scrollToMatcher() {
+  switchTab('tab-matcher');
+  const el = document.getElementById('tab-matcher');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function switchRcipSubtab(subtabId) {
@@ -248,12 +366,17 @@ function updateGlobalCounters() {
   const elS = document.getElementById('hero-saved-steps');
   const badgeC = document.getElementById('tab-badge-countries');
   const badgeSaved = document.getElementById('tab-badge-saved');
+  const mobileBadge = document.getElementById('mobile-badge-saved');
 
   if (elC) elC.textContent = String(cCount || 12);
   if (elP) elP.textContent = String(pCount || 43);
   if (elS) elS.textContent = String(totalSaved);
   if (badgeC) badgeC.textContent = String(cCount || 12);
   if (badgeSaved) badgeSaved.textContent = String(totalSaved);
+  if (mobileBadge) {
+    mobileBadge.textContent = String(totalSaved);
+    mobileBadge.classList.toggle('hidden', totalSaved <= 0);
+  }
 }
 
 function renderHeroCountryStrip() {
@@ -435,7 +558,7 @@ function renderCountryHubWorkspace(country) {
     .join('');
 
   const deepRcipBtn = activePathway.has_deep_engine
-    ? `<button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">Launch Deep RCIP Eligibility &amp; 14-Community Engine →</button>`
+    ? `<button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">Open Interactive RCIP Toolkit →</button>`
     : '';
 
   ws.innerHTML = `
@@ -630,7 +753,7 @@ function renderMatcherResults(res) {
         const whyHtml = (m.why_it_fits || []).map(w => `<li style="color:var(--emerald); margin-top:3px;">${esc(w)}</li>`).join('');
         const gapsHtml = (m.gaps_to_close || []).map(g => `<li style="color:var(--amber); margin-top:3px;">${esc(g)}</li>`).join('');
         const deepBtn = m.has_deep_engine
-          ? `<button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">Deep Calculator</button>`
+          ? `<button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">RCIP Toolkit</button>`
           : '';
         return `
           <div class="match-card tier-${esc(m.fit_tier)}">
@@ -720,11 +843,11 @@ function renderSavedProgress() {
   container.innerHTML = `
     <div class="funds-card" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
       <div>
-        <strong>🇨🇦 Canada RCIP Deep Engine</strong>
+        <strong>🇨🇦 Canada RCIP Roadmap &amp; Checklist</strong>
         <div style="font-size:12px; color:var(--ink-muted);">Readiness Score: ${rcipScore}% · ${rcipDone} RCIP checklist step(s) done · ${shortCount} community shortlist(s)</div>
       </div>
       <div style="display:flex; gap:8px;">
-        <button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">Open RCIP Engine</button>
+        <button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">Open RCIP Toolkit</button>
         <button type="button" class="btn btn-sm" onclick="exportRoadmapReport()">Export RCIP Dossier</button>
       </div>
     </div>
@@ -836,7 +959,7 @@ function updateHeroSummary() {
   if (ctx.local_grad_exempt) branchParts.push('Local Grad Exempt');
   if (branchEl) branchEl.textContent = branchParts.join(' · ');
 
-  if (pagesEl) pagesEl.textContent = `${state.sources.length} Canada.ca pages`;
+  if (pagesEl) pagesEl.textContent = `${state.sources.length} official pages`;
   const shortCount = Object.values(state.shortlists || {}).filter(s => s && s.shortlisted).length;
   if (shortEl) shortEl.textContent = `${shortCount} shortlisted`;
 }
@@ -1475,26 +1598,27 @@ async function updateCommunityState(communityId, shortlisted, employersContacted
 }
 
 // --------------------------------------------------------------------------
-// Live Canada.ca Sync, Official Sources, RAG Copilot & RCIP Export
+// Live Official Gov Sync, Sources Registry, RAG Copilot & RCIP Export
 // --------------------------------------------------------------------------
 
-async function triggerCanadaSync() {
-  const btn = document.getElementById('btn-sync-canada');
+async function triggerSourcesSync() {
+  const btn = document.getElementById('btn-sync-sources');
   const origHtml = btn ? btn.innerHTML : '';
-  if (btn) { btn.disabled = true; btn.textContent = 'Syncing Canada.ca...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Refreshing...'; }
   try {
-    const res = await fetch('/api/sync-canada', { method: 'POST' });
+    const res = await fetch('/api/sync-sources', { method: 'POST' });
     const data = await res.json();
-    if (!res.ok) throw new Error('Sync failed');
+    if (!res.ok) throw new Error('Refresh failed');
     await loadSources();
     updateHeroSummary();
-    showToast(`Canada.ca synced: ${data.total_indexed} pages indexed (${data.inserted} new, ${data.updated} updated).`);
+    showToast(`Official sources refreshed: ${data.total_indexed} pages across ${data.countries_indexed || 12} countries (${data.inserted} new, ${data.updated} updated).`);
   } catch (err) {
-    showToast('Live Canada.ca sync encountered an error.', true);
+    showToast('Could not refresh official sources right now.', true);
   } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = origHtml || 'Sync Canada.ca'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = origHtml || 'Refresh Gov Data'; }
   }
 }
+window.triggerCanadaSync = triggerSourcesSync;
 
 async function loadSources() {
   try {

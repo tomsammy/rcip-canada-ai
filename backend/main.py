@@ -509,6 +509,7 @@ def shortlist_community_endpoint(payload: CommunityShortlistPayload) -> Dict[str
     return {"status": "success", "shortlist": record}
 
 
+@app.post("/api/sync-sources")
 @app.post("/api/sync-canada")
 def sync_canada_endpoint() -> Dict[str, Any]:
     crawl_result = crawl_official_canada_pages()
@@ -530,6 +531,7 @@ def sync_canada_endpoint() -> Dict[str, Any]:
         "failed": len(crawl_result["errors"]),
         "errors": crawl_result["errors"],
         "total_indexed": len(all_pages),
+        "countries_indexed": len(COUNTRIES_CATALOG),
     }
 
 
@@ -823,7 +825,7 @@ def export_roadmap_html_stateless(payload: ExportHtmlPayload) -> HTMLResponse:
     return _render_export_html(payload.profile, payload.progress, payload.shortlists)
 
 
-# Serve static frontend
+# Serve static frontend & PWA root assets
 frontend_dir = os.path.join(str(BASE_DIR), "frontend")
 if os.path.exists(frontend_dir):
     app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
@@ -831,3 +833,28 @@ if os.path.exists(frontend_dir):
     @app.get("/")
     def serve_index() -> FileResponse:
         return FileResponse(os.path.join(frontend_dir, "index.html"))
+
+    @app.get("/manifest.webmanifest")
+    def serve_manifest() -> FileResponse:
+        return FileResponse(
+            os.path.join(frontend_dir, "manifest.webmanifest"),
+            media_type="application/manifest+json",
+        )
+
+    @app.get("/sw.js")
+    def serve_service_worker() -> FileResponse:
+        return FileResponse(
+            os.path.join(frontend_dir, "sw.js"),
+            media_type="application/javascript",
+            headers={
+                "Service-Worker-Allowed": "/",
+                "Cache-Control": "no-cache",
+            },
+        )
+
+    @app.get("/apple-touch-icon.png")
+    def serve_apple_touch_icon() -> FileResponse:
+        return FileResponse(
+            os.path.join(frontend_dir, "icons", "icon-180.png"),
+            media_type="image/png",
+        )

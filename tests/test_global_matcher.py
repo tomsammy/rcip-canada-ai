@@ -191,6 +191,53 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
         self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;Ada", html_body)
         self.assertIn("Skilled Worker", html_body)
 
+    def test_pwa_install_assets_and_clean_ui_naming(self):
+        manifest_resp = self.client.get("/manifest.webmanifest")
+        self.assertEqual(manifest_resp.status_code, 200)
+        manifest = manifest_resp.json()
+        self.assertEqual(manifest["short_name"], "JapaAI.ng")
+        self.assertEqual(manifest["display"], "standalone")
+        self.assertGreaterEqual(len(manifest.get("icons", [])), 3)
+
+        for icon in manifest["icons"]:
+            icon_resp = self.client.get(icon["src"])
+            self.assertEqual(icon_resp.status_code, 200, f"Missing icon {icon['src']}")
+            self.assertEqual(icon_resp.headers.get("content-type"), "image/png")
+            self.assertTrue(icon_resp.content.startswith(b"\x89PNG\r\n\x1a\n"))
+
+        sw_resp = self.client.get("/sw.js")
+        self.assertEqual(sw_resp.status_code, 200)
+        self.assertIn("javascript", (sw_resp.headers.get("content-type") or "").lower())
+        self.assertEqual(sw_resp.headers.get("service-worker-allowed"), "/")
+
+        apple_resp = self.client.get("/apple-touch-icon.png")
+        self.assertEqual(apple_resp.status_code, 200)
+        self.assertEqual(apple_resp.headers.get("content-type"), "image/png")
+        self.assertTrue(apple_resp.content.startswith(b"\x89PNG\r\n\x1a\n"))
+
+        idx_resp = self.client.get("/")
+        self.assertEqual(idx_resp.status_code, 200)
+        html_text = idx_resp.text
+        for required in [
+            "manifest.webmanifest",
+            "apple-touch-icon",
+            "Refresh Gov Data",
+            "Canada RCIP Toolkit",
+            "mobile-bottom-nav",
+        ]:
+            self.assertIn(required, html_text)
+        for forbidden in ["Vercel Production", "Sync Canada.ca", "Canada RCIP Engine"]:
+            self.assertNotIn(forbidden, html_text)
+
+        js_resp = self.client.get("/static/app.js")
+        self.assertEqual(js_resp.status_code, 200)
+        for forbidden_js in ["Vercel Production", "Sync Canada.ca"]:
+            self.assertNotIn(forbidden_js, js_resp.text)
+
+        route_paths = {getattr(r, "path", None) for r in app.routes}
+        self.assertIn("/api/sync-sources", route_paths)
+        self.assertIn("/api/sync-canada", route_paths)
+
 
 if __name__ == "__main__":
     unittest.main()

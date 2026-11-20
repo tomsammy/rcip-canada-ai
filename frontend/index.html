@@ -2,9 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>JapaAI.ng — Official 12-Country Immigration &amp; PR Roadmap Platform</title>
-  <link rel="stylesheet" href="/static/styles.css?v=3">
+  <meta name="description" content="Official government immigration and permanent residence roadmaps across 12 destination countries, built for Nigerians.">
+  <meta name="theme-color" content="#047857" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="JapaAI.ng">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/static/styles.css?v=4">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -23,38 +33,42 @@
           </svg>
         </div>
         <div class="brand-text">
-          <div class="brand-title">
-            JapaAI.ng
-            <span class="verified-dot">12 Countries · Official Gov Sources</span>
-          </div>
-          <span class="brand-sub" id="env-storage-label">Official Immigration &amp; PR Roadmaps for Nigerians</span>
+          <div class="brand-title">JapaAI.ng</div>
+          <span class="brand-sub">Official Gov Roadmaps · 12 Countries</span>
         </div>
       </div>
 
       <div class="nav-actions">
-        <button class="btn btn-ghost btn-sm" id="btn-sync-canada" onclick="triggerCanadaSync()">
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-sync-sources" onclick="triggerSourcesSync()" title="Refresh official government sources index">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-          Sync Canada.ca
+          Refresh Gov Data
         </button>
-        <button class="btn btn-sm" onclick="switchTab('tab-rcip')">
-          Canada RCIP Engine
+        <button type="button" class="btn btn-sm" onclick="switchTab('tab-rcip')">
+          Canada RCIP Toolkit
         </button>
-        <button class="btn btn-icon" id="btn-theme-toggle" onclick="toggleTheme()" title="Toggle Light / Dark Theme" aria-label="Toggle Theme">
-          <svg class="icon" id="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-          <svg class="icon hidden" id="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        <button type="button" class="btn btn-emerald btn-sm pwa-install-trigger" id="btn-install-desktop" onclick="promptPwaInstall()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Install App
         </button>
-        <button class="btn btn-primary btn-sm" onclick="switchTab('tab-copilot')">
+        <button type="button" class="btn btn-icon" id="btn-theme-toggle" onclick="toggleTheme()" title="Toggle Light / Dark Theme" aria-label="Toggle Theme">
+          <svg class="icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          <svg class="icon hidden theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="switchTab('tab-copilot')">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Official Copilot
         </button>
       </div>
 
       <div class="mobile-toggle-wrap">
-        <button class="btn btn-icon" onclick="toggleTheme()" aria-label="Toggle Theme">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        <button type="button" class="btn btn-emerald btn-icon pwa-install-trigger" onclick="promptPwaInstall()" title="Install JapaAI.ng App" aria-label="Install App">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
-        <button class="btn btn-primary btn-sm" onclick="switchTab('tab-copilot')">Copilot</button>
-        <button class="btn btn-icon" onclick="toggleMobileDrawer()" aria-label="Menu">
+        <button type="button" class="btn btn-icon" onclick="toggleTheme()" aria-label="Toggle Theme">
+          <svg class="icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          <svg class="icon hidden theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        </button>
+        <button type="button" class="btn btn-icon" onclick="toggleMobileDrawer()" aria-label="Menu">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
         </button>
       </div>
@@ -64,36 +78,48 @@
   <!-- Mobile Drawer -->
   <div id="mobile-drawer" class="mobile-drawer" onclick="if(event.target===this) toggleMobileDrawer()">
     <div class="mobile-sheet">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <strong>JapaAI.ng</strong>
-        <button class="btn btn-ghost btn-sm" onclick="toggleMobileDrawer()">Close</button>
+      <div class="mobile-sheet-head">
+        <div class="brand-title" style="font-size:16px;">JapaAI.ng</div>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="toggleMobileDrawer()">Close</button>
       </div>
-      <button class="btn" onclick="switchTab('tab-matcher'); toggleMobileDrawer()">Find My Pathway</button>
-      <button class="btn" onclick="switchTab('tab-countries'); toggleMobileDrawer()">12 Country Hubs</button>
-      <button class="btn" onclick="switchTab('tab-rcip'); toggleMobileDrawer()">Canada RCIP Engine</button>
-      <button class="btn" onclick="switchTab('tab-copilot'); toggleMobileDrawer()">Official Copilot</button>
-      <button class="btn" onclick="switchTab('tab-saved'); toggleMobileDrawer()">My Saved Progress</button>
-      <button class="btn" onclick="triggerCanadaSync(); toggleMobileDrawer()">Sync Canada.ca</button>
+      <button type="button" class="btn" onclick="switchTab('tab-matcher'); toggleMobileDrawer()">Find My Pathway</button>
+      <button type="button" class="btn" onclick="switchTab('tab-countries'); toggleMobileDrawer()">12 Country Hubs</button>
+      <button type="button" class="btn" onclick="switchTab('tab-rcip'); toggleMobileDrawer()">Canada RCIP Toolkit</button>
+      <button type="button" class="btn" onclick="switchTab('tab-copilot'); toggleMobileDrawer()">Official Copilot</button>
+      <button type="button" class="btn" onclick="switchTab('tab-saved'); toggleMobileDrawer()">My Saved Progress</button>
+      <hr class="mobile-sheet-divider">
+      <button type="button" class="btn btn-primary pwa-install-trigger" onclick="toggleMobileDrawer(); promptPwaInstall()">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Install JapaAI.ng App
+      </button>
+      <button type="button" class="btn btn-ghost" onclick="triggerSourcesSync(); toggleMobileDrawer()">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+        Refresh Official Data
+      </button>
     </div>
   </div>
 
   <main class="container">
     <!-- Hero Card -->
     <section class="hero-card">
-      <div>
+      <div class="hero-main">
         <div class="hero-eyebrow">
-          Official Government Source Intelligence · Built for Nigerians
+          <span class="hero-dot" aria-hidden="true"></span>
+          12 Official Government Portals · Built for Nigerians
         </div>
-        <h1 class="hero-title">Official Government Immigration Roadmaps — Built for Nigerians.</h1>
+        <h1 class="hero-title">Official Immigration Roadmaps, Built for Nigerians.</h1>
         <p class="hero-sub">
-          Grounded directly in <strong>canada.ca</strong>, <strong>gov.uk</strong>, <strong>uscis.gov</strong>, <strong>make-it-in-germany.com</strong>, <strong>ind.nl</strong>, <strong>migrationsverket.se</strong>, <strong>politsei.ee</strong>, <strong>mvr.bg</strong>, <strong>migracija.lrv.lt</strong>, <strong>inclusion.gob.es</strong>, <strong>france-visas.gouv.fr</strong>, and <strong>gov.br</strong>.
+          Compare verified permanent residence, work, study, and remote-income pathways sourced directly from 12 national immigration authorities.
         </p>
 
-        <div class="country-jump-strip" id="hero-country-strip"></div>
+        <div class="hero-cta-row">
+          <button type="button" class="btn btn-primary btn-lg" onclick="scrollToMatcher()">Find My Pathway</button>
+          <button type="button" class="btn btn-secondary btn-lg" onclick="switchTab('tab-rcip')">Canada RCIP Toolkit</button>
+        </div>
 
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="switchTab('tab-matcher')">Find My Best Country &amp; Pathway</button>
-          <button class="btn btn-crimson" onclick="switchTab('tab-rcip')">Canada RCIP Deep Calculator</button>
+        <div class="hero-jump-wrap">
+          <span class="hero-jump-label">Jump to country</span>
+          <div class="country-jump-strip" id="hero-country-strip"></div>
         </div>
       </div>
 
@@ -101,45 +127,60 @@
         <div class="stat-mini-grid">
           <div class="stat-mini">
             <div class="stat-mini-val tabular" id="hero-countries-count">12</div>
-            <div class="stat-mini-lbl">Destination Countries</div>
+            <div class="stat-mini-lbl">Countries</div>
           </div>
           <div class="stat-mini">
             <div class="stat-mini-val tabular" id="hero-pathways-count">43</div>
-            <div class="stat-mini-lbl">Official Pathways</div>
+            <div class="stat-mini-lbl">PR Pathways</div>
           </div>
           <div class="stat-mini">
             <div class="stat-mini-val tabular" id="hero-rcip-score">0%</div>
-            <div class="stat-mini-lbl">Canada RCIP Score</div>
+            <div class="stat-mini-lbl">RCIP Score</div>
           </div>
           <div class="stat-mini">
             <div class="stat-mini-val tabular" id="hero-saved-steps">0</div>
-            <div class="stat-mini-lbl">Saved Checklist Steps</div>
+            <div class="stat-mini-lbl">Saved Steps</div>
           </div>
         </div>
-        <div style="font-size:12px; color:var(--ink-muted);">
-          Match across all 12 countries with zero inflated scores, or inspect country-specific rules for Nigerian applicants (including US DV Lottery eligibility, UKVI IELTS, anabin, and IND sponsors).
+        <div class="hero-trust-foot">
+          Zero middlemen · Official government portals only · Saved privately on your device
         </div>
       </div>
     </section>
 
-    <!-- 5 Workspace Tabs -->
+    <!-- Mobile App Install Banner (auto-hidden when standalone or dismissed) -->
+    <section id="pwa-install-banner" class="pwa-install-banner hidden" aria-label="Install JapaAI.ng Mobile App">
+      <div class="pwa-banner-left">
+        <img src="/static/icons/icon-192.png" alt="JapaAI.ng icon" width="40" height="40" class="pwa-banner-icon">
+        <div>
+          <div class="pwa-banner-title">Install JapaAI.ng</div>
+          <div class="pwa-banner-sub">One-tap home screen access &amp; offline roadmaps</div>
+        </div>
+      </div>
+      <div class="pwa-banner-actions">
+        <button type="button" class="btn btn-primary btn-sm" onclick="promptPwaInstall()">Install</button>
+        <button type="button" class="btn btn-ghost btn-icon" onclick="dismissInstallBanner()" aria-label="Dismiss install banner">✕</button>
+      </div>
+    </section>
+
+    <!-- 5 Workspace Tabs (Desktop / Tablet) -->
     <nav class="workspace-nav" aria-label="JapaAI.ng Workspace">
-      <button class="ws-tab active" data-tab="tab-matcher" onclick="switchTab('tab-matcher')">
+      <button type="button" class="ws-tab active" data-tab="tab-matcher" onclick="switchTab('tab-matcher')">
         Find My Pathway
         <span class="tab-count">12 Countries</span>
       </button>
-      <button class="ws-tab" data-tab="tab-countries" onclick="switchTab('tab-countries')">
+      <button type="button" class="ws-tab" data-tab="tab-countries" onclick="switchTab('tab-countries')">
         12 Country Hubs
         <span class="tab-count tabular" id="tab-badge-countries">12</span>
       </button>
-      <button class="ws-tab" data-tab="tab-rcip" onclick="switchTab('tab-rcip')">
-        Canada RCIP Engine
+      <button type="button" class="ws-tab" data-tab="tab-rcip" onclick="switchTab('tab-rcip')">
+        Canada RCIP Toolkit
         <span class="tab-count tabular" id="tab-badge-score">0%</span>
       </button>
-      <button class="ws-tab" data-tab="tab-copilot" onclick="switchTab('tab-copilot')">
+      <button type="button" class="ws-tab" data-tab="tab-copilot" onclick="switchTab('tab-copilot')">
         Official Gov Copilot
       </button>
-      <button class="ws-tab" data-tab="tab-saved" onclick="switchTab('tab-saved')">
+      <button type="button" class="ws-tab" data-tab="tab-saved" onclick="switchTab('tab-saved')">
         My Saved Progress
         <span class="tab-count tabular" id="tab-badge-saved">0</span>
       </button>
@@ -283,13 +324,13 @@
       <div id="country-hub-workspace" class="hidden"></div>
     </section>
 
-    <!-- TAB 3: CANADA RCIP DEEP ENGINE -->
+    <!-- TAB 3: CANADA RCIP TOOLKIT -->
     <section id="tab-rcip" class="tab-panel">
       <div class="card">
         <div class="rcip-hero-strip">
           <div>
-            <div class="pill pill-red" style="margin-bottom:8px;">Canada Deep Engine · RCIP Pilot &amp; Jan 1, 2027 Permanent Program</div>
-            <h2 style="font-size:22px; font-weight:800; margin-bottom:6px;">Canada RCIP Readiness &amp; 14-Community Engine</h2>
+            <div class="pill pill-red" style="margin-bottom:8px;">Canada · RCIP Pilot &amp; Jan 1, 2027 Permanent Program</div>
+            <h2 style="font-size:22px; font-weight:800; margin-bottom:6px;">Canada RCIP Eligibility &amp; Roadmap Toolkit</h2>
             <p style="font-size:13.5px; color:var(--ink-muted);">
               Full IRCC verification: 1,560-hr / Local Graduate exemption, TEER 0–5 cross-matching, exact CELPIP/IELTS/PTE/TEF/TCF CLB conversion, and CAD settlement funds.
             </p>
@@ -324,7 +365,7 @@
             <div style="display:flex; flex-wrap:wrap; gap:6px;">
               <span class="pill pill-red" id="kpi-track">Permanent 2027</span>
               <span class="pill pill-blue" id="kpi-branch">Outside Canada</span>
-              <span class="pill pill-emerald tabular" id="kpi-pages">0 Canada.ca pages</span>
+              <span class="pill pill-emerald tabular" id="kpi-pages">0 official pages</span>
               <span class="pill tabular" id="kpi-shortlisted">0 shortlisted</span>
             </div>
           </div>
@@ -674,8 +715,8 @@
         <div class="card">
           <div class="card-header">
             <div>
-              <h3 class="card-title">Live Canada.ca &amp; Official Index</h3>
-              <p class="card-desc">Synced official IRCC pages &amp; 12-country authority registry</p>
+              <h3 class="card-title">Official Sources Index</h3>
+              <p class="card-desc">Verified government portals &amp; live IRCC registry</p>
             </div>
             <span class="pill pill-emerald tabular" id="sources-count-pill">0 pages</span>
           </div>
@@ -710,8 +751,55 @@
     </footer>
   </main>
 
+  <!-- Native-Style Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <button type="button" class="mobile-nav-btn active" data-tab="tab-matcher" onclick="switchTab('tab-matcher')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <span>Match</span>
+    </button>
+    <button type="button" class="mobile-nav-btn" data-tab="tab-countries" onclick="switchTab('tab-countries')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span>Countries</span>
+    </button>
+    <button type="button" class="mobile-nav-btn" data-tab="tab-rcip" onclick="switchTab('tab-rcip')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      <span>RCIP</span>
+    </button>
+    <button type="button" class="mobile-nav-btn" data-tab="tab-copilot" onclick="switchTab('tab-copilot')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Copilot</span>
+    </button>
+    <button type="button" class="mobile-nav-btn" data-tab="tab-saved" onclick="switchTab('tab-saved')">
+      <span class="mobile-nav-icon-wrap">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <span class="mobile-nav-badge tabular hidden" id="mobile-badge-saved">0</span>
+      </span>
+      <span>Saved</span>
+    </button>
+  </nav>
+
+  <!-- PWA Install Guide Modal (for iOS Safari & Manual Browsers) -->
+  <div id="pwa-install-modal" class="pwa-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pwa-modal-title" onclick="if(event.target===this) closePwaInstallModal()">
+    <div class="pwa-modal-card">
+      <div class="pwa-modal-head">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img src="/static/icons/icon-192.png" alt="JapaAI.ng icon" width="40" height="40" class="pwa-banner-icon">
+          <div>
+            <h3 id="pwa-modal-title" style="font-size:17px; font-weight:700;">Install JapaAI.ng on Your Phone</h3>
+            <p style="font-size:12px; color:var(--ink-muted);">Launch full-screen with saved roadmaps</p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-ghost btn-icon" onclick="closePwaInstallModal()" aria-label="Close">✕</button>
+      </div>
+      <ol id="pwa-modal-steps" class="pwa-modal-steps"></ol>
+      <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+        <button type="button" class="btn btn-primary" onclick="closePwaInstallModal()">Got It</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast-container" class="toast-container"></div>
 
-  <script src="/static/app.js?v=3"></script>
+  <script src="/static/app.js?v=4"></script>
 </body>
 </html>

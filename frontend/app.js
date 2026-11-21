@@ -44,6 +44,12 @@ let state = {
   evaluation: null,
   officialForms: [],
   communitiesCatalog: [],
+  rcipEmployersCatalog: [],
+  rcipCommunityDirectories: [],
+  rcipEmployerMatchResult: null,
+  empProvinceFilter: 'all',
+  employerApplications: {},
+  lastParsedResume: null,
   provinceFilter: 'all',
   focusedStageId: null,
   wizardStep: 1,
@@ -98,6 +104,7 @@ function persistBrowserState() {
         profile: state.profile || {},
         progress: state.progress || {},
         shortlists: state.shortlists || {},
+        employerApplications: state.employerApplications || {},
       })
     );
   } catch (err) {
@@ -113,6 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   initPwaSupport();
   setupResumeDropzone();
+  setupEmployerResumeDropzone();
 
   let healthData = null;
   try {
@@ -131,11 +139,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     state.profile = localData.profile || {};
     state.progress = localData.progress || {};
     state.shortlists = localData.shortlists || {};
+    state.employerApplications = localData.employerApplications || {};
   } else if (state.environment === 'local') {
     await hydrateFromLocalServer();
   }
 
-  await Promise.all([loadCountries(), loadSources(), loadCommunities()]);
+  await Promise.all([loadCountries(), loadSources(), loadCommunities(), loadRcipEmployers()]);
   populateUniversalForm();
   populateProfileForm();
   await recomputeRoadmapAndEvaluation();
@@ -853,15 +862,17 @@ function renderSavedProgress() {
   const rcipDone = Object.values(state.progress || {}).filter(p => p && p.completed).length;
   const rcipScore = state.evaluation?.readiness_score ?? 0;
   const shortCount = Object.values(state.shortlists || {}).filter(s => s && s.shortlisted).length;
+  const appliedCount = Object.values(state.employerApplications || {}).filter(a => a && a.applied).length;
 
   container.innerHTML = `
     <div class="funds-card" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
       <div>
         <strong>🇨🇦 Canada RCIP Roadmap &amp; Checklist</strong>
-        <div style="font-size:12px; color:var(--ink-muted);">Readiness Score: ${rcipScore}% · ${rcipDone} RCIP checklist step(s) done · ${shortCount} community shortlist(s)</div>
+        <div style="font-size:12px; color:var(--ink-muted);">Readiness Score: ${rcipScore}% · ${rcipDone} RCIP checklist step(s) done · ${shortCount} community shortlist(s) · ${appliedCount} employer application(s)</div>
       </div>
-      <div style="display:flex; gap:8px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">Open RCIP Toolkit</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="switchTab('tab-rcip'); switchRcipSubtab('rcip-sub-employers')">Employer Applications</button>
         <button type="button" class="btn btn-sm" onclick="exportRoadmapReport()">Export RCIP Dossier</button>
       </div>
     </div>
@@ -1417,6 +1428,7 @@ function setupResumeDropzone() {
 
 function applyParsedResumeHints(parsed) {
   if (!parsed) return;
+  state.lastParsedResume = parsed;
   const p = { ...(state.profile || {}) };
   if (parsed.name && !p.name) p.name = parsed.name;
   if (parsed.email && !p.email) p.email = parsed.email;
@@ -1492,6 +1504,11 @@ function renderResumeSuggestions(parsed) {
     <div class="tag-row" style="margin-bottom:8px;">${skillsHtml}</div>
     <div style="font-size:12px; color:var(--ink-muted);">Top Suggested NOC 2021 Matches:</div>
     ${nocsHtml}
+    <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border-subtle); display:flex; justify-content:flex-end;">
+      <button type="button" class="btn btn-crimson btn-sm" onclick="matchEmployersFromSavedProfile(); switchRcipSubtab('rcip-sub-employers');">
+        Match This CV to Designated Employers →
+      </button>
+    </div>
   `;
 }
 
@@ -1581,11 +1598,392 @@ function renderCommunities() {
               <button type="button" class="btn btn-sm" onclick="updateCommunityState('${esc(c.id)}', true, ${c.employers_contacted + 1})">+</button>
             </div>
           </div>
-          <a class="btn btn-primary btn-sm" href="${esc(c.official_url)}" target="_blank" rel="noopener">Visit Official EDO Portal ↗</a>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <a class="btn btn-primary btn-sm" style="flex:1;" href="${esc(c.official_url)}" target="_blank" rel="noopener">Visit Official EDO Portal ↗</a>
+            <button type="button" class="btn btn-sm" onclick="openCommunityEmployers('${esc(c.id)}')">View Employers</button>
+          </div>
         </div>
       </div>
     `;
   }).join('');
+}
+
+// --------------------------------------------------------------------------
+// RCIP CV-to-Designated-Employer Matcher & Apply Directory
+// --------------------------------------------------------------------------
+
+async function loadRcipEmployers() {
+  try {
+    const res = await fetch('/api/rcip/employers');
+    const data = await res.json();
+    state.rcipEmployersCatalog = data.employers || [];
+    state.rcipCommunityDirectories = data.communities || [];
+    const badge = document.getElementById('rcip-emp-count-badge');
+    if (badge) badge.textContent = String(state.rcipEmployersCatalog.length || 34);
+    populateEmpCommunitySelect();
+    renderRcipEmployers();
+    renderRcipCommunityDirs();
+  } catch (err) {
+    console.warn('Failed to load RCIP designated employers', err);
+  }
+}
+
+function populateEmpCommunitySelect() {
+  const sel = document.getElementById('emp-community-filter');
+  if (!sel || !state.rcipCommunityDirectories.length) return;
+  const current = sel.value || '';
+  sel.innerHTML =
+    '<option value="">All 14 Communities</option>' +
+    state.rcipCommunityDirectories
+      .map(c => `<option value="${esc(c.id)}">${esc(c.name)}, ${esc(c.province_code)}</option>`)
+      .join('');
+  if (current) sel.value = current;
+}
+
+function setupEmployerResumeDropzone() {
+  const dz = document.getElementById('emp-resume-dropzone');
+  if (!dz) return;
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('dragover');
+    if (e.dataTransfer?.files?.length) handleEmployerResumeUpload(e.dataTransfer.files[0]);
+  });
+}
+
+async function handleEmployerResumeUpload(file) {
+  if (!file) return;
+  if (file.size > MAX_UPLOAD_BYTES) {
+    showToast('File exceeds 4.2 MB limit. Paste your CV text instead.', true);
+    return;
+  }
+  const form = new FormData();
+  form.append('file', file);
+  const queryHint = strVal('emp-target-query');
+  if (queryHint) {
+    const digits = queryHint.replace(/\D/g, '');
+    if (digits.length === 5) form.append('target_noc', digits);
+    else form.append('target_title', queryHint);
+  }
+
+  try {
+    const res = await fetch('/api/rcip/match-employers', { method: 'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'CV matching failed');
+    if (data.parsed) {
+      applyParsedResumeHints(data.parsed);
+      renderResumeSuggestions(data.parsed);
+      populateProfileForm();
+    }
+    applyEmployerMatchResponse(data);
+    showToast(`Matched ${data.total_matched || 0} designated employer(s) to ${file.name}.`);
+  } catch (err) {
+    showToast(err.message || 'Failed to match CV file.', true);
+  }
+}
+
+async function matchEmployersFromInput() {
+  const pasted = document.getElementById('emp-resume-paste')?.value.trim() || '';
+  const queryHint = strVal('emp-target-query');
+  const digits = queryHint.replace(/\D/g, '');
+
+  const payload = {
+    resume_text: pasted,
+    target_noc: digits.length === 5 ? digits : '',
+    target_title: digits.length === 5 ? '' : queryHint,
+  };
+
+  if (!pasted && !queryHint) {
+    return matchEmployersFromSavedProfile();
+  }
+
+  try {
+    const res = await fetch('/api/rcip/match-employers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Employer match failed');
+    if (data.parsed) {
+      applyParsedResumeHints(data.parsed);
+      renderResumeSuggestions(data.parsed);
+      populateProfileForm();
+    }
+    applyEmployerMatchResponse(data);
+    showToast(
+      data.status === 'MATCHED'
+        ? `Matched ${data.total_matched} designated employer(s) to your CV.`
+        : (data.message || 'Provide CV details or a target NOC.')
+    );
+  } catch (err) {
+    showToast('Failed to match CV to designated employers.', true);
+  }
+}
+
+async function matchEmployersFromSavedProfile() {
+  const p = state.profile || {};
+  const parsed = state.lastParsedResume || {};
+  const queryHint = strVal('emp-target-query');
+  const digits = queryHint.replace(/\D/g, '');
+
+  const payload = {
+    resume_text: p.experience_summary || parsed.experience_summary || '',
+    target_noc: digits.length === 5 ? digits : (p.target_job_noc_code || ''),
+    target_title: digits.length === 5 ? (p.target_job_title || '') : (queryHint || p.target_job_title || ''),
+    skills: (p.detected_skills && p.detected_skills.length) ? p.detected_skills : (parsed.detected_skills || []),
+    suggested_nocs: parsed.suggested_nocs || [],
+  };
+
+  try {
+    const res = await fetch('/api/rcip/match-employers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Employer match failed');
+    applyEmployerMatchResponse(data);
+    if (data.status === 'NEEDS_INPUT') {
+      showToast('Upload/paste a CV or select your target NOC first.', true);
+    } else {
+      showToast(`Matched ${data.total_matched || 0} designated employer(s) from your profile.`);
+    }
+  } catch (err) {
+    showToast('Could not match saved profile to employers.', true);
+  }
+}
+
+function applyEmployerMatchResponse(data) {
+  if (!data || data.status === 'NEEDS_INPUT') {
+    state.rcipEmployerMatchResult = null;
+    renderRcipEmployerSummary(data);
+    renderRcipEmployers();
+    renderRcipCommunityDirs();
+    return;
+  }
+  state.rcipEmployerMatchResult = data;
+  renderRcipEmployerSummary(data);
+  renderRcipEmployers();
+  renderRcipCommunityDirs();
+}
+
+function resetEmployerMatch() {
+  state.rcipEmployerMatchResult = null;
+  state.empProvinceFilter = 'all';
+  const pasteEl = document.getElementById('emp-resume-paste');
+  const targetEl = document.getElementById('emp-target-query');
+  const searchEl = document.getElementById('emp-search-input');
+  const commSel = document.getElementById('emp-community-filter');
+  if (pasteEl) pasteEl.value = '';
+  if (targetEl) targetEl.value = '';
+  if (searchEl) searchEl.value = '';
+  if (commSel) commSel.value = '';
+  document.querySelectorAll('#rcip-sub-employers .prov-btn').forEach((b, idx) => b.classList.toggle('active', idx === 0));
+  const summaryEl = document.getElementById('emp-match-summary');
+  if (summaryEl) summaryEl.classList.add('hidden');
+  renderRcipEmployers();
+  renderRcipCommunityDirs();
+  showToast('Showing full curated directory of verified RCIP designated employers.');
+}
+
+function openCommunityEmployers(communityId) {
+  switchTab('tab-rcip');
+  switchRcipSubtab('rcip-sub-employers');
+  state.empProvinceFilter = 'all';
+  document.querySelectorAll('#rcip-sub-employers .prov-btn').forEach((b, idx) => b.classList.toggle('active', idx === 0));
+  const commSel = document.getElementById('emp-community-filter');
+  if (commSel) commSel.value = communityId || '';
+  renderRcipEmployers();
+}
+
+function filterRcipEmployers(prov, btnEl) {
+  state.empProvinceFilter = prov;
+  document.querySelectorAll('#rcip-sub-employers .prov-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  renderRcipEmployers();
+}
+
+function renderRcipEmployerSummary(data) {
+  const box = document.getElementById('emp-match-summary');
+  if (!box) return;
+  if (!data || data.status !== 'MATCHED') {
+    box.classList.add('hidden');
+    return;
+  }
+  box.classList.remove('hidden');
+  const skillsHtml = (data.detected_skills || [])
+    .map(s => `<span class="tag">${esc(s)}</span>`)
+    .join('') || '<span style="font-size:12px; color:var(--ink-subtle);">No keyword skills detected</span>';
+  const nocsHtml = (data.detected_nocs || [])
+    .map(n => `<span class="pill pill-blue">NOC ${esc(n.noc)}${n.teer !== null && n.teer !== undefined ? ` (TEER ${Number(n.teer)})` : ''} — ${esc(n.title)}</span>`)
+    .join(' ');
+
+  box.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+      <strong style="font-size:13.5px;">${esc(data.message)}</strong>
+      <span class="pill pill-emerald tabular">${Number(data.total_matched || 0)} employer match(es)</span>
+    </div>
+    ${nocsHtml ? `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">${nocsHtml}</div>` : ''}
+    <div class="tag-row">${skillsHtml}</div>
+  `;
+}
+
+function toggleEmployerApplied(employerId, employerName, communityId) {
+  const prev = state.employerApplications[employerId] || {};
+  const nextApplied = !prev.applied;
+  state.employerApplications[employerId] = {
+    employer_id: employerId,
+    name: employerName,
+    community_id: communityId,
+    applied: nextApplied,
+    updated_at: new Date().toISOString(),
+  };
+  persistBrowserState();
+  renderRcipEmployers();
+  renderSavedProgress();
+  showToast(nextApplied ? `Marked applied: ${employerName}` : `Removed applied flag: ${employerName}`);
+}
+
+function renderRcipEmployers() {
+  const grid = document.getElementById('rcip-employers-grid');
+  if (!grid) return;
+
+  const isMatchedMode = !!(state.rcipEmployerMatchResult && state.rcipEmployerMatchResult.status === 'MATCHED');
+  const sourceList = isMatchedMode
+    ? (state.rcipEmployerMatchResult.matched_employers || [])
+    : (state.rcipEmployersCatalog || []);
+
+  const prov = (state.empProvinceFilter || 'all').toLowerCase();
+  const cid = strVal('emp-community-filter').toLowerCase();
+  const q = strVal('emp-search-input').toLowerCase();
+
+  const filtered = sourceList.filter(e => {
+    const appRec = state.employerApplications[e.id] || {};
+    const isApplied = !!appRec.applied;
+    if (prov === 'applied' && !isApplied) return false;
+    if (prov !== 'all' && prov !== 'applied') {
+      if (prov !== String(e.province || '').toLowerCase() && prov !== String(e.province_code || '').toLowerCase()) {
+        return false;
+      }
+    }
+    if (cid && String(e.community_id || '').toLowerCase() !== cid) return false;
+    if (q) {
+      const hay = [
+        e.name,
+        e.community_name,
+        e.province,
+        e.sector,
+        e.location_note,
+        ...(e.typical_nocs || []),
+        ...(e.noc_labels || []),
+        ...(e.hiring_keywords || []),
+      ].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML =
+      '<div style="grid-column:1/-1; text-align:center; padding:28px; color:var(--ink-subtle);">No designated employers match those filters. Clear a filter or check all 14 official community EDO portals below.</div>';
+    return;
+  }
+
+  const tierLabels = {
+    STRONG_FIT: ['pill-emerald', 'Strong CV Match'],
+    GOOD_FIT: ['pill-blue', 'Good CV Match'],
+    EXPLORE_SECTOR: ['pill-amber', 'Sector Alignment'],
+  };
+
+  grid.innerHTML = filtered
+    .map(e => {
+      const appRec = state.employerApplications[e.id] || {};
+      const isApplied = !!appRec.applied;
+      const [tierCls, tierTxt] = tierLabels[e.fit_tier] || ['pill', 'Verified Designated Employer'];
+      const matchBadge = isMatchedMode
+        ? `<span class="pill ${tierCls} tabular">${esc(tierTxt)} · ${Number(e.match_score || 0)}%</span>`
+        : `<span class="pill pill-emerald">${esc(e.sector)}</span>`;
+      const tierClass = isMatchedMode && e.fit_tier ? `tier-${esc(e.fit_tier)}` : '';
+      const nocTags = (e.typical_nocs || [])
+        .map(code => `<span class="tag tabular">NOC ${esc(code)}</span>`)
+        .join('');
+      const reasonsHtml = (e.match_reasons || []).length
+        ? `<ul class="emp-match-reasons">${e.match_reasons.map(r => `<li>${esc(r)}</li>`).join('')}</ul>`
+        : '';
+
+      return `
+        <article class="employer-card ${tierClass} ${isApplied ? 'is-applied' : ''}">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap;">
+              <div>
+                <span class="pill" style="margin-bottom:6px;">${esc(e.community_name)}, ${esc(e.province_code)} · ${esc(e.sector)}</span>
+                <h4 style="font-size:16px; font-weight:700;">${esc(e.name)}</h4>
+              </div>
+              ${matchBadge}
+            </div>
+            ${reasonsHtml}
+            <div class="tag-row" style="margin-top:10px;">${nocTags}</div>
+            <p style="font-size:11.5px; color:var(--ink-muted); margin-top:8px;">${esc(e.location_note)}</p>
+          </div>
+
+          <div class="emp-actions">
+            <a class="btn btn-primary btn-sm" style="flex:1;" href="${esc(e.careers_url)}" target="_blank" rel="noopener">
+              Apply on Employer Website ↗
+            </a>
+            <a class="btn btn-sm" href="${esc(e.job_bank_url)}" target="_blank" rel="noopener">Job Bank ↗</a>
+            <a class="btn btn-sm" href="${esc(e.edo_directory_url || e.source_portal_url)}" target="_blank" rel="noopener">Verify EDO List ↗</a>
+            <button type="button" class="btn btn-sm ${isApplied ? 'btn-emerald' : ''}"
+                    onclick="toggleEmployerApplied('${esc(e.id)}', '${esc(e.name)}', '${esc(e.community_id)}')">
+              ${isApplied ? 'Applied ✓' : 'Track Applied'}
+            </button>
+          </div>
+        </article>
+      `;
+    })
+    .join('');
+}
+
+function renderRcipCommunityDirs() {
+  const grid = document.getElementById('rcip-community-dirs-grid');
+  if (!grid) return;
+
+  const isMatchedMode = !!(state.rcipEmployerMatchResult && state.rcipEmployerMatchResult.status === 'MATCHED');
+  const dirs = isMatchedMode
+    ? (state.rcipEmployerMatchResult.matched_communities || [])
+    : (state.rcipCommunityDirectories || []);
+
+  if (!dirs.length) return;
+
+  grid.innerHTML = dirs
+    .map(c => {
+      const sectorsHtml = (c.key_sectors || []).map(s => `<span class="tag">${esc(s)}</span>`).join('');
+      const alignedCount = Number(c.matched_employer_count || 0);
+      const rankBadge = isMatchedMode && alignedCount > 0
+        ? `<span class="pill pill-emerald tabular">${alignedCount} CV match(es)</span>`
+        : `<span class="pill">${esc(c.province_code)}</span>`;
+
+      return `
+        <div class="community-dir-card">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+              <div>
+                <h4 style="font-size:14.5px; font-weight:700;">${esc(c.name)}, ${esc(c.province_code)}</h4>
+                <div style="font-size:11.5px; color:var(--ink-subtle);">${esc(c.edo_name)}</div>
+              </div>
+              ${rankBadge}
+            </div>
+            <div class="tag-row" style="margin-top:8px;">${sectorsHtml}</div>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+            <a class="btn btn-primary btn-sm" style="flex:1;" href="${esc(c.employer_directory_url)}" target="_blank" rel="noopener">Official EDO Employer List ↗</a>
+            <a class="btn btn-sm" href="${esc(c.job_bank_url)}" target="_blank" rel="noopener">Canada Job Bank ↗</a>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
 }
 
 async function updateCommunityState(communityId, shortlisted, employersContacted) {

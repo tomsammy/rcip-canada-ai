@@ -45,3 +45,11 @@ _Avoid_: External link, blog reference
 **Program Track**:
 The transition split between Canada's **Rural Community Immigration Pilot** (community recommendations dated `<= 2026-12-31`) and the **Permanent RCIP Program** (`>= 2027-01-01`).
 _Avoid_: Visa batch, pathway tier
+
+**Designated Employer Directory**:
+The curated directory of real employers officially designated by the 14 participating RCIP communities, paired with direct official company careers URLs, local EDO portals, and pre-filtered Canada Job Bank links (never cold-call unadvertised roles).
+_Avoid_: Sponsor database, visa job board
+
+**CV-to-Employer Match**:
+Deterministic matching of an applicant's factual CV skills and NOC 2021 occupation codes against verified RCIP Designated Employers and participating community priority sectors.
+_Avoid_: Guaranteed placement, automated referral

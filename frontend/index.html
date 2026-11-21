@@ -20,7 +20,7 @@
   <meta property="og:type" content="website">
   <meta property="og:image" content="/static/images/hero-global-mobility.webp?v=7">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="stylesheet" href="/static/styles.css?v=7">
+  <link rel="stylesheet" href="/static/styles.css?v=8">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -428,7 +428,10 @@
             </p>
             <div class="transition-strip">
               <span><strong>Jan 1, 2027 Cutoff:</strong> Recommendations dated Dec 31, 2026 or earlier apply under the Pilot; newer recommendations route to the Permanent Program.</span>
-              <button type="button" class="btn btn-sm" onclick="exportRoadmapReport()">Export RCIP Dossier</button>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-crimson btn-sm" onclick="switchRcipSubtab('rcip-sub-employers')">Match CV to Employers →</button>
+                <button type="button" class="btn btn-sm" onclick="exportRoadmapReport()">Export RCIP Dossier</button>
+              </div>
             </div>
           </div>
 
@@ -466,6 +469,10 @@
 
       <div class="subtabs">
         <button type="button" class="subtab-btn active" data-subtab="rcip-sub-roadmap" onclick="switchRcipSubtab('rcip-sub-roadmap')">Guided 6-Stage Roadmap</button>
+        <button type="button" class="subtab-btn" data-subtab="rcip-sub-employers" onclick="switchRcipSubtab('rcip-sub-employers')">
+          CV → Designated Employers
+          <span class="tab-count tabular" id="rcip-emp-count-badge">34</span>
+        </button>
         <button type="button" class="subtab-btn" data-subtab="rcip-sub-wizard" onclick="switchRcipSubtab('rcip-sub-wizard')">6-Step Eligibility Wizard &amp; Resume NOC</button>
         <button type="button" class="subtab-btn" data-subtab="rcip-sub-communities" onclick="switchRcipSubtab('rcip-sub-communities')">14 Participating Communities</button>
       </div>
@@ -767,6 +774,105 @@
           <div class="communities-grid" id="communities-grid"></div>
         </div>
       </div>
+
+      <!-- RCIP Subtab 4: CV to Designated Employers Matcher & Official Apply Directory -->
+      <div id="rcip-sub-employers" class="subtab-pane">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span class="pill pill-red" style="margin-bottom:6px;">Stage 2 → Stage 3 · Employer-Driven PR Flow</span>
+              <h3 class="card-title">Match Your CV to Verified RCIP Designated Employers</h3>
+              <p class="card-desc">Upload your CV once to rank officially designated RCIP employers by your skills &amp; NOC 2021 code, then apply directly on each employer's official careers site or Canada Job Bank.</p>
+            </div>
+          </div>
+
+          <!-- 3-Step Official Employer -> Community Recommendation -> PR Workflow -->
+          <div class="emp-workflow-strip">
+            <div class="emp-step-tile">
+              <span class="emp-step-num tabular">1</span>
+              <div>
+                <div class="emp-step-title">Match CV &amp; Apply on Employer Site</div>
+                <div class="emp-step-desc">Apply directly to open vacancies on designated employer career portals or Canada Job Bank.</div>
+              </div>
+            </div>
+            <div class="emp-step-tile">
+              <span class="emp-step-num tabular">2</span>
+              <div>
+                <div class="emp-step-title">Receive Valid IMM 0247 Job Offer</div>
+                <div class="emp-step-desc">Full-time (≥30 hrs/wk), non-seasonal, indeterminate offer inside a priority occupation &amp; boundary.</div>
+              </div>
+            </div>
+            <div class="emp-step-tile">
+              <span class="emp-step-num tabular">3</span>
+              <div>
+                <div class="emp-step-title">Employer Submits Recommendation → PR</div>
+                <div class="emp-step-desc">Your designated employer applies to the local EDO for your Recommendation Certificate before your IRCC PR filing.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="watchout-box">
+            <strong style="font-size:13px;">Official EDO Application Rules</strong>
+            <ul style="font-size:12px; padding-left:18px; margin-top:4px; color:var(--ink);">
+              <li>Apply <strong>only</strong> to publicly advertised openings — participating RCIP communities prohibit unsolicited cold-calling of designated employers.</li>
+              <li>Designated employer lists and annual hiring caps update monthly; always confirm active status on the community's EDO link before accepting an offer.</li>
+              <li>Never pay any fee to an employer, recruiter, or third party for an RCIP job offer or recommendation.</li>
+            </ul>
+          </div>
+
+          <!-- Quick CV Upload / Paste / Target Occupation Matcher -->
+          <div class="grid-2" style="margin-bottom:14px;">
+            <div class="dropzone" id="emp-resume-dropzone" onclick="document.getElementById('emp-resume-file').click()">
+              <input type="file" id="emp-resume-file" class="hidden" accept=".pdf,.docx,.txt" onchange="handleEmployerResumeUpload(this.files[0])">
+              <div style="font-weight:700; font-size:13.5px; color:var(--brand);">Upload CV for Instant Employer Matching (.PDF, .DOCX, .TXT)</div>
+              <div style="font-size:12px; color:var(--ink-subtle); margin-top:4px;">Detects skills &amp; NOC 2021 codes locally without inventing credentials (max 4.2 MB)</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <textarea id="emp-resume-paste" class="textarea" rows="3" placeholder="Or paste CV / work duties here (e.g. Registered Nurse ICU 4 years, Software Engineer Python SQL, Welder TIG MIG)..."></textarea>
+              <input type="text" id="emp-target-query" class="input" placeholder="Optional target role or 5-digit NOC (e.g. Registered Nurse, 21231, Millwright)">
+            </div>
+          </div>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+            <button type="button" class="btn btn-crimson" onclick="matchEmployersFromInput()">Match My CV to Employers</button>
+            <button type="button" class="btn btn-secondary" onclick="matchEmployersFromSavedProfile()">Use Saved Profile / Uploaded CV</button>
+            <button type="button" class="btn btn-ghost" onclick="resetEmployerMatch()">Reset to Full Directory</button>
+          </div>
+
+          <div id="emp-match-summary" class="hidden funds-card" style="margin-bottom:16px;"></div>
+
+          <!-- Filters -->
+          <div class="filter-toolbar">
+            <div class="prov-pills">
+              <button type="button" class="prov-btn active" onclick="filterRcipEmployers('all', this)">All 34</button>
+              <button type="button" class="prov-btn" onclick="filterRcipEmployers('ON', this)">ON</button>
+              <button type="button" class="prov-btn" onclick="filterRcipEmployers('MB', this)">MB</button>
+              <button type="button" class="prov-btn" onclick="filterRcipEmployers('BC', this)">BC</button>
+              <button type="button" class="prov-btn" onclick="filterRcipEmployers('SK', this)">SK</button>
+              <button type="button" class="prov-btn" onclick="filterRcipEmployers('NS', this)">NS</button>
+              <button type="button" class="prov-btn" onclick="filterRcipEmployers('applied', this)">Applied</button>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; flex:1; justify-content:flex-end;">
+              <select id="emp-community-filter" class="select" style="max-width:220px;" onchange="renderRcipEmployers()">
+                <option value="">All 14 Communities</option>
+              </select>
+              <input type="text" id="emp-search-input" class="input" style="max-width:250px;" placeholder="Filter employer, sector, NOC..." oninput="renderRcipEmployers()">
+            </div>
+          </div>
+
+          <div class="employers-grid" id="rcip-employers-grid"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">All 14 Official Community EDO Directories &amp; Live Job Bank Searches</h3>
+              <p class="card-desc">Every participating community maintains its full monthly-updated designated employer roster on its official EDO portal, plus live vacancies on Canada Job Bank.</p>
+            </div>
+          </div>
+          <div class="community-dir-grid" id="rcip-community-dirs-grid"></div>
+        </div>
+      </div>
     </section>
 
     <!-- TAB 4: OFFICIAL GOV RAG COPILOT -->
@@ -892,8 +998,8 @@
 
   <div id="toast-container" class="toast-container"></div>
 
-  <script src="/static/js/utils.js?v=7"></script>
-  <script src="/static/js/pwa.js?v=7"></script>
-  <script src="/static/app.js?v=7"></script>
+  <script src="/static/js/utils.js?v=8"></script>
+  <script src="/static/js/pwa.js?v=8"></script>
+  <script src="/static/app.js?v=8"></script>
 </body>
 </html>

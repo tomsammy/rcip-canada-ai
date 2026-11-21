@@ -34,6 +34,10 @@ from backend.rcip_data import (
     PARTICIPATING_COMMUNITIES,
     SETTLEMENT_FUNDS_TABLE,
 )
+from backend.rcip_employers import (
+    list_designated_employers,
+    match_cv_to_rcip_employers,
+)
 from backend.resume_parser import parse_resume_file, parse_resume_text
 from backend.store import (
     get_profile as store_get_profile,
@@ -286,39 +290,60 @@ def save_profile_endpoint(payload: ProfilePayload) -> Dict[str, Any]:
     return {"status": "success", "profile": saved, "evaluation": evaluation}
 
 
-@app.post("/api/resume/upload")
-async def upload_resume_endpoint(request: Request) -> Dict[str, Any]:
-    """Parse an uploaded PDF/DOCX/TXT file or pasted resume text for NOC/TEER suggestions."""
+async def _extract_resume_and_payload(
+    request: Request,
+    *,
+    require_resume: bool,
+) -> tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
+    """Parse optional/required CV file or text from multipart or JSON request with size limits."""
     content_type = (request.headers.get("content-type") or "").lower()
-    parsed: Dict[str, Any]
-
     if "multipart/form-data" in content_type:
         form = await request.form()
         upload = form.get("file")
-        pasted = form.get("resume_text")
+        pasted = str(form.get("resume_text") or "")
+        meta: Dict[str, Any] = {
+            "community_id": str(form.get("community_id") or ""),
+            "province": str(form.get("province") or ""),
+            "sector": str(form.get("sector") or ""),
+            "target_noc": str(form.get("target_noc") or ""),
+            "target_title": str(form.get("target_title") or ""),
+            "resume_text": pasted,
+        }
         if upload is not None and hasattr(upload, "read"):
             raw_bytes = await upload.read()
             if len(raw_bytes) > MAX_UPLOAD_BYTES:
                 raise HTTPException(status_code=413, detail="Resume file exceeds 4.2 MB limit.")
-            parsed = parse_resume_file(getattr(upload, "filename", "resume.txt"), raw_bytes)
-        elif pasted:
-            if len(str(pasted).encode("utf-8")) > MAX_UPLOAD_BYTES:
+            return parse_resume_file(getattr(upload, "filename", "resume.txt"), raw_bytes), meta
+        if pasted.strip():
+            if len(pasted.encode("utf-8")) > MAX_UPLOAD_BYTES:
                 raise HTTPException(status_code=413, detail="Resume text exceeds 4.2 MB limit.")
-            parsed = parse_resume_text(str(pasted))
-        else:
+            return parse_resume_text(pasted), meta
+        if require_resume:
             raise HTTPException(status_code=400, detail="Provide a resume file or resume_text.")
-    else:
-        raw_body = await request.body()
-        if len(raw_body) > MAX_UPLOAD_BYTES:
-            raise HTTPException(status_code=413, detail="Resume payload exceeds 4.2 MB limit.")
-        try:
-            body = await request.json()
-        except Exception as exc:
-            raise HTTPException(status_code=400, detail="Invalid request body.") from exc
-        resume_text = str((body or {}).get("resume_text") or "")
-        if not resume_text.strip():
-            raise HTTPException(status_code=400, detail="resume_text cannot be empty.")
-        parsed = parse_resume_text(resume_text)
+        return None, meta
+
+    raw_body = await request.body()
+    if len(raw_body) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="Resume payload exceeds 4.2 MB limit.")
+    try:
+        body = (await request.json()) if raw_body.strip() else {}
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid request body.") from exc
+
+    body_dict = body if isinstance(body, dict) else {}
+    resume_text = str(body_dict.get("resume_text") or "")
+    if resume_text.strip():
+        return parse_resume_text(resume_text), body_dict
+    if require_resume:
+        raise HTTPException(status_code=400, detail="resume_text cannot be empty.")
+    return None, body_dict
+
+
+@app.post("/api/resume/upload")
+async def upload_resume_endpoint(request: Request) -> Dict[str, Any]:
+    """Parse an uploaded PDF/DOCX/TXT file or pasted resume text for NOC/TEER suggestions."""
+    parsed, _ = await _extract_resume_and_payload(request, require_resume=True)
+    assert parsed is not None
 
     # Safely update only non-authoritative hints if current profile lacks them
     with store_session(_resolve_db_path()) as conn:
@@ -527,6 +552,46 @@ def shortlist_community_endpoint(payload: CommunityShortlistPayload) -> Dict[str
             employers_contacted=payload.employers_contacted,
         )
     return {"status": "success", "shortlist": record}
+
+
+@app.get("/api/rcip/employers")
+def rcip_employers_endpoint(
+    community_id: Optional[str] = Query(None),
+    province: Optional[str] = Query(None),
+    sector: Optional[str] = Query(None),
+    noc: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
+) -> Dict[str, Any]:
+    """Return verified RCIP designated employers and official community directories."""
+    data = list_designated_employers(
+        community_id=community_id,
+        province=province,
+        sector=sector,
+        noc=noc,
+        q=q,
+    )
+    return {"status": "success", **data}
+
+
+@app.post("/api/rcip/match-employers")
+async def rcip_match_employers_endpoint(request: Request) -> Dict[str, Any]:
+    """Match an uploaded/pasted CV or profile NOC signals to verified RCIP designated employers."""
+    parsed, body = await _extract_resume_and_payload(request, require_resume=False)
+    result = match_cv_to_rcip_employers(
+        parsed_resume=parsed,
+        target_noc=str(body.get("target_noc") or ""),
+        target_title=str(body.get("target_title") or ""),
+        skills=body.get("skills") if isinstance(body.get("skills"), list) else None,
+        suggested_nocs=body.get("suggested_nocs") if isinstance(body.get("suggested_nocs"), list) else None,
+        community_id=str(body.get("community_id") or ""),
+        province=str(body.get("province") or ""),
+        sector=str(body.get("sector") or ""),
+        free_text=str(body.get("resume_text") or ""),
+    )
+    return {
+        "parsed": parsed,
+        **result,
+    }
 
 
 @app.post("/api/sync-canada")

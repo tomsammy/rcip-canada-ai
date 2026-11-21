@@ -1,10 +1,10 @@
-const CACHE_NAME = 'japaai-ng-v7';
+const CACHE_NAME = 'japaai-ng-v8';
 const PRECACHE_URLS = [
   '/',
-  '/static/styles.css?v=7',
-  '/static/js/utils.js?v=7',
-  '/static/js/pwa.js?v=7',
-  '/static/app.js?v=7',
+  '/static/styles.css?v=8',
+  '/static/js/utils.js?v=8',
+  '/static/js/pwa.js?v=8',
+  '/static/app.js?v=8',
   '/static/images/hero-global-mobility.webp?v=7',
   '/manifest.webmanifest',
   '/static/icons/icon-192.png',

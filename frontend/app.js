@@ -237,6 +237,7 @@ async function loadCountries() {
     const data = await res.json();
     state.countriesCatalog = data.countries || [];
     renderHeroCountryStrip();
+    renderDestinationShowcase();
     renderCountriesGrid();
     populateCopilotCountryDropdown();
     updateGlobalCounters();
@@ -302,6 +303,63 @@ function filterCountries(region, btnEl) {
   renderCountriesGrid();
 }
 
+function getMediaForCountry(countryId) {
+  if (window.JapaUtils?.getCountryMedia) {
+    return window.JapaUtils.getCountryMedia(countryId);
+  }
+  return {
+    src: '/static/images/hero-global-mobility.webp?v=7',
+    alt: 'Global immigration destination skyline',
+    focal: 'center',
+  };
+}
+
+function renderDestinationShowcase() {
+  const rail = document.getElementById('landing-destination-showcase');
+  if (!rail) return;
+
+  const featuredIds = window.JapaUtils?.FEATURED_SHOWCASE_IDS || [
+    'canada',
+    'uk',
+    'usa',
+    'germany',
+    'spain',
+    'sweden',
+    'brazil',
+  ];
+  const byId = new Map(state.countriesCatalog.map(c => [c.id, c]));
+  const items = featuredIds.map(id => byId.get(id)).filter(Boolean);
+  const displayList = items.length ? items : state.countriesCatalog.slice(0, 7);
+
+  rail.innerHTML = displayList
+    .map(c => {
+      const media = getMediaForCountry(c.id);
+      const topPathway = (c.pathway_names || [])[0] || c.authority || '';
+      return `
+        <button type="button" class="showcase-card" onclick="openCountryHub('${esc(c.id)}')" aria-label="Explore ${esc(c.name)} immigration hub">
+          <img src="${esc(media.src)}"
+               alt="${esc(media.alt)}"
+               width="800"
+               height="480"
+               loading="lazy"
+               decoding="async"
+               class="showcase-card-img"
+               style="object-position:${esc(media.focal || 'center')};">
+          <div class="showcase-card-scrim" aria-hidden="true"></div>
+          <div class="showcase-card-top">
+            <span class="showcase-badge">${esc(c.region)}</span>
+            <span class="showcase-badge showcase-badge-emerald tabular">${Number(c.pathway_count)} pathways</span>
+          </div>
+          <div class="showcase-card-bottom">
+            <div class="showcase-card-name">${esc(c.flag)} ${esc(c.name)}</div>
+            <div class="showcase-card-sub">${esc(topPathway)}</div>
+          </div>
+        </button>
+      `;
+    })
+    .join('');
+}
+
 function renderCountriesGrid() {
   const grid = document.getElementById('countries-grid');
   if (!grid) return;
@@ -325,33 +383,50 @@ function renderCountriesGrid() {
 
   grid.innerHTML = filtered
     .map(c => {
+      const media = getMediaForCountry(c.id);
       const chips = (c.pathway_names || [])
         .slice(0, 3)
         .map(name => `<span class="tag">${esc(name)}</span>`)
         .join('');
       const extraCount = (c.pathway_names || []).length > 3 ? `<span class="tag">+${c.pathway_names.length - 3} more</span>` : '';
       return `
-        <div class="country-card">
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-              <div>
-                <span class="pill" style="margin-bottom:6px;">${esc(c.region)}</span>
-                <h3 style="font-size:17px; font-weight:700;">${esc(c.flag)} ${esc(c.name)}</h3>
-                <div style="font-size:11.5px; color:var(--ink-subtle);">${esc(c.authority)}</div>
-              </div>
-              <span class="pill pill-emerald tabular">${Number(c.pathway_count)} pathways</span>
+        <article class="country-card">
+          <div class="country-card-media" onclick="openCountryHub('${esc(c.id)}')" role="button" tabindex="0"
+               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCountryHub('${esc(c.id)}');}"
+               aria-label="Open ${esc(c.name)} country hub">
+            <img src="${esc(media.src)}"
+                 alt="${esc(media.alt)}"
+                 width="800"
+                 height="480"
+                 loading="lazy"
+                 decoding="async"
+                 class="country-card-img"
+                 style="object-position:${esc(media.focal || 'center')};">
+            <div class="country-card-scrim" aria-hidden="true"></div>
+            <div class="country-card-badges">
+              <span class="showcase-badge">${esc(c.region)}</span>
+              <span class="showcase-badge showcase-badge-emerald tabular">${Number(c.pathway_count)} pathways</span>
             </div>
-            <p style="font-size:12.5px; color:var(--ink-muted); margin:10px 0;">${esc(c.summary)}</p>
-            <div class="tag-row">${chips}${extraCount}</div>
+            <div class="country-card-title-wrap">
+              <h3 class="country-card-title">${esc(c.flag)} ${esc(c.name)}</h3>
+              <div class="country-card-auth">${esc(c.authority)}</div>
+            </div>
           </div>
 
-          <div style="display:flex; gap:8px; flex-wrap:wrap; border-top:1px solid var(--border-subtle); padding-top:10px;">
-            <button type="button" class="btn btn-primary btn-sm" style="flex:1;" onclick="openCountryHub('${esc(c.id)}')">
-              Open Country Hub
-            </button>
-            <a class="btn btn-sm" href="${esc(c.official_portal)}" target="_blank" rel="noopener">Official Site ↗</a>
+          <div class="country-card-body">
+            <div>
+              <p class="country-card-summary">${esc(c.summary)}</p>
+              <div class="tag-row">${chips}${extraCount}</div>
+            </div>
+
+            <div class="country-card-actions">
+              <button type="button" class="btn btn-primary btn-sm" style="flex:1;" onclick="openCountryHub('${esc(c.id)}')">
+                Open Country Hub
+              </button>
+              <a class="btn btn-sm" href="${esc(c.official_portal)}" target="_blank" rel="noopener">Official Site ↗</a>
+            </div>
           </div>
-        </div>
+        </article>
       `;
     })
     .join('');
@@ -474,17 +549,29 @@ function renderCountryHubWorkspace(country) {
     ? `<button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">Open Interactive RCIP Toolkit →</button>`
     : '';
 
+  const media = getMediaForCountry(country.id);
   ws.innerHTML = `
     <div class="card">
-      <div class="card-header">
-        <div>
-          <span class="pill pill-emerald" style="margin-bottom:6px;">${esc(country.flag)} ${esc(country.name)} · Official Country Hub</span>
-          <h2 class="card-title" style="font-size:21px;">${esc(country.name)} — ${esc(country.authority)}</h2>
-          <p class="card-desc">${esc(country.summary)}</p>
-        </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <a class="btn btn-primary btn-sm" href="${esc(country.official_portal)}" target="_blank" rel="noopener">Official Portal ↗</a>
-          ${extraLinksHtml}
+      <div class="hub-hero-banner">
+        <img src="${esc(media.src)}"
+             alt="${esc(media.alt)}"
+             width="800"
+             height="480"
+             loading="lazy"
+             decoding="async"
+             class="hub-hero-img"
+             style="object-position:${esc(media.focal || 'center')};">
+        <div class="hub-hero-scrim" aria-hidden="true"></div>
+        <div class="hub-hero-content">
+          <div class="hub-hero-text">
+            <span class="showcase-badge showcase-badge-emerald">${esc(country.flag)} ${esc(country.name)} · Official Country Hub</span>
+            <h2 class="hub-hero-title">${esc(country.name)} — ${esc(country.authority)}</h2>
+            <p class="hub-hero-desc">${esc(country.summary)}</p>
+          </div>
+          <div class="hub-hero-links">
+            <a class="btn btn-primary btn-sm" href="${esc(country.official_portal)}" target="_blank" rel="noopener">Official Portal ↗</a>
+            ${extraLinksHtml}
+          </div>
         </div>
       </div>
 

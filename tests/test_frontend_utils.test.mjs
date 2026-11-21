@@ -9,6 +9,8 @@ const {
   resolveHeroSyncStatusText,
   migrateBrowserState,
   isValidUploadSize,
+  FEATURED_SHOWCASE_IDS,
+  getCountryMedia,
 } = require('../frontend/js/utils.js');
 
 test('esc sanitizes HTML special characters and handles nullish values', () => {
@@ -48,4 +50,33 @@ test('isValidUploadSize enforces positive non-empty size up to cap', () => {
   assert.equal(isValidUploadSize(1024, cap), true);
   assert.equal(isValidUploadSize(cap, cap), true);
   assert.equal(isValidUploadSize(cap + 1, cap), false);
+});
+
+test('getCountryMedia maps all 12 countries and FEATURED_SHOWCASE_IDS use distinct images', () => {
+  const allCountries = [
+    'canada',
+    'uk',
+    'usa',
+    'germany',
+    'netherlands',
+    'sweden',
+    'estonia',
+    'bulgaria',
+    'lithuania',
+    'spain',
+    'france',
+    'brazil',
+  ];
+  for (const id of allCountries) {
+    const media = getCountryMedia(id);
+    assert.match(media.src, /^\/static\/images\/[a-z0-9-]+\.webp\?v=7$/);
+    assert.ok(media.alt && media.alt.length > 10);
+  }
+
+  assert.equal(FEATURED_SHOWCASE_IDS.length, 7);
+  const featuredSrcs = new Set(FEATURED_SHOWCASE_IDS.map(id => getCountryMedia(id).src));
+  assert.equal(featuredSrcs.size, 7);
+
+  const fallback = getCountryMedia('unknown-country');
+  assert.equal(fallback.src, '/static/images/hero-global-mobility.webp?v=7');
 });

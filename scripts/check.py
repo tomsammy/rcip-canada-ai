@@ -17,6 +17,17 @@ from backend.catalog_schema import (  # noqa: E402
 from backend.countries_data import COUNTRIES_CATALOG  # noqa: E402
 
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+REQUIRED_IMAGES = (
+    "hero-global-mobility.webp",
+    "dest-canada.webp",
+    "dest-uk.webp",
+    "dest-usa.webp",
+    "dest-central-europe.webp",
+    "dest-southern-europe.webp",
+    "dest-nordic-baltic.webp",
+    "dest-brazil.webp",
+)
+MAX_IMAGE_BYTES = 260_000
 
 
 def _run(cmd, label: str) -> None:
@@ -101,11 +112,38 @@ def _check_pwa_assets() -> None:
         raise SystemExit("Missing frontend/sw.js")
 
 
+def _check_image_assets() -> None:
+    print("[check] WebP destination & hero image assets...")
+    images_dir = ROOT / "frontend" / "images"
+    for filename in REQUIRED_IMAGES:
+        img_path = images_dir / filename
+        if not img_path.exists():
+            raise SystemExit(f"Missing required WebP image: {img_path}")
+        raw = img_path.read_bytes()
+        if len(raw) < 12 or raw[:4] != b"RIFF" or raw[8:12] != b"WEBP":
+            raise SystemExit(f"Invalid WebP header in {img_path}")
+        if len(raw) > MAX_IMAGE_BYTES:
+            raise SystemExit(f"WebP asset {filename} too heavy ({len(raw)} bytes > {MAX_IMAGE_BYTES})")
+
+    ref_targets = [
+        ROOT / "frontend" / "index.html",
+        ROOT / "frontend" / "js" / "utils.js",
+        ROOT / "frontend" / "app.js",
+        ROOT / "frontend" / "sw.js",
+    ]
+    for path in ref_targets:
+        text = path.read_text(encoding="utf-8")
+        for match in re.findall(r"/static/images/([a-z0-9_-]+\.webp)", text):
+            if not (images_dir / match).exists():
+                raise SystemExit(f"Missing referenced image /static/images/{match} (referenced in {path.relative_to(ROOT)})")
+
+
 def main() -> None:
     _run([sys.executable, "-m", "compileall", "-q", "backend", "app.py", "run_server.py", "scripts", "tests"], "Python bytecode compileall")
     _check_catalog_and_ui_parity()
     _check_forbidden_strings()
     _check_pwa_assets()
+    _check_image_assets()
     _run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"], "Python unit & API tests")
     for js_file in [
         "frontend/js/utils.js",

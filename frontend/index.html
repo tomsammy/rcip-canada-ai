@@ -14,7 +14,13 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="stylesheet" href="/static/styles.css?v=6">
+  <link rel="preload" as="image" href="/static/images/hero-global-mobility.webp?v=7" type="image/webp">
+  <meta property="og:title" content="JapaAI.ng — Official 12-Country Immigration &amp; PR Roadmap Platform">
+  <meta property="og:description" content="Real-time curated official government immigration and permanent residence roadmaps across 12 destination countries, built for applicants worldwide.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/static/images/hero-global-mobility.webp?v=7">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="/static/styles.css?v=7">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -123,29 +129,58 @@
         </div>
       </div>
 
-      <div class="hero-summary-box">
-        <div class="stat-mini-grid">
-          <div class="stat-mini">
-            <div class="stat-mini-val tabular" id="hero-countries-count">12</div>
-            <div class="stat-mini-lbl">Countries</div>
+      <div class="hero-visual-panel">
+        <div class="hero-photo-frame">
+          <img src="/static/images/hero-global-mobility.webp?v=7"
+               alt="Sunlit international departure concourse overlooking a global waterfront skyline"
+               width="1200"
+               height="800"
+               fetchpriority="high"
+               decoding="async"
+               class="hero-photo">
+          <div class="hero-photo-badge">
+            <span class="live-dot-pulse" aria-hidden="true"></span>
+            <span>Live · 12 National Portals</span>
           </div>
-          <div class="stat-mini">
-            <div class="stat-mini-val tabular" id="hero-pathways-count">43</div>
-            <div class="stat-mini-lbl">PR Pathways</div>
+          <div class="hero-photo-overlay">
+            <div class="stat-mini-grid">
+              <div class="stat-mini">
+                <div class="stat-mini-val tabular" id="hero-countries-count">12</div>
+                <div class="stat-mini-lbl">Countries</div>
+              </div>
+              <div class="stat-mini">
+                <div class="stat-mini-val tabular" id="hero-pathways-count">43</div>
+                <div class="stat-mini-lbl">PR Pathways</div>
+              </div>
+              <div class="stat-mini">
+                <div class="stat-mini-val tabular" id="hero-rcip-score">0%</div>
+                <div class="stat-mini-lbl">RCIP Score</div>
+              </div>
+              <div class="stat-mini">
+                <div class="stat-mini-val tabular" id="hero-saved-steps">0</div>
+                <div class="stat-mini-lbl">Saved Steps</div>
+              </div>
+            </div>
+            <div class="hero-trust-foot">
+              <span id="hero-sync-status">Direct official sources · No additions or middlemen · Updated in real time</span>
+            </div>
           </div>
-          <div class="stat-mini">
-            <div class="stat-mini-val tabular" id="hero-rcip-score">0%</div>
-            <div class="stat-mini-lbl">RCIP Score</div>
-          </div>
-          <div class="stat-mini">
-            <div class="stat-mini-val tabular" id="hero-saved-steps">0</div>
-            <div class="stat-mini-lbl">Saved Steps</div>
-          </div>
-        </div>
-        <div class="hero-trust-foot">
-          <span id="hero-sync-status">Direct official sources · No additions or middlemen · Updated in real time</span>
         </div>
       </div>
+    </section>
+
+    <!-- Featured Destinations Visual Showcase Strip -->
+    <section class="destination-showcase" aria-label="Featured Destinations">
+      <div class="showcase-head">
+        <div>
+          <span class="showcase-kicker">Official Global Destinations</span>
+          <h2 class="showcase-title">Explore Official Destination Hubs</h2>
+        </div>
+        <button type="button" class="btn btn-sm btn-secondary" onclick="switchTab('tab-countries')">
+          View all 12 countries →
+        </button>
+      </div>
+      <div class="showcase-rail" id="landing-destination-showcase"></div>
     </section>
 
     <!-- Mobile App Install Banner (auto-hidden when standalone or dismissed) -->
@@ -297,6 +332,48 @@
       </div>
 
       <div id="global-matcher-results"></div>
+
+      <!-- 3-Step Editorial Trust & Workflow Band -->
+      <section class="how-it-works-band" aria-label="How JapaAI.ng Works">
+        <div class="how-head">
+          <span class="showcase-kicker">Transparent Official Guidance</span>
+          <h2 class="showcase-title">How JapaAI.ng Keeps Every Roadmap Grounded</h2>
+        </div>
+        <div class="how-grid">
+          <article class="how-card">
+            <div class="how-card-top">
+              <div class="how-icon how-icon-emerald" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+              </div>
+              <span class="how-step-num tabular">01</span>
+            </div>
+            <h3 class="how-card-title">Compare 12 Countries Honestly</h3>
+            <p class="how-card-desc">Enter your profile once to see realistic eligibility tiers across 43 official permanent residence, work, study, and digital nomad pathways.</p>
+          </article>
+
+          <article class="how-card">
+            <div class="how-card-top">
+              <div class="how-icon how-icon-blue" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
+              </div>
+              <span class="how-step-num tabular">02</span>
+            </div>
+            <h3 class="how-card-title">Follow Verbatim Official Steps</h3>
+            <p class="how-card-desc">Every checklist item, fee note, and government form links straight to the issuing national ministry with zero additions or middlemen.</p>
+          </article>
+
+          <article class="how-card">
+            <div class="how-card-top">
+              <div class="how-icon how-icon-amber" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+              </div>
+              <span class="how-step-num tabular">03</span>
+            </div>
+            <h3 class="how-card-title">Verify Live Portal Updates</h3>
+            <p class="how-card-desc">Trigger real-time source refreshes anytime to capture current notices straight from <code>canada.ca</code>, <code>gov.uk</code>, <code>uscis.gov</code>, and 9 EU/South American portals.</p>
+          </article>
+        </div>
+      </section>
     </section>
 
     <!-- TAB 2: 12 COUNTRY HUBS -->
@@ -327,7 +404,21 @@
 
     <!-- TAB 3: CANADA RCIP TOOLKIT -->
     <section id="tab-rcip" class="tab-panel">
-      <div class="card">
+      <div class="card rcip-banner-card">
+        <div class="rcip-cover-strip">
+          <img src="/static/images/dest-canada.webp?v=7"
+               alt="Scenic Canadian waterfront skyline and mountain backdrop"
+               width="800"
+               height="480"
+               loading="lazy"
+               decoding="async"
+               class="rcip-cover-img">
+          <div class="rcip-cover-scrim" aria-hidden="true"></div>
+          <div class="rcip-cover-content">
+            <span class="rcip-cover-pill">Canada · Official IRCC Pathway Toolkit</span>
+            <span class="rcip-cover-sub">14 Designated Communities · TEER 0–5 · CLB &amp; CAD Funds Calculator</span>
+          </div>
+        </div>
         <div class="rcip-hero-strip">
           <div>
             <div class="pill pill-red" style="margin-bottom:8px;">Canada · RCIP Pilot &amp; Jan 1, 2027 Permanent Program</div>
@@ -801,8 +892,8 @@
 
   <div id="toast-container" class="toast-container"></div>
 
-  <script src="/static/js/utils.js?v=6"></script>
-  <script src="/static/js/pwa.js?v=6"></script>
-  <script src="/static/app.js?v=6"></script>
+  <script src="/static/js/utils.js?v=7"></script>
+  <script src="/static/js/pwa.js?v=7"></script>
+  <script src="/static/app.js?v=7"></script>
 </body>
 </html>

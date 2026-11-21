@@ -253,10 +253,28 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
         for forbidden_js in [
             "Vercel Production",
             "Sync Canada.ca",
+            "Canada RCIP Engine",
             "Built for Nigerians",
             "Nigerian Applicant",
         ]:
             self.assertNotIn(forbidden_js, js_resp.text)
+
+        home_resp = self.client.get("/")
+        self.assertEqual(home_resp.status_code, 200)
+        self.assertIn("/static/images/hero-global-mobility.webp?v=7", home_resp.text)
+        self.assertIn("og:image", home_resp.text)
+        self.assertIn("landing-destination-showcase", home_resp.text)
+
+        for img_path in [
+            "/static/images/hero-global-mobility.webp",
+            "/static/images/dest-canada.webp",
+            "/static/images/dest-brazil.webp",
+        ]:
+            img_resp = self.client.get(img_path)
+            self.assertEqual(img_resp.status_code, 200, img_path)
+            self.assertIn("image/webp", img_resp.headers.get("content-type", ""), img_path)
+            self.assertEqual(img_resp.content[:4], b"RIFF")
+            self.assertEqual(img_resp.content[8:12], b"WEBP")
 
         route_paths = {getattr(r, "path", None) for r in app.routes}
         self.assertIn("/api/sync-sources", route_paths)

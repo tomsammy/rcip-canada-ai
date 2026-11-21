@@ -1,7 +1,10 @@
 """FastAPI gateway for JapaAI.ng."""
 
+import mimetypes
 import os
 from typing import Any, Dict, List, Optional
+
+mimetypes.add_type("image/webp", ".webp")
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware

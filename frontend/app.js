@@ -320,49 +320,26 @@ function launchSolution(solutionId) {
   }
 }
 
+function getSolutionIconSvg(iconKey, color = '#ff5a1f') {
+  const c = esc(color);
+  const icons = {
+    briefcase: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+    compass: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`,
+    calculator: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="12" y1="10" x2="12" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/><line x1="8" y1="18" x2="16" y2="18"/></svg>`,
+    sparkles: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>`,
+    shield: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>`,
+    badge: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`,
+    heart: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+    building: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/></svg>`,
+    laptop: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></svg>`,
+    globe: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  };
+  return icons[iconKey] || icons.globe;
+}
+
 function renderStoreSpotlight() {
   const wrap = document.getElementById('store-featured-strip');
-  if (!wrap) return;
-  const featured = state.solutionsCatalog.filter(s => s.featured).slice(0, 2);
-  if (!featured.length) {
-    wrap.innerHTML = '';
-    return;
-  }
-
-  wrap.innerHTML = featured
-    .map(sol => {
-      const chips = (sol.highlights || []).slice(0, 3).map(h => `<span class="showcase-badge">${esc(h)}</span>`).join('');
-      return `
-        <article class="spotlight-card">
-          <img src="${esc(sol.cover_image)}"
-               alt="${esc(sol.name)}"
-               width="800"
-               height="480"
-               loading="lazy"
-               decoding="async"
-               class="spotlight-card-img">
-          <div class="spotlight-card-scrim" aria-hidden="true"></div>
-          <div class="spotlight-card-body">
-            <div class="spotlight-meta-row">
-              <span class="showcase-badge showcase-badge-emerald">${esc(sol.badge)}</span>
-              <span class="showcase-badge">${esc(sol.flag)} ${esc(sol.country_label)}</span>
-            </div>
-            <div>
-              <h3 class="spotlight-title">${esc(sol.name)}</h3>
-              <p class="spotlight-desc">${esc(sol.tagline)}</p>
-            </div>
-            <div class="tag-row">${chips}</div>
-            <div class="spotlight-foot">
-              <span class="spotlight-source">Source: ${esc(sol.official_source_label)}</span>
-              <button type="button" class="btn btn-primary btn-sm" onclick="launchSolution('${esc(sol.id)}')">
-                ${esc(sol.cta_label || 'Launch App')} →
-              </button>
-            </div>
-          </div>
-        </article>
-      `;
-    })
-    .join('');
+  if (wrap) wrap.innerHTML = '';
 }
 
 function renderSolutionsGrid() {
@@ -385,6 +362,8 @@ function renderSolutionsGrid() {
         sol.tagline,
         sol.country_label,
         sol.badge,
+        sol.category_label,
+        sol.emblem_title,
         sol.official_source_label,
         ...(sol.highlights || []),
       ].join(' ').toLowerCase();
@@ -401,39 +380,39 @@ function renderSolutionsGrid() {
 
   grid.innerHTML = filtered
     .map(sol => {
-      const highlightsHtml = (sol.highlights || [])
-        .map(h => `<span class="tag">${esc(h)}</span>`)
-        .join('');
-      const accentCls = `accent-${esc(sol.accent || 'emerald')}`;
+      const badgeHtml = sol.badge
+        ? `<span class="store-popular-pill">${esc(sol.badge)}</span>`
+        : '';
+      const iconSvg = getSolutionIconSvg(sol.icon_key, sol.emblem_color || '#ff5a1f');
+      const catLabel = esc(sol.category_label || sol.category || 'AI TOOL');
+      const hiBadge = sol.highlight_badge ? `<span class="store-meta-right">${esc(sol.highlight_badge)}</span>` : '';
+      const scopeFooter = esc(sol.scope_footer || `${sol.country_label} · Free`);
       return `
-        <article class="solution-card ${accentCls}">
-          <div class="solution-card-head">
-            <img src="${esc(sol.cover_image)}"
-                 alt="${esc(sol.name)}"
-                 width="800"
-                 height="480"
-                 loading="lazy"
-                 decoding="async"
-                 class="solution-card-img">
-            <div class="solution-card-scrim" aria-hidden="true"></div>
-            <div class="solution-card-top">
-              <span class="showcase-badge showcase-badge-emerald">${esc(sol.badge)}</span>
-              <span class="showcase-badge">Live AI App</span>
+        <article class="solution-card">
+          ${badgeHtml}
+          <div class="solution-emblem-tray" onclick="launchSolution('${esc(sol.id)}')" role="button" tabindex="0"
+               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();launchSolution('${esc(sol.id)}');}"
+               aria-label="Open ${esc(sol.name)}">
+            <div class="solution-emblem-box">
+              ${iconSvg}
+              <span class="solution-emblem-wordmark">${esc(sol.flag)} ${esc(sol.emblem_title || sol.name)}</span>
             </div>
-            <div class="solution-card-country">${esc(sol.flag)} ${esc(sol.country_label)}</div>
           </div>
 
           <div class="solution-card-body">
             <div>
+              <div class="solution-meta-row">
+                <span class="solution-cat-label">${catLabel}</span>
+                ${hiBadge}
+              </div>
               <h3 class="solution-card-title">${esc(sol.name)}</h3>
               <p class="solution-card-desc">${esc(sol.tagline)}</p>
-              <div class="tag-row">${highlightsHtml}</div>
             </div>
 
             <div class="solution-card-foot">
-              <div class="solution-card-src">Grounded in: ${esc(sol.official_source_label)}</div>
-              <button type="button" class="btn btn-primary btn-sm" style="width:100%;" onclick="launchSolution('${esc(sol.id)}')">
-                ${esc(sol.cta_label || 'Launch App')} →
+              <span class="solution-scope-price">${scopeFooter}</span>
+              <button type="button" class="btn-coral-pill" onclick="launchSolution('${esc(sol.id)}')">
+                + ${esc(sol.cta_label || 'Launch')}
               </button>
             </div>
           </div>
@@ -541,41 +520,18 @@ function renderDestinationShowcase() {
   const rail = document.getElementById('landing-destination-showcase');
   if (!rail) return;
 
-  const featuredIds = window.JapaUtils?.FEATURED_SHOWCASE_IDS || [
-    'canada',
-    'uk',
-    'usa',
-    'germany',
-    'spain',
-    'sweden',
-    'brazil',
-  ];
-  const byId = new Map(state.countriesCatalog.map(c => [c.id, c]));
-  const items = featuredIds.map(id => byId.get(id)).filter(Boolean);
-  const displayList = items.length ? items : state.countriesCatalog.slice(0, 7);
-
-  rail.innerHTML = displayList
+  rail.innerHTML = state.countriesCatalog
     .map(c => {
-      const media = getMediaForCountry(c.id);
       const topPathway = (c.pathway_names || [])[0] || c.authority || '';
       return `
-        <button type="button" class="showcase-card" onclick="openCountryHub('${esc(c.id)}')" aria-label="Explore ${esc(c.name)} immigration hub">
-          <img src="${esc(media.src)}"
-               alt="${esc(media.alt)}"
-               width="800"
-               height="480"
-               loading="lazy"
-               decoding="async"
-               class="showcase-card-img"
-               style="object-position:${esc(media.focal || 'center')};">
-          <div class="showcase-card-scrim" aria-hidden="true"></div>
-          <div class="showcase-card-top">
-            <span class="showcase-badge">${esc(c.region)}</span>
-            <span class="showcase-badge showcase-badge-emerald tabular">${Number(c.pathway_count)} pathways</span>
+        <button type="button" class="showcase-card showcase-card-clean" onclick="openCountryHub('${esc(c.id)}')" aria-label="Explore ${esc(c.name)} immigration hub">
+          <div class="showcase-card-top-clean">
+            <span class="showcase-flag-clean">${esc(c.flag)}</span>
+            <span class="pill tabular" style="font-size:10.5px;">${Number(c.pathway_count)} pathways</span>
           </div>
-          <div class="showcase-card-bottom">
-            <div class="showcase-card-name">${esc(c.flag)} ${esc(c.name)}</div>
-            <div class="showcase-card-sub">${esc(topPathway)}</div>
+          <div>
+            <div class="showcase-name-clean">${esc(c.name)}</div>
+            <div class="showcase-sub-clean">${esc(topPathway)}</div>
           </div>
         </button>
       `;
@@ -606,47 +562,39 @@ function renderCountriesGrid() {
 
   grid.innerHTML = filtered
     .map(c => {
-      const media = getMediaForCountry(c.id);
       const chips = (c.pathway_names || [])
         .slice(0, 3)
         .map(name => `<span class="tag">${esc(name)}</span>`)
         .join('');
       const extraCount = (c.pathway_names || []).length > 3 ? `<span class="tag">+${c.pathway_names.length - 3} more</span>` : '';
       return `
-        <article class="country-card">
-          <div class="country-card-media" onclick="openCountryHub('${esc(c.id)}')" role="button" tabindex="0"
+        <article class="solution-card country-card-neo">
+          <div class="solution-emblem-tray" onclick="openCountryHub('${esc(c.id)}')" role="button" tabindex="0"
                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCountryHub('${esc(c.id)}');}"
                aria-label="Open ${esc(c.name)} country hub">
-            <img src="${esc(media.src)}"
-                 alt="${esc(media.alt)}"
-                 width="800"
-                 height="480"
-                 loading="lazy"
-                 decoding="async"
-                 class="country-card-img"
-                 style="object-position:${esc(media.focal || 'center')};">
-            <div class="country-card-scrim" aria-hidden="true"></div>
-            <div class="country-card-badges">
-              <span class="showcase-badge">${esc(c.region)}</span>
-              <span class="showcase-badge showcase-badge-emerald tabular">${Number(c.pathway_count)} pathways</span>
-            </div>
-            <div class="country-card-title-wrap">
-              <h3 class="country-card-title">${esc(c.flag)} ${esc(c.name)}</h3>
-              <div class="country-card-auth">${esc(c.authority)}</div>
+            <div class="solution-emblem-box">
+              <span style="font-size:28px; line-height:1;">${esc(c.flag)}</span>
+              <span class="solution-emblem-wordmark">${esc(c.name)} · ${esc(c.code)}</span>
             </div>
           </div>
 
-          <div class="country-card-body">
+          <div class="solution-card-body">
             <div>
-              <p class="country-card-summary">${esc(c.summary)}</p>
-              <div class="tag-row">${chips}${extraCount}</div>
+              <div class="solution-meta-row">
+                <span class="solution-cat-label">${esc(c.region)}</span>
+                <span class="store-meta-right tabular">${Number(c.pathway_count)} pathways</span>
+              </div>
+              <h3 class="solution-card-title">${esc(c.name)}</h3>
+              <div style="font-size:11.5px; color:var(--ink-subtle); margin-bottom:6px;">${esc(c.authority)}</div>
+              <p class="solution-card-desc">${esc(c.summary)}</p>
+              <div class="tag-row" style="margin-bottom:8px;">${chips}${extraCount}</div>
             </div>
 
-            <div class="country-card-actions">
-              <button type="button" class="btn btn-primary btn-sm" style="flex:1;" onclick="openCountryHub('${esc(c.id)}')">
-                Open Country Hub
-              </button>
+            <div class="solution-card-foot">
               <a class="btn btn-sm" href="${esc(c.official_portal)}" target="_blank" rel="noopener">Official Site ↗</a>
+              <button type="button" class="btn-coral-pill" onclick="openCountryHub('${esc(c.id)}')">
+                + Open Hub
+              </button>
             </div>
           </div>
         </article>
@@ -772,29 +720,17 @@ function renderCountryHubWorkspace(country) {
     ? `<button type="button" class="btn btn-crimson btn-sm" onclick="switchTab('tab-rcip')">Open Interactive RCIP Toolkit →</button>`
     : '';
 
-  const media = getMediaForCountry(country.id);
   ws.innerHTML = `
     <div class="card">
-      <div class="hub-hero-banner">
-        <img src="${esc(media.src)}"
-             alt="${esc(media.alt)}"
-             width="800"
-             height="480"
-             loading="lazy"
-             decoding="async"
-             class="hub-hero-img"
-             style="object-position:${esc(media.focal || 'center')};">
-        <div class="hub-hero-scrim" aria-hidden="true"></div>
-        <div class="hub-hero-content">
-          <div class="hub-hero-text">
-            <span class="showcase-badge showcase-badge-emerald">${esc(country.flag)} ${esc(country.name)} · Official Country Hub</span>
-            <h2 class="hub-hero-title">${esc(country.name)} — ${esc(country.authority)}</h2>
-            <p class="hub-hero-desc">${esc(country.summary)}</p>
-          </div>
-          <div class="hub-hero-links">
-            <a class="btn btn-primary btn-sm" href="${esc(country.official_portal)}" target="_blank" rel="noopener">Official Portal ↗</a>
-            ${extraLinksHtml}
-          </div>
+      <div class="card-header">
+        <div>
+          <span class="pill pill-emerald" style="margin-bottom:6px;">${esc(country.flag)} ${esc(country.name)} · Official Country Hub</span>
+          <h2 class="card-title" style="font-size:21px;">${esc(country.name)} — ${esc(country.authority)}</h2>
+          <p class="card-desc">${esc(country.summary)}</p>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <a class="btn btn-primary btn-sm" href="${esc(country.official_portal)}" target="_blank" rel="noopener">Official Portal ↗</a>
+          ${extraLinksHtml}
         </div>
       </div>
 

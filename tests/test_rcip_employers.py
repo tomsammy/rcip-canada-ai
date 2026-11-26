@@ -161,7 +161,7 @@ class RCIPDesignatedEmployersTests(unittest.TestCase):
         home = self.client.get("/")
         self.assertEqual(home.status_code, 200)
         self.assertIn("rcip-sub-employers", home.text)
-        self.assertIn("/static/app.js?v=9", home.text)
+        self.assertIn("/static/app.js?v=10", home.text)
 
 
 if __name__ == "__main__":

@@ -261,11 +261,12 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
 
         home_resp = self.client.get("/")
         self.assertEqual(home_resp.status_code, 200)
-        self.assertIn("/static/images/hero-global-mobility.webp?v=7", home_resp.text)
         self.assertIn("og:image", home_resp.text)
         self.assertIn("landing-destination-showcase", home_resp.text)
         self.assertIn("tab-store", home_resp.text)
-        self.assertIn("/static/app.js?v=9", home_resp.text)
+        self.assertIn("solutions-store-grid", home_resp.text)
+        self.assertIn("/static/app.js?v=10", home_resp.text)
+        self.assertNotIn("hero-photo-frame", home_resp.text)
 
         sol_resp = self.client.get("/api/solutions")
         self.assertEqual(sol_resp.status_code, 200)

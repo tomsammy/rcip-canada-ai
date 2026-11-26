@@ -14,13 +14,12 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="preload" as="image" href="/static/images/hero-global-mobility.webp?v=7" type="image/webp">
   <meta property="og:title" content="ai4japa.store — AI App Store for Global Japa &amp; Official Pathways">
   <meta property="og:description" content="Explore purpose-built AI tools by country and pathway — RCIP employer matching, 12-country PR finder, CLB calculators &amp; real-time government RAG.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="/static/images/hero-global-mobility.webp?v=7">
-  <meta name="twitter:card" content="summary_large_image">
-  <link rel="stylesheet" href="/static/styles.css?v=9">
+  <meta property="og:image" content="/static/icons/icon-512.png">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="/static/styles.css?v=10">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -132,42 +131,34 @@
         </div>
       </div>
 
-      <div class="hero-visual-panel">
-        <div class="hero-photo-frame">
-          <img src="/static/images/hero-global-mobility.webp?v=7"
-               alt="Sunlit international departure concourse overlooking a global waterfront skyline"
-               width="1200"
-               height="800"
-               fetchpriority="high"
-               decoding="async"
-               class="hero-photo">
-          <div class="hero-photo-badge">
+      <div class="hero-summary-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span class="store-live-pill">
             <span class="live-dot-pulse" aria-hidden="true"></span>
-            <span>ai4japa.store · 10 Live AI Apps</span>
+            Live Solutions Index
+          </span>
+          <span style="font-size:11.5px; font-weight:700; color:var(--ink-subtle);">FREE · OFFICIAL DATA</span>
+        </div>
+        <div class="stat-mini-grid">
+          <div class="stat-mini">
+            <div class="stat-mini-val tabular" id="hero-apps-count">10</div>
+            <div class="stat-mini-lbl">AI Solutions</div>
           </div>
-          <div class="hero-photo-overlay">
-            <div class="stat-mini-grid">
-              <div class="stat-mini">
-                <div class="stat-mini-val tabular" id="hero-apps-count">10</div>
-                <div class="stat-mini-lbl">AI Solutions</div>
-              </div>
-              <div class="stat-mini">
-                <div class="stat-mini-val tabular" id="hero-countries-count">12</div>
-                <div class="stat-mini-lbl">Countries</div>
-              </div>
-              <div class="stat-mini">
-                <div class="stat-mini-val tabular" id="hero-pathways-count">43</div>
-                <div class="stat-mini-lbl">PR Pathways</div>
-              </div>
-              <div class="stat-mini">
-                <div class="stat-mini-val tabular" id="hero-rcip-score">0%</div>
-                <div class="stat-mini-lbl">RCIP Score</div>
-              </div>
-            </div>
-            <div class="hero-trust-foot">
-              <span id="hero-sync-status">Direct official sources · No additions or middlemen · Updated in real time</span>
-            </div>
+          <div class="stat-mini">
+            <div class="stat-mini-val tabular" id="hero-countries-count">12</div>
+            <div class="stat-mini-lbl">Countries</div>
           </div>
+          <div class="stat-mini">
+            <div class="stat-mini-val tabular" id="hero-pathways-count">43</div>
+            <div class="stat-mini-lbl">PR Pathways</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-val tabular" id="hero-rcip-score">0%</div>
+            <div class="stat-mini-lbl">RCIP Score</div>
+          </div>
+        </div>
+        <div class="hero-trust-foot">
+          <span id="hero-sync-status">Direct official sources · No additions or middlemen · Updated in real time</span>
         </div>
       </div>
     </section>
@@ -226,11 +217,8 @@
           <button type="button" class="btn btn-secondary btn-sm" onclick="resetStoreFilters()">Show All Solutions</button>
         </div>
 
-        <!-- Flagship Featured Apps Strip -->
-        <div class="store-spotlight-grid" id="store-featured-strip"></div>
-
         <!-- Store Purpose Category & Country Filters -->
-        <div class="filter-toolbar" style="margin-top:16px;">
+        <div class="filter-toolbar" style="margin-top:8px;">
           <div class="prov-pills" id="store-category-pills">
             <button type="button" class="prov-btn active" data-cat="all" onclick="filterSolutionsCategory('all', this)">All AI Solutions</button>
             <button type="button" class="prov-btn" data-cat="employer-job" onclick="filterSolutionsCategory('employer-job', this)">Employer &amp; Job AI</button>
@@ -449,21 +437,7 @@
 
     <!-- TAB 3: CANADA RCIP TOOLKIT -->
     <section id="tab-rcip" class="tab-panel">
-      <div class="card rcip-banner-card">
-        <div class="rcip-cover-strip">
-          <img src="/static/images/dest-canada.webp?v=7"
-               alt="Scenic Canadian waterfront skyline and mountain backdrop"
-               width="800"
-               height="480"
-               loading="lazy"
-               decoding="async"
-               class="rcip-cover-img">
-          <div class="rcip-cover-scrim" aria-hidden="true"></div>
-          <div class="rcip-cover-content">
-            <span class="rcip-cover-pill">Canada · Official IRCC Pathway Toolkit</span>
-            <span class="rcip-cover-sub">14 Designated Communities · TEER 0–5 · CLB &amp; CAD Funds Calculator</span>
-          </div>
-        </div>
+      <div class="card">
         <div class="rcip-hero-strip">
           <div>
             <div class="pill pill-red" style="margin-bottom:8px;">Canada · RCIP Pilot &amp; Jan 1, 2027 Permanent Program</div>
@@ -1043,8 +1017,8 @@
 
   <div id="toast-container" class="toast-container"></div>
 
-  <script src="/static/js/utils.js?v=9"></script>
-  <script src="/static/js/pwa.js?v=9"></script>
-  <script src="/static/app.js?v=9"></script>
+  <script src="/static/js/utils.js?v=10"></script>
+  <script src="/static/js/pwa.js?v=10"></script>
+  <script src="/static/app.js?v=10"></script>
 </body>
 </html>

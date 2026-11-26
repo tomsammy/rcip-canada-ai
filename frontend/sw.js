@@ -1,11 +1,10 @@
-const CACHE_NAME = 'ai4japa-store-v9';
+const CACHE_NAME = 'ai4japa-store-v10';
 const PRECACHE_URLS = [
   '/',
-  '/static/styles.css?v=9',
-  '/static/js/utils.js?v=9',
-  '/static/js/pwa.js?v=9',
-  '/static/app.js?v=9',
-  '/static/images/hero-global-mobility.webp?v=7',
+  '/static/styles.css?v=10',
+  '/static/js/utils.js?v=10',
+  '/static/js/pwa.js?v=10',
+  '/static/app.js?v=10',
   '/manifest.webmanifest',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',

@@ -1,4 +1,4 @@
-"""Single-source-of-truth domain enums and integrity validator for JapaAI.ng country & pathway catalogs."""
+"""Single-source-of-truth domain enums and integrity validator for ai4japa.store country & pathway catalogs."""
 
 import re
 from typing import Any, Dict, List
@@ -23,7 +23,7 @@ ALLOWED_PROFESSION_FIELDS = frozenset(
 
 ALLOWED_LANGUAGES = frozenset({"english", "french", "german", "portuguese", "spanish"})
 
-ALLOWED_REGIONS = frozenset({"North America", "Europe", "South America"})
+ALLOWED_REGIONS = frozenset({"North America", "Europe", "South America", "Oceania", "Caribbean"})
 
 _DISALLOWED_LOCALIZED_RE = re.compile(r"\b(?:nigeria|nigerian|lagos|abuja)\b", re.I)
 

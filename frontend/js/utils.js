@@ -103,6 +103,46 @@
       alt: 'Brazilian oceanfront skyline along a golden bay framed by lush green tropical peaks',
       focal: 'center',
     },
+    italy: {
+      src: `/static/images/dest-southern-europe.webp?${IMAGE_VERSION}`,
+      alt: 'Sunlit Southern European coastal boulevard and limestone promenade terraces',
+      focal: 'center',
+    },
+    portugal: {
+      src: `/static/images/dest-southern-europe.webp?${IMAGE_VERSION}`,
+      alt: 'Sunlit Southern European coastal boulevard and limestone promenade terraces',
+      focal: 'center',
+    },
+    hungary: {
+      src: `/static/images/dest-central-europe.webp?${IMAGE_VERSION}`,
+      alt: 'Central European architectural canal promenade lined with trees and heritage buildings',
+      focal: 'center',
+    },
+    austria: {
+      src: `/static/images/dest-central-europe.webp?${IMAGE_VERSION}`,
+      alt: 'Central European architectural canal promenade lined with trees and heritage buildings',
+      focal: 'center',
+    },
+    australia: {
+      src: `/static/images/hero-global-mobility.webp?${IMAGE_VERSION}`,
+      alt: 'Modern coastal harbor skyline representing skilled global migration to Australia',
+      focal: 'center',
+    },
+    cuba: {
+      src: `/static/images/dest-brazil.webp?${IMAGE_VERSION}`,
+      alt: 'Sunlit Caribbean waterfront boulevard framed by coastal architecture and palms',
+      focal: 'center',
+    },
+    slovakia: {
+      src: `/static/images/dest-central-europe.webp?${IMAGE_VERSION}`,
+      alt: 'Central European architectural canal promenade lined with trees and heritage buildings',
+      focal: 'center',
+    },
+    slovenia: {
+      src: `/static/images/dest-central-europe.webp?${IMAGE_VERSION}`,
+      alt: 'Central European architectural canal promenade lined with trees and heritage buildings',
+      focal: 'center',
+    },
   };
 
   const FEATURED_SHOWCASE_IDS = ['canada', 'uk', 'usa', 'germany', 'spain', 'sweden', 'brazil'];

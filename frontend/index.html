@@ -15,11 +15,11 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <meta property="og:title" content="ai4japa.store — AI App Store for Global Japa &amp; Official Pathways">
-  <meta property="og:description" content="Explore purpose-built AI tools by country and pathway — RCIP employer matching, 12-country PR finder, CLB calculators &amp; real-time government RAG.">
+  <meta property="og:description" content="Explore purpose-built AI tools by country and pathway — RCIP employer matching, 20-country PR finder, CLB calculators &amp; real-time government RAG.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="/static/icons/icon-512.png">
   <meta name="twitter:card" content="summary">
-  <link rel="stylesheet" href="/static/styles.css?v=10">
+  <link rel="stylesheet" href="/static/styles.css?v=11">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -90,7 +90,7 @@
       </div>
       <button type="button" class="btn btn-primary" onclick="switchTab('tab-store'); toggleMobileDrawer()">AI App Store</button>
       <button type="button" class="btn" onclick="switchTab('tab-matcher'); toggleMobileDrawer()">Find My Pathway</button>
-      <button type="button" class="btn" onclick="switchTab('tab-countries'); toggleMobileDrawer()">12 Country Hubs</button>
+      <button type="button" class="btn" onclick="switchTab('tab-countries'); toggleMobileDrawer()">20 Country Hubs</button>
       <button type="button" class="btn" onclick="switchTab('tab-rcip'); toggleMobileDrawer()">Canada RCIP Toolkit</button>
       <button type="button" class="btn" onclick="switchTab('tab-copilot'); toggleMobileDrawer()">Official Copilot</button>
       <button type="button" class="btn" onclick="switchTab('tab-saved'); toggleMobileDrawer()">My Saved Progress</button>
@@ -122,7 +122,7 @@
         <div class="hero-cta-row">
           <button type="button" class="btn btn-primary btn-lg" onclick="scrollToStore()">Browse AI App Store</button>
           <button type="button" class="btn btn-secondary btn-lg" onclick="switchTab('tab-rcip'); switchRcipSubtab('rcip-sub-employers')">Canada RCIP Employer AI</button>
-          <button type="button" class="btn btn-lg" onclick="scrollToMatcher()">12-Country Matcher</button>
+          <button type="button" class="btn btn-lg" onclick="scrollToMatcher()">20-Country Matcher</button>
         </div>
 
         <div class="hero-jump-wrap">
@@ -141,15 +141,15 @@
         </div>
         <div class="stat-mini-grid">
           <div class="stat-mini">
-            <div class="stat-mini-val tabular" id="hero-apps-count">10</div>
+            <div class="stat-mini-val tabular" id="hero-apps-count">14</div>
             <div class="stat-mini-lbl">AI Solutions</div>
           </div>
           <div class="stat-mini">
-            <div class="stat-mini-val tabular" id="hero-countries-count">12</div>
+            <div class="stat-mini-val tabular" id="hero-countries-count">20</div>
             <div class="stat-mini-lbl">Countries</div>
           </div>
           <div class="stat-mini">
-            <div class="stat-mini-val tabular" id="hero-pathways-count">43</div>
+            <div class="stat-mini-val tabular" id="hero-pathways-count">67</div>
             <div class="stat-mini-lbl">PR Pathways</div>
           </div>
           <div class="stat-mini">
@@ -182,15 +182,15 @@
     <nav class="workspace-nav" aria-label="ai4japa.store Workspace">
       <button type="button" class="ws-tab active" data-tab="tab-store" onclick="switchTab('tab-store')">
         AI App Store
-        <span class="tab-count tabular" id="tab-badge-apps">10 Apps</span>
+        <span class="tab-count tabular" id="tab-badge-apps">14 Apps</span>
       </button>
       <button type="button" class="ws-tab" data-tab="tab-matcher" onclick="switchTab('tab-matcher')">
         Find My Pathway
-        <span class="tab-count">12 Countries</span>
+        <span class="tab-count">20 Countries</span>
       </button>
       <button type="button" class="ws-tab" data-tab="tab-countries" onclick="switchTab('tab-countries')">
-        12 Country Hubs
-        <span class="tab-count tabular" id="tab-badge-countries">12</span>
+        20 Country Hubs
+        <span class="tab-count tabular" id="tab-badge-countries">20</span>
       </button>
       <button type="button" class="ws-tab" data-tab="tab-rcip" onclick="switchTab('tab-rcip')">
         Canada RCIP Toolkit
@@ -244,10 +244,10 @@
         <div class="showcase-head">
           <div>
             <span class="showcase-kicker">Explore By Destination Country</span>
-            <h2 class="showcase-title">12 Official Destination Collections</h2>
+            <h2 class="showcase-title">20 Official Destination Collections</h2>
           </div>
           <button type="button" class="btn btn-sm btn-secondary" onclick="switchTab('tab-countries')">
-            Open All 12 Country Hubs →
+            Open All 20 Country Hubs →
           </button>
         </div>
         <div class="showcase-rail" id="landing-destination-showcase"></div>
@@ -296,15 +296,15 @@
       </section>
     </section>
 
-    <!-- TAB 2: UNIVERSAL 12-COUNTRY MATCHER -->
+    <!-- TAB 2: UNIVERSAL 20-COUNTRY MATCHER -->
     <section id="tab-matcher" class="tab-panel">
       <div class="card">
         <div class="card-header">
           <div>
             <h2 class="card-title">Universal Cross-Country Pathway Matcher</h2>
-            <p class="card-desc">Enter your profile once to compare realistic PR, Skilled Worker, EU Blue Card, Self-Petition, and Digital Nomad eligibility across all 12 countries.</p>
+            <p class="card-desc">Enter your profile once to compare realistic PR, Skilled Worker, EU Blue Card, Self-Petition, and Digital Nomad eligibility across all 20 countries.</p>
           </div>
-          <button type="button" class="btn btn-primary" onclick="runGlobalMatcher()">Match Across All 12 Countries</button>
+          <button type="button" class="btn btn-primary" onclick="runGlobalMatcher()">Match Across All 20 Countries</button>
         </div>
 
         <div class="grid-4">
@@ -378,9 +378,11 @@
           <div class="field">
             <label>Target Region</label>
             <select id="gm-region" class="select">
-              <option value="all">All 12 Countries</option>
+              <option value="all">All 20 Countries</option>
               <option value="North America">North America (Canada, USA)</option>
-              <option value="Europe">Europe (UK, DE, NL, SE, EE, BG, LT, ES, FR)</option>
+              <option value="Europe">Europe (15 Countries)</option>
+              <option value="Oceania">Oceania (Australia)</option>
+              <option value="Caribbean">Caribbean (Cuba)</option>
               <option value="South America">South America (Brazil)</option>
             </select>
           </div>
@@ -409,21 +411,23 @@
       <div id="global-matcher-results"></div>
     </section>
 
-    <!-- TAB 3: 12 COUNTRY HUBS -->
+    <!-- TAB 3: 20 COUNTRY HUBS -->
     <section id="tab-countries" class="tab-panel">
       <div class="card">
         <div class="card-header">
           <div>
-            <h2 class="card-title">12 Destination Country Hubs</h2>
+            <h2 class="card-title">20 Destination Country Hubs</h2>
             <p class="card-desc">Explore every major permanent residence, work, study, and digital nomad pathway sourced straight from official government ministries.</p>
           </div>
         </div>
 
         <div class="filter-toolbar">
           <div class="prov-pills">
-            <button type="button" class="prov-btn active" onclick="filterCountries('all', this)">All 12</button>
+            <button type="button" class="prov-btn active" onclick="filterCountries('all', this)">All 20</button>
             <button type="button" class="prov-btn" onclick="filterCountries('North America', this)">North America (2)</button>
-            <button type="button" class="prov-btn" onclick="filterCountries('Europe', this)">Europe (9)</button>
+            <button type="button" class="prov-btn" onclick="filterCountries('Europe', this)">Europe (15)</button>
+            <button type="button" class="prov-btn" onclick="filterCountries('Oceania', this)">Oceania (1)</button>
+            <button type="button" class="prov-btn" onclick="filterCountries('Caribbean', this)">Caribbean (1)</button>
             <button type="button" class="prov-btn" onclick="filterCountries('South America', this)">South America (1)</button>
           </div>
           <input type="text" id="country-search" class="input" style="max-width:300px;" placeholder="Search country, Blue Card, NIW, RCIP..." oninput="renderCountriesGrid()">
@@ -919,12 +923,12 @@
 
           <div id="chat-history" class="chat-thread">
             <div class="chat-msg bot">
-              Ask any question across <strong>Canada, UK, USA, Germany, Netherlands, Sweden, Estonia, Bulgaria, Lithuania, Spain, France, or Brazil</strong>. Answers quote curated official government portals directly with clickable citations.
+              Ask any question across <strong>Canada, UK, USA, Germany, Netherlands, Sweden, Estonia, Bulgaria, Lithuania, Spain, France, Brazil, Italy, Portugal, Hungary, Austria, Australia, Cuba, Slovakia, or Slovenia</strong>. Answers quote curated official government portals directly with clickable citations.
             </div>
           </div>
 
           <div class="chat-compose">
-            <input type="text" id="chat-input" class="input" placeholder="Ask about salary thresholds, PR timelines, Blue Card, IND, MIGRIS, RCIP..." onkeydown="if(event.key==='Enter') sendCopilotQuery()">
+            <input type="text" id="chat-input" class="input" placeholder="Ask about salary thresholds, PR timelines, Blue Card, RWR Card, Subclass 189, D8, RCIP..." onkeydown="if(event.key==='Enter') sendCopilotQuery()">
             <button type="button" class="btn btn-primary" onclick="sendCopilotQuery()">Send</button>
           </div>
         </div>
@@ -933,7 +937,7 @@
           <div class="card-header">
             <div>
               <h3 class="card-title">Official Sources Index</h3>
-              <p class="card-desc">Real-time verified official portals across all 12 countries</p>
+              <p class="card-desc">Real-time verified official portals across all 20 countries</p>
             </div>
             <span class="pill pill-emerald tabular" id="sources-count-pill">0 pages</span>
           </div>
@@ -955,7 +959,7 @@
         <div class="card-header">
           <div>
             <h2 class="card-title">My Saved Roadmaps &amp; Progress</h2>
-            <p class="card-desc">All checklist steps and shortlisted communities saved privately in your browser across all 12 countries.</p>
+            <p class="card-desc">All checklist steps and shortlisted communities saved privately in your browser across all 20 countries.</p>
           </div>
           <button type="button" class="btn btn-sm" onclick="exportRoadmapReport()">Export Canada RCIP Dossier</button>
         </div>
@@ -964,7 +968,7 @@
     </section>
 
     <footer class="footer">
-      ai4japa.store — Curated AI mobility store powered directly by official government portals across 12 destination countries with real-time syncing and zero added assumptions. Informational planning tool only; not legal advice.
+      ai4japa.store — Curated AI mobility store powered directly by official government portals across 20 destination countries with real-time syncing and zero added assumptions. Informational planning tool only; not legal advice.
     </footer>
   </main>
 
@@ -1017,8 +1021,8 @@
 
   <div id="toast-container" class="toast-container"></div>
 
-  <script src="/static/js/utils.js?v=10"></script>
-  <script src="/static/js/pwa.js?v=10"></script>
-  <script src="/static/app.js?v=10"></script>
+  <script src="/static/js/utils.js?v=11"></script>
+  <script src="/static/js/pwa.js?v=11"></script>
+  <script src="/static/app.js?v=11"></script>
 </body>
 </html>

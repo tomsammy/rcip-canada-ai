@@ -43,6 +43,14 @@ _COUNTRY_SIGNALS: Dict[str, Tuple[str, ...]] = {
     "spain": ("spain", "spanish", "teletrabajo", "uge-ce", "2849"),
     "france": ("france", "french", "passeport talent", "france-visas", "campus france", "rece"),
     "brazil": ("brazil", "brazilian", "vitem", "migranteweb", "gov.br"),
+    "italy": ("italy", "italian", "vistoperitalia", "integrazionemigranti", "universitaly", "carta blu", "nulla osta", "permesso di soggiorno"),
+    "portugal": ("portugal", "portuguese", "aima", "vistos.mne.gov.pt", "d7", "d8", "d3", "procura de trabalho"),
+    "hungary": ("hungary", "hungarian", "enterhungary", "oif", "magyar kartya", "white card", "stipendium hungaricum"),
+    "austria": ("austria", "austrian", "migration.gv.at", "red-white-red", "rwr", "rot-weiss-rot", "oesterreich.gv.at"),
+    "australia": ("australia", "australian", "homeaffairs", "immiaccount", "skillselect", "subclass 189", "subclass 190", "subclass 482", "subclass 491", "subclass 186"),
+    "cuba": ("cuba", "cuban", "consular.cu", "cubaminrex", "d'viajeros", "dviajeros", "minrex"),
+    "slovakia": ("slovakia", "slovak", "slovak republic", "mzv.sk", "slovensko.sk", "mic.iom.sk", "regvis", "zivnost"),
+    "slovenia": ("slovenia", "slovenian", "gov.si", "infotujci", "euprava", "zrsz", "upravna enota"),
 }
 
 
@@ -104,12 +112,12 @@ class CanadaRAGService:
         pages: List[Dict[str, Any]],
         global_live_pages: Optional[List[Dict[str, Any]]] = None,
     ) -> None:
-        """Index Canada.ca pages, 14 RCIP communities, curated 12-country catalog, and real-time live portal snapshots."""
+        """Index Canada.ca pages, 14 RCIP communities, curated 20-country catalog, and real-time live portal snapshots."""
         self.pages = list(pages or [])
         self.global_live_pages = list(global_live_pages or [])
         chunks: List[Dict[str, Any]] = []
 
-        # 1. Live-synced official portal pages across all 12 countries (highest freshness priority)
+        # 1. Live-synced official portal pages across all 20 countries (highest freshness priority)
         for lp in self.global_live_pages:
             body = "\n".join(
                 part

@@ -256,7 +256,7 @@ async function loadSolutions() {
     state.solutionsCatalog = data.solutions || [];
     const heroApps = document.getElementById('hero-apps-count');
     const badgeApps = document.getElementById('tab-badge-apps');
-    const count = state.solutionsCatalog.length || 10;
+    const count = state.solutionsCatalog.length || 14;
     if (heroApps) heroApps.textContent = String(count);
     if (badgeApps) badgeApps.textContent = `${count} Apps`;
     renderStoreSpotlight();
@@ -434,7 +434,7 @@ async function loadCountries() {
     populateStoreCountryFilter();
     updateGlobalCounters();
   } catch (err) {
-    showToast('Failed to load 12-country catalog.', true);
+    showToast('Failed to load 20-country catalog.', true);
   }
 }
 
@@ -452,10 +452,10 @@ function updateGlobalCounters() {
   const badgeSaved = document.getElementById('tab-badge-saved');
   const mobileBadge = document.getElementById('mobile-badge-saved');
 
-  if (elC) elC.textContent = String(cCount || 12);
-  if (elP) elP.textContent = String(pCount || 43);
+  if (elC) elC.textContent = String(cCount || 20);
+  if (elP) elP.textContent = String(pCount || 67);
   if (elS) elS.textContent = String(totalSaved);
-  if (badgeC) badgeC.textContent = String(cCount || 12);
+  if (badgeC) badgeC.textContent = String(cCount || 20);
   if (badgeSaved) badgeSaved.textContent = String(totalSaved);
   if (mobileBadge) {
     mobileBadge.textContent = String(totalSaved);
@@ -493,7 +493,7 @@ function populateCopilotCountryDropdown() {
   if (!sel) return;
   const prev = sel.value || 'all';
   sel.innerHTML =
-    '<option value="all">All 12 Countries</option>' +
+    '<option value="all">All 20 Countries</option>' +
     state.countriesCatalog.map(c => `<option value="${esc(c.id)}">${esc(c.flag)} ${esc(c.name)}</option>`).join('');
   sel.value = prev;
 }

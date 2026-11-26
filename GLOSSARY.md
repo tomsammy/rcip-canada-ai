@@ -1,6 +1,6 @@
 # ai4japa.store Domain Glossary
 
-Real-time curated AI solutions store and official government immigration roadmaps across 12 destination countries and popular mobility pathways.
+Real-time curated AI solutions store and official government immigration roadmaps across 20 destination countries and popular mobility pathways.
 
 ## Core Concepts
 

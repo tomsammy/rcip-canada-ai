@@ -52,7 +52,7 @@ test('isValidUploadSize enforces positive non-empty size up to cap', () => {
   assert.equal(isValidUploadSize(cap + 1, cap), false);
 });
 
-test('getCountryMedia maps all 12 countries and FEATURED_SHOWCASE_IDS use distinct images', () => {
+test('getCountryMedia maps all 20 countries and FEATURED_SHOWCASE_IDS use distinct images', () => {
   const allCountries = [
     'canada',
     'uk',
@@ -66,6 +66,14 @@ test('getCountryMedia maps all 12 countries and FEATURED_SHOWCASE_IDS use distin
     'spain',
     'france',
     'brazil',
+    'italy',
+    'portugal',
+    'hungary',
+    'austria',
+    'australia',
+    'cuba',
+    'slovakia',
+    'slovenia',
   ];
   for (const id of allCountries) {
     const media = getCountryMedia(id);

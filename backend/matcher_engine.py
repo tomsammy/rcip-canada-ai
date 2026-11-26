@@ -1,4 +1,4 @@
-"""Honest cross-country immigration & PR pathway matcher across 12 countries."""
+"""Honest cross-country immigration & PR pathway matcher across 20 countries."""
 
 from typing import Any, Dict, List
 
@@ -62,12 +62,12 @@ def _has_profile_input(profile: Dict[str, Any]) -> bool:
 
 
 def match_global_pathways(profile: Dict[str, Any]) -> Dict[str, Any]:
-    """Score and rank pathways across all 12 countries strictly from stated profile facts."""
+    """Score and rank pathways across all 20 countries strictly from stated profile facts."""
     safe = dict(profile or {})
     if not _has_profile_input(safe):
         return {
             "status": "INCOMPLETE",
-            "message": "Enter your education, field, work experience, language proficiency, and budget to match across all 12 countries.",
+            "message": "Enter your education, field, work experience, language proficiency, and budget to match across all 20 countries.",
             "total_pathways": 0,
             "top_matches": [],
             "viable_with_job_offer": [],
@@ -267,12 +267,12 @@ def match_global_pathways(profile: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "status": "MATCHED",
         "message": (
-            f"Evaluated {len(all_matches)} pathways across 12 countries: "
+            f"Evaluated {len(all_matches)} pathways across 20 countries: "
             f"{len(top_matches)} strong match(es), {len(viable_offer)} viable with a sponsored job offer."
         ),
         "total_pathways": len(all_matches),
-        "top_matches": top_matches[:12],
-        "viable_with_job_offer": viable_offer[:12],
-        "explore_and_prepare": explore_prepare[:12],
+        "top_matches": top_matches[:16],
+        "viable_with_job_offer": viable_offer[:16],
+        "explore_and_prepare": explore_prepare[:16],
         "all_matches": all_matches,
     }

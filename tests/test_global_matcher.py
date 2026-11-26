@@ -1,4 +1,4 @@
-"""Unit and API tests for JapaAI.ng 12-country catalog, global matcher, and endpoints."""
+"""Unit and API tests for ai4japa.store 20-country catalog, global matcher, and endpoints."""
 
 import sys
 import unittest
@@ -27,6 +27,14 @@ EXPECTED_COUNTRY_IDS = {
     "spain",
     "france",
     "brazil",
+    "italy",
+    "portugal",
+    "hungary",
+    "austria",
+    "australia",
+    "cuba",
+    "slovakia",
+    "slovenia",
 }
 
 
@@ -34,8 +42,8 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
     def setUp(self) -> None:
         self.client = TestClient(app)
 
-    def test_twelve_country_catalog_integrity(self):
-        self.assertEqual(len(COUNTRIES_CATALOG), 12)
+    def test_twenty_country_catalog_integrity(self):
+        self.assertEqual(len(COUNTRIES_CATALOG), 20)
         ids = {c["id"] for c in COUNTRIES_CATALOG}
         self.assertEqual(ids, EXPECTED_COUNTRY_IDS)
 
@@ -134,8 +142,22 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
         self.assertEqual(countries_resp.status_code, 200)
         cdata = countries_resp.json()
         self.assertEqual(cdata["status"], "success")
-        self.assertEqual(cdata["total"], 12)
-        self.assertEqual(len(cdata["countries"]), 12)
+        self.assertEqual(cdata["total"], 20)
+        self.assertEqual(len(cdata["countries"]), 20)
+
+        for new_cid in ("italy", "portugal", "hungary", "austria", "australia", "cuba", "slovakia", "slovenia"):
+            hub_resp = self.client.get(f"/api/countries/{new_cid}")
+            self.assertEqual(hub_resp.status_code, 200, f"Missing hub {new_cid}")
+
+        oceania_resp = self.client.get("/api/countries?region=Oceania")
+        self.assertEqual(oceania_resp.status_code, 200)
+        self.assertEqual(oceania_resp.json()["total"], 1)
+        self.assertEqual(oceania_resp.json()["countries"][0]["id"], "australia")
+
+        caribbean_resp = self.client.get("/api/countries?region=Caribbean")
+        self.assertEqual(caribbean_resp.status_code, 200)
+        self.assertEqual(caribbean_resp.json()["total"], 1)
+        self.assertEqual(caribbean_resp.json()["countries"][0]["id"], "cuba")
 
         filtered = self.client.get("/api/countries?search=Brazil")
         self.assertEqual(filtered.status_code, 200)
@@ -166,7 +188,7 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
         self.assertEqual(good_match.status_code, 200)
         mdata = good_match.json()
         self.assertEqual(mdata["status"], "MATCHED")
-        self.assertGreaterEqual(mdata["total_pathways"], 40)
+        self.assertGreaterEqual(mdata["total_pathways"], 65)
 
         chat_resp = self.client.post(
             "/api/chat",
@@ -265,14 +287,15 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
         self.assertIn("landing-destination-showcase", home_resp.text)
         self.assertIn("tab-store", home_resp.text)
         self.assertIn("solutions-store-grid", home_resp.text)
-        self.assertIn("/static/app.js?v=10", home_resp.text)
+        self.assertIn("/static/app.js?v=11", home_resp.text)
         self.assertNotIn("hero-photo-frame", home_resp.text)
 
         sol_resp = self.client.get("/api/solutions")
         self.assertEqual(sol_resp.status_code, 200)
         sol_data = sol_resp.json()
-        self.assertGreaterEqual(sol_data["total"], 10)
+        self.assertGreaterEqual(sol_data["total"], 14)
         self.assertTrue(any(s["id"] == "canada-rcip-employer-ai" for s in sol_data["solutions"]))
+        self.assertTrue(any(s["id"] == "australia-skilled-pr-planner" for s in sol_data["solutions"]))
 
         ca_sol_resp = self.client.get("/api/solutions?country_id=canada")
         self.assertEqual(ca_sol_resp.status_code, 200)

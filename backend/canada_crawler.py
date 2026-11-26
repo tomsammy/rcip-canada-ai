@@ -412,7 +412,7 @@ def build_global_crawl_targets(
     country_id: Optional[str] = None,
     max_pathways_per_country: int = 2,
 ) -> List[Dict[str, str]]:
-    """Build curated official URL targets (portal + top pathway URLs) across all 12 or 1 country."""
+    """Build curated official URL targets (portal + top pathway URLs) across all 20 or 1 country."""
     scope = (country_id or "").strip().lower()
     targets: List[Dict[str, str]] = []
     seen_urls = set()

@@ -1,10 +1,10 @@
-const CACHE_NAME = 'japaai-ng-v8';
+const CACHE_NAME = 'ai4japa-store-v9';
 const PRECACHE_URLS = [
   '/',
-  '/static/styles.css?v=8',
-  '/static/js/utils.js?v=8',
-  '/static/js/pwa.js?v=8',
-  '/static/app.js?v=8',
+  '/static/styles.css?v=9',
+  '/static/js/utils.js?v=9',
+  '/static/js/pwa.js?v=9',
+  '/static/app.js?v=9',
   '/static/images/hero-global-mobility.webp?v=7',
   '/manifest.webmanifest',
   '/static/icons/icon-192.png',

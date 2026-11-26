@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>JapaAI.ng — Official 12-Country Immigration &amp; PR Roadmap Platform</title>
-  <meta name="description" content="Real-time curated official government immigration and permanent residence roadmaps across 12 destination countries, built for applicants worldwide.">
+  <title>ai4japa.store — AI App Store for Global Japa &amp; Official Pathways</title>
+  <meta name="description" content="Curated AI app store for global relocation: purpose-built AI solutions for different countries and popular pathways, grounded in official portals updated in real time.">
   <meta name="theme-color" content="#047857" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="JapaAI.ng">
+  <meta name="apple-mobile-web-app-title" content="ai4japa.store">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="preload" as="image" href="/static/images/hero-global-mobility.webp?v=7" type="image/webp">
-  <meta property="og:title" content="JapaAI.ng — Official 12-Country Immigration &amp; PR Roadmap Platform">
-  <meta property="og:description" content="Real-time curated official government immigration and permanent residence roadmaps across 12 destination countries, built for applicants worldwide.">
+  <meta property="og:title" content="ai4japa.store — AI App Store for Global Japa &amp; Official Pathways">
+  <meta property="og:description" content="Explore purpose-built AI tools by country and pathway — RCIP employer matching, 12-country PR finder, CLB calculators &amp; real-time government RAG.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="/static/images/hero-global-mobility.webp?v=7">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="stylesheet" href="/static/styles.css?v=8">
+  <link rel="stylesheet" href="/static/styles.css?v=9">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
@@ -30,17 +30,18 @@
   <!-- Sticky Navbar -->
   <header class="navbar">
     <div class="container navbar-inner">
-      <div class="brand" onclick="switchTab('tab-matcher')">
+      <div class="brand" onclick="switchTab('tab-store')">
         <div class="brand-mark" aria-hidden="true">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"/>
           </svg>
         </div>
         <div class="brand-text">
-          <div class="brand-title">JapaAI.ng</div>
-          <span class="brand-sub">Official Gov Sources · Real-Time Index</span>
+          <div class="brand-title">ai4japa.store</div>
+          <span class="brand-sub">AI Solutions Store · Official Gov Sources</span>
         </div>
       </div>
 
@@ -67,7 +68,7 @@
       </div>
 
       <div class="mobile-toggle-wrap">
-        <button type="button" class="btn btn-emerald btn-icon pwa-install-trigger" onclick="promptPwaInstall()" title="Install JapaAI.ng App" aria-label="Install App">
+        <button type="button" class="btn btn-emerald btn-icon pwa-install-trigger" onclick="promptPwaInstall()" title="Install ai4japa.store App" aria-label="Install App">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
         <button type="button" class="btn btn-icon" onclick="toggleTheme()" aria-label="Toggle Theme">
@@ -85,18 +86,19 @@
   <div id="mobile-drawer" class="mobile-drawer" onclick="if(event.target===this) toggleMobileDrawer()">
     <div class="mobile-sheet">
       <div class="mobile-sheet-head">
-        <div class="brand-title" style="font-size:16px;">JapaAI.ng</div>
+        <div class="brand-title" style="font-size:16px;">ai4japa.store</div>
         <button type="button" class="btn btn-ghost btn-sm" onclick="toggleMobileDrawer()">Close</button>
       </div>
+      <button type="button" class="btn btn-primary" onclick="switchTab('tab-store'); toggleMobileDrawer()">AI App Store</button>
       <button type="button" class="btn" onclick="switchTab('tab-matcher'); toggleMobileDrawer()">Find My Pathway</button>
       <button type="button" class="btn" onclick="switchTab('tab-countries'); toggleMobileDrawer()">12 Country Hubs</button>
       <button type="button" class="btn" onclick="switchTab('tab-rcip'); toggleMobileDrawer()">Canada RCIP Toolkit</button>
       <button type="button" class="btn" onclick="switchTab('tab-copilot'); toggleMobileDrawer()">Official Copilot</button>
       <button type="button" class="btn" onclick="switchTab('tab-saved'); toggleMobileDrawer()">My Saved Progress</button>
       <hr class="mobile-sheet-divider">
-      <button type="button" class="btn btn-primary pwa-install-trigger" onclick="toggleMobileDrawer(); promptPwaInstall()">
+      <button type="button" class="btn btn-emerald pwa-install-trigger" onclick="toggleMobileDrawer(); promptPwaInstall()">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Install JapaAI.ng App
+        Install ai4japa.store App
       </button>
       <button type="button" class="btn btn-ghost" onclick="triggerSourcesSync(); toggleMobileDrawer()">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
@@ -111,20 +113,21 @@
       <div class="hero-main">
         <div class="hero-eyebrow">
           <span class="hero-dot" aria-hidden="true"></span>
-          Real-Time Official Government Sources · 12 Countries
+          ai4japa.store · Multi-Country AI Mobility Store
         </div>
-        <h1 class="hero-title">Official Immigration Roadmaps, Straight From the Source.</h1>
+        <h1 class="hero-title">The AI Store for Global Relocation — Straight From the Source.</h1>
         <p class="hero-sub">
-          Well-curated permanent residence, work, study, and remote-income pathways pulled directly from 12 national immigration portals — no additions, no omissions, updated in real time.
+          A curated store of specialized AI apps built for different countries and popular immigration pathways — match your CV to verified employers, compare PR routes, and verify official rules updated in real time.
         </p>
 
         <div class="hero-cta-row">
-          <button type="button" class="btn btn-primary btn-lg" onclick="scrollToMatcher()">Find My Pathway</button>
-          <button type="button" class="btn btn-secondary btn-lg" onclick="switchTab('tab-rcip')">Canada RCIP Toolkit</button>
+          <button type="button" class="btn btn-primary btn-lg" onclick="scrollToStore()">Browse AI App Store</button>
+          <button type="button" class="btn btn-secondary btn-lg" onclick="switchTab('tab-rcip'); switchRcipSubtab('rcip-sub-employers')">Canada RCIP Employer AI</button>
+          <button type="button" class="btn btn-lg" onclick="scrollToMatcher()">12-Country Matcher</button>
         </div>
 
         <div class="hero-jump-wrap">
-          <span class="hero-jump-label">Jump to country</span>
+          <span class="hero-jump-label">Filter store by country</span>
           <div class="country-jump-strip" id="hero-country-strip"></div>
         </div>
       </div>
@@ -140,10 +143,14 @@
                class="hero-photo">
           <div class="hero-photo-badge">
             <span class="live-dot-pulse" aria-hidden="true"></span>
-            <span>Live · 12 National Portals</span>
+            <span>ai4japa.store · 10 Live AI Apps</span>
           </div>
           <div class="hero-photo-overlay">
             <div class="stat-mini-grid">
+              <div class="stat-mini">
+                <div class="stat-mini-val tabular" id="hero-apps-count">10</div>
+                <div class="stat-mini-lbl">AI Solutions</div>
+              </div>
               <div class="stat-mini">
                 <div class="stat-mini-val tabular" id="hero-countries-count">12</div>
                 <div class="stat-mini-lbl">Countries</div>
@@ -156,10 +163,6 @@
                 <div class="stat-mini-val tabular" id="hero-rcip-score">0%</div>
                 <div class="stat-mini-lbl">RCIP Score</div>
               </div>
-              <div class="stat-mini">
-                <div class="stat-mini-val tabular" id="hero-saved-steps">0</div>
-                <div class="stat-mini-lbl">Saved Steps</div>
-              </div>
             </div>
             <div class="hero-trust-foot">
               <span id="hero-sync-status">Direct official sources · No additions or middlemen · Updated in real time</span>
@@ -169,27 +172,13 @@
       </div>
     </section>
 
-    <!-- Featured Destinations Visual Showcase Strip -->
-    <section class="destination-showcase" aria-label="Featured Destinations">
-      <div class="showcase-head">
-        <div>
-          <span class="showcase-kicker">Official Global Destinations</span>
-          <h2 class="showcase-title">Explore Official Destination Hubs</h2>
-        </div>
-        <button type="button" class="btn btn-sm btn-secondary" onclick="switchTab('tab-countries')">
-          View all 12 countries →
-        </button>
-      </div>
-      <div class="showcase-rail" id="landing-destination-showcase"></div>
-    </section>
-
     <!-- Mobile App Install Banner (auto-hidden when standalone or dismissed) -->
-    <section id="pwa-install-banner" class="pwa-install-banner hidden" aria-label="Install JapaAI.ng Mobile App">
+    <section id="pwa-install-banner" class="pwa-install-banner hidden" aria-label="Install ai4japa.store Mobile App">
       <div class="pwa-banner-left">
-        <img src="/static/icons/icon-192.png" alt="JapaAI.ng icon" width="40" height="40" class="pwa-banner-icon">
+        <img src="/static/icons/icon-192.png" alt="ai4japa.store icon" width="40" height="40" class="pwa-banner-icon">
         <div>
-          <div class="pwa-banner-title">Install JapaAI.ng</div>
-          <div class="pwa-banner-sub">One-tap home screen access &amp; offline roadmaps</div>
+          <div class="pwa-banner-title">Install ai4japa.store</div>
+          <div class="pwa-banner-sub">One-tap access to all AI solutions &amp; offline roadmaps</div>
         </div>
       </div>
       <div class="pwa-banner-actions">
@@ -198,9 +187,13 @@
       </div>
     </section>
 
-    <!-- 5 Workspace Tabs (Desktop / Tablet) -->
-    <nav class="workspace-nav" aria-label="JapaAI.ng Workspace">
-      <button type="button" class="ws-tab active" data-tab="tab-matcher" onclick="switchTab('tab-matcher')">
+    <!-- 6 Workspace Tabs (Desktop / Tablet) -->
+    <nav class="workspace-nav" aria-label="ai4japa.store Workspace">
+      <button type="button" class="ws-tab active" data-tab="tab-store" onclick="switchTab('tab-store')">
+        AI App Store
+        <span class="tab-count tabular" id="tab-badge-apps">10 Apps</span>
+      </button>
+      <button type="button" class="ws-tab" data-tab="tab-matcher" onclick="switchTab('tab-matcher')">
         Find My Pathway
         <span class="tab-count">12 Countries</span>
       </button>
@@ -221,8 +214,102 @@
       </button>
     </nav>
 
-    <!-- TAB 1: UNIVERSAL 12-COUNTRY MATCHER -->
-    <section id="tab-matcher" class="tab-panel active">
+    <!-- TAB 1 (DEFAULT): AI4JAPA SOLUTIONS STORE -->
+    <section id="tab-store" class="tab-panel active">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="pill pill-emerald" style="margin-bottom:6px;">Curated Storefront · Purpose-Built Mobility Apps</span>
+            <h2 class="card-title">Browse AI Solutions by Country &amp; Pathway</h2>
+            <p class="card-desc">Choose a specialized AI app built for your exact relocation bottleneck — every solution runs on verified official government criteria with zero fabricated data.</p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="resetStoreFilters()">Show All Solutions</button>
+        </div>
+
+        <!-- Flagship Featured Apps Strip -->
+        <div class="store-spotlight-grid" id="store-featured-strip"></div>
+
+        <!-- Store Purpose Category & Country Filters -->
+        <div class="filter-toolbar" style="margin-top:16px;">
+          <div class="prov-pills" id="store-category-pills">
+            <button type="button" class="prov-btn active" data-cat="all" onclick="filterSolutionsCategory('all', this)">All AI Solutions</button>
+            <button type="button" class="prov-btn" data-cat="employer-job" onclick="filterSolutionsCategory('employer-job', this)">Employer &amp; Job AI</button>
+            <button type="button" class="prov-btn" data-cat="pathway-matcher" onclick="filterSolutionsCategory('pathway-matcher', this)">Pathway Matchers</button>
+            <button type="button" class="prov-btn" data-cat="eligibility-calc" onclick="filterSolutionsCategory('eligibility-calc', this)">Eligibility &amp; Calculators</button>
+            <button type="button" class="prov-btn" data-cat="popular-pathway" onclick="filterSolutionsCategory('popular-pathway', this)">Popular Pathway Apps</button>
+            <button type="button" class="prov-btn" data-cat="gov-copilot" onclick="filterSolutionsCategory('gov-copilot', this)">Gov RAG &amp; Hubs</button>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; flex:1; justify-content:flex-end;">
+            <select id="store-country-filter" class="select" style="max-width:210px;" onchange="renderSolutionsGrid()">
+              <option value="all">All Countries &amp; Global</option>
+            </select>
+            <input type="text" id="store-search-input" class="input" style="max-width:260px;" placeholder="Search apps: RCIP, NIW, Blue Card, CV..." oninput="renderSolutionsGrid()">
+          </div>
+        </div>
+
+        <!-- Full AI Store Cards Grid -->
+        <div class="solutions-grid" id="solutions-store-grid"></div>
+      </div>
+
+      <!-- Featured Destinations Visual Showcase Strip -->
+      <section class="destination-showcase" aria-label="Featured Destinations">
+        <div class="showcase-head">
+          <div>
+            <span class="showcase-kicker">Explore By Destination Country</span>
+            <h2 class="showcase-title">12 Official Destination Collections</h2>
+          </div>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="switchTab('tab-countries')">
+            Open All 12 Country Hubs →
+          </button>
+        </div>
+        <div class="showcase-rail" id="landing-destination-showcase"></div>
+      </section>
+
+      <!-- 3-Step Editorial Trust & Workflow Band -->
+      <section class="how-it-works-band" aria-label="How ai4japa.store Works">
+        <div class="how-head">
+          <span class="showcase-kicker">Why Specialized AI Apps Win</span>
+          <h2 class="showcase-title">How ai4japa.store Powers Every Move</h2>
+        </div>
+        <div class="how-grid">
+          <article class="how-card">
+            <div class="how-card-top">
+              <div class="how-icon how-icon-emerald" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+              </div>
+              <span class="how-step-num tabular">01</span>
+            </div>
+            <h3 class="how-card-title">Pick the Right AI Solution</h3>
+            <p class="how-card-desc">Launch purpose-built apps for specific bottlenecks — from Canada RCIP CV-to-employer matching to US NIW or EU Blue Card checklists.</p>
+          </article>
+
+          <article class="how-card">
+            <div class="how-card-top">
+              <div class="how-icon how-icon-blue" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
+              </div>
+              <span class="how-step-num tabular">02</span>
+            </div>
+            <h3 class="how-card-title">Grounded in Official Sources</h3>
+            <p class="how-card-desc">Every calculator rule, employer portal link, salary threshold, and IMM/visa form maps verbatim to the issuing national government ministry.</p>
+          </article>
+
+          <article class="how-card">
+            <div class="how-card-top">
+              <div class="how-icon how-icon-amber" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+              </div>
+              <span class="how-step-num tabular">03</span>
+            </div>
+            <h3 class="how-card-title">Live Updates &amp; Private Tracking</h3>
+            <p class="how-card-desc">Sync live government notices anytime and keep your saved CV matches, employer applications, and pathway checklists right in your browser.</p>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <!-- TAB 2: UNIVERSAL 12-COUNTRY MATCHER -->
+    <section id="tab-matcher" class="tab-panel">
       <div class="card">
         <div class="card-header">
           <div>
@@ -332,51 +419,9 @@
       </div>
 
       <div id="global-matcher-results"></div>
-
-      <!-- 3-Step Editorial Trust & Workflow Band -->
-      <section class="how-it-works-band" aria-label="How JapaAI.ng Works">
-        <div class="how-head">
-          <span class="showcase-kicker">Transparent Official Guidance</span>
-          <h2 class="showcase-title">How JapaAI.ng Keeps Every Roadmap Grounded</h2>
-        </div>
-        <div class="how-grid">
-          <article class="how-card">
-            <div class="how-card-top">
-              <div class="how-icon how-icon-emerald" aria-hidden="true">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-              </div>
-              <span class="how-step-num tabular">01</span>
-            </div>
-            <h3 class="how-card-title">Compare 12 Countries Honestly</h3>
-            <p class="how-card-desc">Enter your profile once to see realistic eligibility tiers across 43 official permanent residence, work, study, and digital nomad pathways.</p>
-          </article>
-
-          <article class="how-card">
-            <div class="how-card-top">
-              <div class="how-icon how-icon-blue" aria-hidden="true">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
-              </div>
-              <span class="how-step-num tabular">02</span>
-            </div>
-            <h3 class="how-card-title">Follow Verbatim Official Steps</h3>
-            <p class="how-card-desc">Every checklist item, fee note, and government form links straight to the issuing national ministry with zero additions or middlemen.</p>
-          </article>
-
-          <article class="how-card">
-            <div class="how-card-top">
-              <div class="how-icon how-icon-amber" aria-hidden="true">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-              </div>
-              <span class="how-step-num tabular">03</span>
-            </div>
-            <h3 class="how-card-title">Verify Live Portal Updates</h3>
-            <p class="how-card-desc">Trigger real-time source refreshes anytime to capture current notices straight from <code>canada.ca</code>, <code>gov.uk</code>, <code>uscis.gov</code>, and 9 EU/South American portals.</p>
-          </article>
-        </div>
-      </section>
     </section>
 
-    <!-- TAB 2: 12 COUNTRY HUBS -->
+    <!-- TAB 3: 12 COUNTRY HUBS -->
     <section id="tab-countries" class="tab-panel">
       <div class="card">
         <div class="card-header">
@@ -945,13 +990,17 @@
     </section>
 
     <footer class="footer">
-      JapaAI.ng — Curated directly from official government immigration portals across 12 destination countries with real-time syncing and zero added assumptions. Informational planning tool only; not legal advice.
+      ai4japa.store — Curated AI mobility store powered directly by official government portals across 12 destination countries with real-time syncing and zero added assumptions. Informational planning tool only; not legal advice.
     </footer>
   </main>
 
   <!-- Native-Style Mobile Bottom Navigation -->
   <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
-    <button type="button" class="mobile-nav-btn active" data-tab="tab-matcher" onclick="switchTab('tab-matcher')">
+    <button type="button" class="mobile-nav-btn active" data-tab="tab-store" onclick="switchTab('tab-store')">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Store</span>
+    </button>
+    <button type="button" class="mobile-nav-btn" data-tab="tab-matcher" onclick="switchTab('tab-matcher')">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
       <span>Match</span>
     </button>
@@ -960,12 +1009,8 @@
       <span>Countries</span>
     </button>
     <button type="button" class="mobile-nav-btn" data-tab="tab-rcip" onclick="switchTab('tab-rcip')">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       <span>RCIP</span>
-    </button>
-    <button type="button" class="mobile-nav-btn" data-tab="tab-copilot" onclick="switchTab('tab-copilot')">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <span>Copilot</span>
     </button>
     <button type="button" class="mobile-nav-btn" data-tab="tab-saved" onclick="switchTab('tab-saved')">
       <span class="mobile-nav-icon-wrap">
@@ -981,10 +1026,10 @@
     <div class="pwa-modal-card">
       <div class="pwa-modal-head">
         <div style="display:flex; align-items:center; gap:10px;">
-          <img src="/static/icons/icon-192.png" alt="JapaAI.ng icon" width="40" height="40" class="pwa-banner-icon">
+          <img src="/static/icons/icon-192.png" alt="ai4japa.store icon" width="40" height="40" class="pwa-banner-icon">
           <div>
-            <h3 id="pwa-modal-title" style="font-size:17px; font-weight:700;">Install JapaAI.ng on Your Phone</h3>
-            <p style="font-size:12px; color:var(--ink-muted);">Launch full-screen with saved roadmaps</p>
+            <h3 id="pwa-modal-title" style="font-size:17px; font-weight:700;">Install ai4japa.store on Your Phone</h3>
+            <p style="font-size:12px; color:var(--ink-muted);">Launch full-screen with all AI apps &amp; saved roadmaps</p>
           </div>
         </div>
         <button type="button" class="btn btn-ghost btn-icon" onclick="closePwaInstallModal()" aria-label="Close">✕</button>
@@ -998,8 +1043,8 @@
 
   <div id="toast-container" class="toast-container"></div>
 
-  <script src="/static/js/utils.js?v=8"></script>
-  <script src="/static/js/pwa.js?v=8"></script>
-  <script src="/static/app.js?v=8"></script>
+  <script src="/static/js/utils.js?v=9"></script>
+  <script src="/static/js/pwa.js?v=9"></script>
+  <script src="/static/app.js?v=9"></script>
 </body>
 </html>

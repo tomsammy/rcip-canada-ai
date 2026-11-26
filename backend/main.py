@@ -1,4 +1,4 @@
-"""FastAPI gateway for JapaAI.ng."""
+"""FastAPI gateway for ai4japa.store."""
 
 import mimetypes
 import os
@@ -38,6 +38,7 @@ from backend.rcip_employers import (
     list_designated_employers,
     match_cv_to_rcip_employers,
 )
+from backend.solutions_catalog import list_solutions
 from backend.resume_parser import parse_resume_file, parse_resume_text
 from backend.store import (
     get_profile as store_get_profile,
@@ -59,9 +60,9 @@ from backend.sync_service import (
 )
 
 app = FastAPI(
-    title="JapaAI.ng — Official Global Immigration & PR Roadmap Platform",
-    description="Real-time curated official immigration & permanent residence roadmaps across 12 destination countries directly from national government portals.",
-    version="2.0.0",
+    title="ai4japa.store — AI App Store for Global Immigration & PR Solutions",
+    description="Curated store of purpose-built AI solutions and official government roadmaps across 12 destination countries and popular immigration pathways.",
+    version="3.0.0",
 )
 
 app.add_middleware(
@@ -232,7 +233,7 @@ def health_check() -> Dict[str, Any]:
     ]
     return {
         "status": "healthy",
-        "service": "JapaAI.ng",
+        "service": "ai4japa.store",
         "countries_count": len(COUNTRIES_CATALOG),
         "indexed_pages": len(pages) + len(live_pages),
         "live_global_pages": len(live_pages),
@@ -636,8 +637,19 @@ def chat_endpoint(payload: ChatPayload) -> Dict[str, Any]:
 
 
 # --------------------------------------------------------------------------
-# Multi-Country JapaAI.ng Endpoints
+# Multi-Country ai4japa.store Solutions & Country Endpoints
 # --------------------------------------------------------------------------
+
+
+@app.get("/api/solutions")
+def list_solutions_endpoint(
+    category: Optional[str] = Query(None),
+    country_id: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
+) -> Dict[str, Any]:
+    """Return curated AI solutions and specialized pathway apps hosted on ai4japa.store."""
+    return {"status": "success", **list_solutions(category=category, country_id=country_id, q=q)}
+
 
 @app.get("/api/countries")
 def list_countries_endpoint(

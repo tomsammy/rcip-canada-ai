@@ -1,4 +1,4 @@
-"""Official 12-country immigration & permanent residence catalog for JapaAI.ng."""
+"""Official 12-country immigration & permanent residence catalog for ai4japa.store."""
 
 from typing import Any, Dict, List
 

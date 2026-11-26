@@ -79,6 +79,7 @@ class CatalogSchemaAndDossierTests(unittest.TestCase):
             checked_steps={step_id: True},
             notes={step_id: "<img src=x onerror=alert(2)>Uploaded"},
         )
+        self.assertIn("ai4japa.store", html_doc)
         self.assertNotIn("<script>alert(1)</script>", html_doc)
         self.assertNotIn("<img src=x onerror=alert(2)>", html_doc)
         self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;Kofi", html_doc)
@@ -89,7 +90,7 @@ class CatalogSchemaAndDossierTests(unittest.TestCase):
             progress_map={"s1_noc_teer": {"completed": True}},
             shortlists={},
         )
-        self.assertIn("RCIP Canada AI", rcip_doc)
+        self.assertIn("ai4japa.store", rcip_doc)
         self.assertNotIn("<b>Ada</b>", rcip_doc)
         self.assertIn("&lt;b&gt;Ada&lt;/b&gt;", rcip_doc)
 

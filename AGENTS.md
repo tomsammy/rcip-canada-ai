@@ -1,4 +1,4 @@
-# JapaAI.ng Engineering Guide
+# ai4japa.store Engineering Guide
 
 - Read [GLOSSARY.md](GLOSSARY.md) before naming new modules, endpoints, or domain concepts.
 - Review [CODING_STANDARDS.md](CODING_STANDARDS.md) for code invariants and review rules.

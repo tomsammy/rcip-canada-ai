@@ -1,4 +1,4 @@
-// Pure frontend utilities for JapaAI.ng (browser global + CommonJS testable in Node)
+// Pure frontend utilities for ai4japa.store (browser global + CommonJS testable in Node)
 
 (function attachJapaUtils(root) {
   function esc(value) {

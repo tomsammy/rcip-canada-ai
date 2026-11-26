@@ -205,7 +205,7 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
         manifest_resp = self.client.get("/manifest.webmanifest")
         self.assertEqual(manifest_resp.status_code, 200)
         manifest = manifest_resp.json()
-        self.assertEqual(manifest["short_name"], "JapaAI.ng")
+        self.assertEqual(manifest["short_name"], "ai4japa.store")
         self.assertEqual(manifest["display"], "standalone")
         self.assertGreaterEqual(len(manifest.get("icons", [])), 3)
         self.assertNotIn("Nigerian", manifest.get("description", ""))
@@ -264,6 +264,22 @@ class GlobalCatalogAndMatcherTests(unittest.TestCase):
         self.assertIn("/static/images/hero-global-mobility.webp?v=7", home_resp.text)
         self.assertIn("og:image", home_resp.text)
         self.assertIn("landing-destination-showcase", home_resp.text)
+        self.assertIn("tab-store", home_resp.text)
+        self.assertIn("/static/app.js?v=9", home_resp.text)
+
+        sol_resp = self.client.get("/api/solutions")
+        self.assertEqual(sol_resp.status_code, 200)
+        sol_data = sol_resp.json()
+        self.assertGreaterEqual(sol_data["total"], 10)
+        self.assertTrue(any(s["id"] == "canada-rcip-employer-ai" for s in sol_data["solutions"]))
+
+        ca_sol_resp = self.client.get("/api/solutions?country_id=canada")
+        self.assertEqual(ca_sol_resp.status_code, 200)
+        self.assertGreaterEqual(ca_sol_resp.json()["total"], 4)
+
+        emp_cat_resp = self.client.get("/api/solutions?category=employer-job&q=RCIP")
+        self.assertEqual(emp_cat_resp.status_code, 200)
+        self.assertEqual(emp_cat_resp.json()["total"], 1)
 
         for img_path in [
             "/static/images/hero-global-mobility.webp",

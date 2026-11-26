@@ -27,7 +27,8 @@ class TestStoreAndAPI(unittest.TestCase):
     def test_frontend_static_and_health(self):
         idx = self.client.get("/")
         self.assertEqual(idx.status_code, 200)
-        self.assertIn("JapaAI.ng", idx.text)
+        self.assertIn("ai4japa.store", idx.text)
+        self.assertIn("solutions-store-grid", idx.text)
 
         css = self.client.get("/static/styles.css")
         self.assertEqual(css.status_code, 200)
@@ -159,13 +160,13 @@ class TestStoreAndAPI(unittest.TestCase):
         # Printable HTML Export
         export_res = self.client.get("/api/roadmap/export/html")
         self.assertEqual(export_res.status_code, 200)
-        self.assertIn("RCIP Canada AI", export_res.text)
+        self.assertIn("ai4japa.store", export_res.text)
         self.assertIn("Pictou County", export_res.text)
 
     def test_vercel_entrypoint_and_stateless_endpoints(self):
         import app as vercel_entry
 
-        self.assertIn("JapaAI.ng", vercel_entry.app.title)
+        self.assertIn("ai4japa.store", vercel_entry.app.title)
 
         health = self.client.get("/api/health").json()
         self.assertIn(health["environment"], ("local", "vercel"))

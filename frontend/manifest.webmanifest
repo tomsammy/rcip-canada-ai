@@ -1,7 +1,7 @@
 {
-  "name": "JapaAI.ng — Official Immigration Roadmaps",
-  "short_name": "JapaAI.ng",
-  "description": "Real-time curated official government immigration & permanent residence roadmaps across 12 destination countries, for applicants worldwide.",
+  "name": "ai4japa.store — AI App Store for Global Relocation",
+  "short_name": "ai4japa.store",
+  "description": "Curated store of purpose-built AI solutions and official government roadmaps across 12 destination countries and popular immigration pathways.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

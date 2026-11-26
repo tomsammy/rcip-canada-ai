@@ -56,12 +56,12 @@ def render_country_pathway_dossier(
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>JapaAI.ng — {esc(country['name'])}: {esc(pathway['name'])}</title>
+<title>ai4japa.store — {esc(country['name'])}: {esc(pathway['name'])}</title>
 <style>{css}</style>
 </head>
 <body>
   <div class="no-print" style="margin-bottom:16px;"><button onclick="window.print()">Print / Save PDF</button></div>
-  <h1>JapaAI.ng — {esc(country['name'])} Immigration Roadmap</h1>
+  <h1>ai4japa.store — {esc(country['name'])} Immigration Roadmap</h1>
   <div class="box">
     <p><strong>Applicant:</strong> {name_safe}</p>
     <p><strong>Pathway:</strong> {esc(pathway['name'])} ({esc(pathway['category'])})</p>
@@ -75,7 +75,7 @@ def render_country_pathway_dossier(
   <h2>Official Applicant Notes &amp; Key Requirements</h2>
   <ul>{notes_html}</ul>
   <p style="margin-top:28px; font-size:12px; color:#64748b;">
-    Curated directly from official government portals indexed by JapaAI.ng with no added assumptions. Informational planning guide only; not legal immigration advice.
+    Curated directly from official government portals indexed by ai4japa.store with no added assumptions. Informational planning guide only; not legal immigration advice.
   </p>
 </body>
 </html>"""
@@ -136,14 +136,14 @@ def render_rcip_dossier(
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RCIP Canada AI — Personalized Roadmap Report</title>
+<title>ai4japa.store — Canada RCIP Personalized Roadmap Report</title>
 <style>{css}</style>
 </head>
 <body>
   <div class="no-print" style="margin-bottom:16px;">
     <button onclick="window.print()">Print / Save PDF</button>
   </div>
-  <h1>RCIP Canada AI — Personalized Roadmap Report</h1>
+  <h1>ai4japa.store — Canada RCIP Roadmap Report</h1>
   <div class="box">
     <p><strong>Applicant:</strong> {candidate_name}</p>
     <p><strong>Readiness Score:</strong> {evaluation['readiness_score']}/100 ({esc(evaluation['overall_status'])})</p>

@@ -1,8 +1,12 @@
-# JapaAI.ng Domain Glossary
+# ai4japa.store Domain Glossary
 
-Real-time curated immigration and permanent residence intelligence built directly from official national government portals across 12 destination countries.
+Real-time curated AI solutions store and official government immigration roadmaps across 12 destination countries and popular mobility pathways.
 
 ## Core Concepts
+
+**AI Solution**:
+A focused, verified workflow hosted inside `ai4japa.store` for a specific destination country, popular pathway, or relocation bottleneck (for example, Canada RCIP Designated Employer CV Matching, 12-Country Pathway Finder, or Real-Time Gov RAG Copilot).
+_Avoid_: Toy chatbot, generic AI wrapper
 
 **Destination Hub**:
 A country workspace organizing official portals, national requirements, active Live Snapshots, and structured immigration Pathways for one destination country.

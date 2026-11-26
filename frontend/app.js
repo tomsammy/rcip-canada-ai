@@ -1,8 +1,9 @@
-// JapaAI.ng Frontend Controller — Multi-Country Roadmaps + Canada RCIP Toolkit
+// ai4japa.store Frontend Controller — AI App Store + Country Hubs + Canada RCIP Toolkit
 
-const STORAGE_KEY = 'japaai_ng_state_v3';
-const LEGACY_STORAGE_KEY = 'rcip_canada_ai_state_v2';
-const THEME_KEY = 'japaai_ng_theme';
+const STORAGE_KEY = 'ai4japa_store_state_v4';
+const LEGACY_STORAGE_KEYS = ['japaai_ng_state_v3', 'rcip_canada_ai_state_v2'];
+const THEME_KEY = 'ai4japa_store_theme';
+const LEGACY_THEME_KEY = 'japaai_ng_theme';
 const MAX_UPLOAD_BYTES = Math.floor(4.2 * 1024 * 1024);
 const DONUT_CIRCUMFERENCE = 263.89;
 
@@ -28,6 +29,8 @@ function showToast(message, isError = false) {
 
 let state = {
   environment: 'local',
+  solutionsCatalog: [],
+  storeCategoryFilter: 'all',
   countriesCatalog: [],
   countryCache: {},
   regionFilter: 'all',
@@ -61,7 +64,7 @@ let state = {
 // --------------------------------------------------------------------------
 
 function initTheme() {
-  const saved = localStorage.getItem(THEME_KEY) || 'light';
+  const saved = localStorage.getItem(THEME_KEY) || localStorage.getItem(LEGACY_THEME_KEY) || 'light';
   applyTheme(saved);
 }
 
@@ -81,7 +84,7 @@ function toggleTheme() {
 function loadLocalBrowserState() {
   try {
     const primary = localStorage.getItem(STORAGE_KEY);
-    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    const legacy = LEGACY_STORAGE_KEYS.map(k => localStorage.getItem(k)).find(Boolean) || null;
     if (window.JapaUtils?.migrateBrowserState) {
       return window.JapaUtils.migrateBrowserState(primary, legacy);
     }
@@ -144,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await hydrateFromLocalServer();
   }
 
-  await Promise.all([loadCountries(), loadSources(), loadCommunities(), loadRcipEmployers()]);
+  await Promise.all([loadSolutions(), loadCountries(), loadSources(), loadCommunities(), loadRcipEmployers()]);
   populateUniversalForm();
   populateProfileForm();
   await recomputeRoadmapAndEvaluation();
@@ -216,6 +219,12 @@ function switchTab(tabId) {
   if (tabId === 'tab-saved') renderSavedProgress();
 }
 
+function scrollToStore() {
+  switchTab('tab-store');
+  const el = document.getElementById('tab-store');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function scrollToMatcher() {
   switchTab('tab-matcher');
   const el = document.getElementById('tab-matcher');
@@ -240,6 +249,200 @@ function toggleMobileDrawer() {
 // 12 Countries Catalog, Country Hubs & Global Checklists
 // --------------------------------------------------------------------------
 
+async function loadSolutions() {
+  try {
+    const res = await fetch('/api/solutions');
+    const data = await res.json();
+    state.solutionsCatalog = data.solutions || [];
+    const heroApps = document.getElementById('hero-apps-count');
+    const badgeApps = document.getElementById('tab-badge-apps');
+    const count = state.solutionsCatalog.length || 10;
+    if (heroApps) heroApps.textContent = String(count);
+    if (badgeApps) badgeApps.textContent = `${count} Apps`;
+    renderStoreSpotlight();
+    renderSolutionsGrid();
+  } catch (err) {
+    console.warn('Failed to load AI solutions catalog', err);
+  }
+}
+
+function filterSolutionsCategory(cat, btnEl) {
+  state.storeCategoryFilter = cat || 'all';
+  document.querySelectorAll('#store-category-pills .prov-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  renderSolutionsGrid();
+}
+
+function filterStoreByCountry(countryId) {
+  switchTab('tab-store');
+  state.storeCategoryFilter = 'all';
+  document.querySelectorAll('#store-category-pills .prov-btn').forEach((b, idx) => b.classList.toggle('active', idx === 0));
+  const sel = document.getElementById('store-country-filter');
+  if (sel) sel.value = countryId || 'all';
+  renderSolutionsGrid();
+  const grid = document.getElementById('solutions-store-grid');
+  if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function resetStoreFilters() {
+  state.storeCategoryFilter = 'all';
+  document.querySelectorAll('#store-category-pills .prov-btn').forEach((b, idx) => b.classList.toggle('active', idx === 0));
+  const sel = document.getElementById('store-country-filter');
+  const qEl = document.getElementById('store-search-input');
+  if (sel) sel.value = 'all';
+  if (qEl) qEl.value = '';
+  renderSolutionsGrid();
+}
+
+function launchSolution(solutionId) {
+  const sol = state.solutionsCatalog.find(s => s.id === solutionId);
+  if (!sol || !sol.launch_action) return;
+  const act = sol.launch_action;
+
+  if (act.type === 'tab') {
+    switchTab(act.tab_id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (act.type === 'rcip_subtab') {
+    switchTab(act.tab_id || 'tab-rcip');
+    switchRcipSubtab(act.subtab_id || 'rcip-sub-wizard');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (act.type === 'country_hub') {
+    openCountryHub(act.country_id, act.pathway_id || null);
+  } else if (act.type === 'countries_region') {
+    switchTab('tab-countries');
+    state.regionFilter = act.region || 'all';
+    document.querySelectorAll('#tab-countries .prov-btn').forEach(btn => {
+      const txt = btn.textContent || '';
+      btn.classList.toggle('active', act.region ? txt.includes(act.region) : txt.includes('All'));
+    });
+    renderCountriesGrid();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function renderStoreSpotlight() {
+  const wrap = document.getElementById('store-featured-strip');
+  if (!wrap) return;
+  const featured = state.solutionsCatalog.filter(s => s.featured).slice(0, 2);
+  if (!featured.length) {
+    wrap.innerHTML = '';
+    return;
+  }
+
+  wrap.innerHTML = featured
+    .map(sol => {
+      const chips = (sol.highlights || []).slice(0, 3).map(h => `<span class="showcase-badge">${esc(h)}</span>`).join('');
+      return `
+        <article class="spotlight-card">
+          <img src="${esc(sol.cover_image)}"
+               alt="${esc(sol.name)}"
+               width="800"
+               height="480"
+               loading="lazy"
+               decoding="async"
+               class="spotlight-card-img">
+          <div class="spotlight-card-scrim" aria-hidden="true"></div>
+          <div class="spotlight-card-body">
+            <div class="spotlight-meta-row">
+              <span class="showcase-badge showcase-badge-emerald">${esc(sol.badge)}</span>
+              <span class="showcase-badge">${esc(sol.flag)} ${esc(sol.country_label)}</span>
+            </div>
+            <div>
+              <h3 class="spotlight-title">${esc(sol.name)}</h3>
+              <p class="spotlight-desc">${esc(sol.tagline)}</p>
+            </div>
+            <div class="tag-row">${chips}</div>
+            <div class="spotlight-foot">
+              <span class="spotlight-source">Source: ${esc(sol.official_source_label)}</span>
+              <button type="button" class="btn btn-primary btn-sm" onclick="launchSolution('${esc(sol.id)}')">
+                ${esc(sol.cta_label || 'Launch App')} →
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    })
+    .join('');
+}
+
+function renderSolutionsGrid() {
+  const grid = document.getElementById('solutions-store-grid');
+  if (!grid) return;
+
+  const catFilter = (state.storeCategoryFilter || 'all').toLowerCase();
+  const countryFilter = strVal('store-country-filter').toLowerCase() || 'all';
+  const q = strVal('store-search-input').toLowerCase();
+
+  const filtered = state.solutionsCatalog.filter(sol => {
+    if (catFilter !== 'all' && String(sol.category || '').toLowerCase() !== catFilter) return false;
+    if (countryFilter !== 'all') {
+      const cids = (sol.country_ids || []).map(x => String(x).toLowerCase());
+      if (!cids.includes(countryFilter) && !cids.includes('all')) return false;
+    }
+    if (q) {
+      const hay = [
+        sol.name,
+        sol.tagline,
+        sol.country_label,
+        sol.badge,
+        sol.official_source_label,
+        ...(sol.highlights || []),
+      ].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML =
+      '<div style="grid-column:1/-1; text-align:center; padding:28px; color:var(--ink-subtle);">No AI solutions match those filters. Click <strong>Show All Solutions</strong> to reset.</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered
+    .map(sol => {
+      const highlightsHtml = (sol.highlights || [])
+        .map(h => `<span class="tag">${esc(h)}</span>`)
+        .join('');
+      const accentCls = `accent-${esc(sol.accent || 'emerald')}`;
+      return `
+        <article class="solution-card ${accentCls}">
+          <div class="solution-card-head">
+            <img src="${esc(sol.cover_image)}"
+                 alt="${esc(sol.name)}"
+                 width="800"
+                 height="480"
+                 loading="lazy"
+                 decoding="async"
+                 class="solution-card-img">
+            <div class="solution-card-scrim" aria-hidden="true"></div>
+            <div class="solution-card-top">
+              <span class="showcase-badge showcase-badge-emerald">${esc(sol.badge)}</span>
+              <span class="showcase-badge">Live AI App</span>
+            </div>
+            <div class="solution-card-country">${esc(sol.flag)} ${esc(sol.country_label)}</div>
+          </div>
+
+          <div class="solution-card-body">
+            <div>
+              <h3 class="solution-card-title">${esc(sol.name)}</h3>
+              <p class="solution-card-desc">${esc(sol.tagline)}</p>
+              <div class="tag-row">${highlightsHtml}</div>
+            </div>
+
+            <div class="solution-card-foot">
+              <div class="solution-card-src">Grounded in: ${esc(sol.official_source_label)}</div>
+              <button type="button" class="btn btn-primary btn-sm" style="width:100%;" onclick="launchSolution('${esc(sol.id)}')">
+                ${esc(sol.cta_label || 'Launch App')} →
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    })
+    .join('');
+}
+
 async function loadCountries() {
   try {
     const res = await fetch('/api/countries');
@@ -249,6 +452,7 @@ async function loadCountries() {
     renderDestinationShowcase();
     renderCountriesGrid();
     populateCopilotCountryDropdown();
+    populateStoreCountryFilter();
     updateGlobalCounters();
   } catch (err) {
     showToast('Failed to load 12-country catalog.', true);
@@ -286,13 +490,23 @@ function renderHeroCountryStrip() {
   strip.innerHTML = state.countriesCatalog
     .map(
       c => `
-      <button type="button" class="country-chip" onclick="openCountryHub('${esc(c.id)}')">
+      <button type="button" class="country-chip" onclick="filterStoreByCountry('${esc(c.id)}')">
         <span>${esc(c.flag)}</span>
         <span>${esc(c.name)}</span>
       </button>
     `
     )
     .join('');
+}
+
+function populateStoreCountryFilter() {
+  const sel = document.getElementById('store-country-filter');
+  if (!sel) return;
+  const prev = sel.value || 'all';
+  sel.innerHTML =
+    '<option value="all">All Countries &amp; Global</option>' +
+    state.countriesCatalog.map(c => `<option value="${esc(c.id)}">${esc(c.flag)} ${esc(c.name)}</option>`).join('');
+  sel.value = prev;
 }
 
 function populateCopilotCountryDropdown() {
@@ -685,7 +899,7 @@ async function exportGlobalRoadmap(countryId, pathwayId) {
       body: JSON.stringify({
         country_id: countryId,
         pathway_id: pathwayId,
-        applicant_name: state.profile?.name || 'JapaAI.ng Applicant',
+        applicant_name: state.profile?.name || 'ai4japa.store Applicant',
         checked_steps: checked,
         notes,
       }),
@@ -698,7 +912,7 @@ async function exportGlobalRoadmap(countryId, pathwayId) {
     if (!win) {
       const a = document.createElement('a');
       a.href = url;
-      a.download = `JapaAI_${countryId}_${pathwayId}.html`;
+      a.download = `AI4Japa_${countryId}_${pathwayId}.html`;
       a.click();
     }
     setTimeout(() => URL.revokeObjectURL(url), 15000);
@@ -2194,7 +2408,7 @@ async function exportRoadmapReport() {
     if (!win) {
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'JapaAI_Canada_RCIP_Roadmap.html';
+      a.download = 'AI4Japa_Store_Canada_RCIP_Roadmap.html';
       a.click();
     }
     setTimeout(() => URL.revokeObjectURL(url), 15000);

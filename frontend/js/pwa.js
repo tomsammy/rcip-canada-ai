@@ -1,6 +1,7 @@
-// PWA Installation & Service Worker Lifecycle for JapaAI.ng
+// PWA Installation & Service Worker Lifecycle for ai4japa.store
 
-const INSTALL_DISMISS_KEY = 'japaai_ng_install_dismissed';
+const INSTALL_DISMISS_KEY = 'ai4japa_store_install_dismissed';
+const LEGACY_INSTALL_DISMISS_KEY = 'japaai_ng_install_dismissed';
 let deferredInstallPrompt = null;
 
 function isStandalonePwa() {
@@ -19,7 +20,10 @@ function isIosDevice() {
 function showInstallBannerIfEligible() {
   const banner = document.getElementById('pwa-install-banner');
   if (!banner) return;
-  if (isStandalonePwa() || localStorage.getItem(INSTALL_DISMISS_KEY) === '1') {
+  const dismissed =
+    localStorage.getItem(INSTALL_DISMISS_KEY) === '1' ||
+    localStorage.getItem(LEGACY_INSTALL_DISMISS_KEY) === '1';
+  if (isStandalonePwa() || dismissed) {
     banner.classList.add('hidden');
     return;
   }
@@ -40,18 +44,18 @@ function openPwaInstallModal() {
   if (!modal || !steps) return;
 
   if (isIosDevice()) {
-    if (title) title.textContent = 'Install JapaAI.ng on iPhone / iPad';
+    if (title) title.textContent = 'Install ai4japa.store on iPhone / iPad';
     steps.innerHTML = [
       '<li>Tap the <strong>Share</strong> icon in your Safari toolbar (square with an upward arrow).</li>',
       '<li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>',
-      '<li>Tap <strong>Add</strong> in the top corner to install JapaAI.ng like a native app.</li>',
+      '<li>Tap <strong>Add</strong> in the top corner to install ai4japa.store like a native app.</li>',
     ].join('');
   } else {
-    if (title) title.textContent = 'Install JapaAI.ng on Android or Desktop';
+    if (title) title.textContent = 'Install ai4japa.store on Android or Desktop';
     steps.innerHTML = [
       '<li>Open your browser menu (<strong>⋮</strong> on Chrome Android or <strong>⋯</strong> in your toolbar).</li>',
       '<li>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>',
-      '<li>Confirm to add <strong>JapaAI.ng</strong> directly to your phone or desktop.</li>',
+      '<li>Confirm to add <strong>ai4japa.store</strong> directly to your phone or desktop.</li>',
     ].join('');
   }
   modal.classList.remove('hidden');
@@ -65,7 +69,7 @@ function closePwaInstallModal() {
 async function promptPwaInstall() {
   if (isStandalonePwa()) {
     if (typeof showToast === 'function') {
-      showToast('JapaAI.ng is already running as an installed app.');
+      showToast('ai4japa.store is already running as an installed app.');
     }
     return;
   }
@@ -111,7 +115,7 @@ function initPwaSupport() {
     const banner = document.getElementById('pwa-install-banner');
     if (banner) banner.classList.add('hidden');
     if (typeof showToast === 'function') {
-      showToast('JapaAI.ng installed on your device!');
+      showToast('ai4japa.store installed on your device!');
     }
   });
 

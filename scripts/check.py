@@ -1,4 +1,4 @@
-"""Single deterministic guardrail script verifying JapaAI.ng backend, schema parity, PWA, and JS checks."""
+"""Single deterministic guardrail script verifying ai4japa.store backend, schema parity, PWA, and JS checks."""
 
 import json
 import re
@@ -16,6 +16,7 @@ from backend.catalog_schema import (  # noqa: E402
 )
 from backend.countries_data import COUNTRIES_CATALOG  # noqa: E402
 from backend.rcip_employers import validate_designated_employers_directory  # noqa: E402
+from backend.solutions_catalog import validate_solutions_catalog  # noqa: E402
 
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 REQUIRED_IMAGES = (
@@ -47,6 +48,10 @@ def _check_catalog_and_ui_parity() -> None:
     emp_errs = validate_designated_employers_directory()
     if emp_errs:
         raise SystemExit("RCIP designated employers invariant errors:\n- " + "\n- ".join(emp_errs))
+
+    sol_errs = validate_solutions_catalog()
+    if sol_errs:
+        raise SystemExit("AI solutions store invariant errors:\n- " + "\n- ".join(sol_errs))
 
     index_html = (ROOT / "frontend" / "index.html").read_text(encoding="utf-8")
 
